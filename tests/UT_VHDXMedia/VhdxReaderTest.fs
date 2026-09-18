@@ -106,17 +106,18 @@ type VhdxReaderTest_Test () =
                     let dataCount = Array.fold ( fun cnt j -> cnt + ( match j with | Data _ -> 1 | _ -> 0 ) ) 0 logents
                     let headerlength = Functions.AddPaddingLengthInt32 ( 64 + logents.Length * 32 ) 4096
                     let entryLength = headerlength + dataCount * 4096
+                    let effSN = ( sequenceNumber + uint64 i )
                     // log entry header
-                    yield! logEntryHeader ( uint32 entryLength ) ( uint32 startPos ) ( sequenceNumber + uint64 i ) ( uint32 logents.Length ) logGuid flushedFileOffset lastFileOffset
+                    yield! logEntryHeader ( uint32 entryLength ) ( uint32 startPos ) effSN ( uint32 logents.Length ) logGuid flushedFileOffset lastFileOffset
                     // descriptor
                     for itr2 in logents do
                         match itr2 with
                         | Zero( x, y ) ->
-                            yield! zeroDiscriptor x y sequenceNumber
+                            yield! zeroDiscriptor x y effSN
                         | Data( x, y ) ->
                             let trailingBytes = if x.Length > 0 then x.[ 4092 .. 4095 ] else Array.zeroCreate<byte> 4
                             let leadingBytes = if x.Length > 0 then x.[ 0 .. 7 ] else Array.zeroCreate<byte> 8
-                            yield! dataDiscriptor trailingBytes leadingBytes y sequenceNumber
+                            yield! dataDiscriptor trailingBytes leadingBytes y effSN
                     // padding
                     let padlength = headerlength - ( 64 + logents.Length * 32 )
                     yield! Array.zeroCreate<byte> padlength
@@ -125,9 +126,9 @@ type VhdxReaderTest_Test () =
                         match itr2 with
                         | Data( x, y ) ->
                             yield! ( "data" |> Encoding.UTF8.GetBytes )     // DataSignature
-                            yield! BitConverter.GetBytes ( uint32 ( sequenceNumber >>> 32 ) )   // SequenceHigh
+                            yield! BitConverter.GetBytes ( uint32 ( effSN >>> 32 ) )   // SequenceHigh
                             yield! if x.Length > 0 then x.[ 8 .. 4091 ] else Array.zeroCreate<byte> 4084
-                            yield! BitConverter.GetBytes ( uint32 sequenceNumber )   // SequenceLow
+                            yield! BitConverter.GetBytes ( uint32 effSN )   // SequenceLow
                         | _ ->
                             ()
                 |]
@@ -791,19 +792,22 @@ type VhdxReaderTest_Test () =
         Assert.StrictEqual( 4, r.Value.Descriptors.Length )
  
     [<Theory>]
-    [<InlineData( 1 )>]
-    [<InlineData( 125 )>]
-    [<InlineData( 126 )>]
-    [<InlineData( 127 )>]
-    member _.ReadLogEntry_003 ( count : int32 ) =
+    [<InlineData( 1, 1 )>]
+    [<InlineData( 125, 1 )>]
+    [<InlineData( 126, 1 )>]
+    [<InlineData( 127, 1 )>]
+    [<InlineData( 0, 254 )>]
+    [<InlineData( 0, 0 )>]
+    member _.ReadLogEntry_003 ( zcount : int32 ) ( dcount : int32 ) =
         let entry = [|
             {
                 PatchPosition = 0;
                 PatchData = Array.Empty();
                 Descriptor = [|
-                    for i = 1 to count do
+                    for i = 1 to zcount do
                         yield Zero( 4096UL, 12288UL )
-                    yield Data( [||], 0UL );
+                    for i = 1 to dcount do
+                        yield Data( [||], 0UL );
                 |];
             };
         |]
@@ -811,22 +815,180 @@ type VhdxReaderTest_Test () =
         let logData = genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
         let r = VhdxReader.ReadLogEntry logData 0u logGuid
         Assert.True( r.IsSome )
-        Assert.StrictEqual( count + 1, r.Value.Descriptors.Length )
+        Assert.StrictEqual( zcount + dcount, r.Value.Descriptors.Length )
+
+    [<Theory>]
+    [<InlineData( 0 )>]
+    [<InlineData( 1011712 )>]
+    [<InlineData( 1019904 )>]
+    [<InlineData( 1044480 )>]
+    member _.ReadActiveLogSequense_001 ( pos : int32 ) =
+        let entry = [|
+            {   // Entry length = 16384
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |];
+            };
+            {   // Entry length = 12288
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 12288UL ); Data( [||], 16384UL ); |];
+            };
+            {   // Entry length = 8192
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 20480UL ); |];
+            };
+        |]
+        let logGuid = Guid.NewGuid()
+        let logData = genLogData 1048576 pos entry logGuid 99UL 2097152UL 3145728UL 
+        let r = VhdxReader.ReadActiveLogSequense logData logGuid
+        Assert.StrictEqual( 3, r.Length )
+        Assert.StrictEqual( 4u, r.[0].DescriptorCount )
+        Assert.True( r.[0].Descriptors.[0].IsData )
+        Assert.True( r.[0].Descriptors.[1].IsData )
+        Assert.True( r.[0].Descriptors.[2].IsData )
+        Assert.True( r.[0].Descriptors.[3].IsZero )
+        Assert.StrictEqual( 2u, r.[1].DescriptorCount )
+        Assert.True( r.[1].Descriptors.[0].IsData )
+        Assert.True( r.[1].Descriptors.[1].IsData )
+        Assert.StrictEqual( 1u, r.[2].DescriptorCount )
+        Assert.True( r.[2].Descriptors.[0].IsData )
+
+    // If multiple valid active sequences exist, the one with the higher sequence number is adopted.
+    [<Theory>]
+    [<InlineData( 1UL, 2UL, false )>]
+    [<InlineData( 2UL, 1UL, true )>]
+    [<InlineData( 2UL, 2UL, true )>]
+    member _.ReadActiveLogSequense_002 ( seq1 : uint64 ) ( seq2 : uint64 ) ( flg : bool ) =
+        let entry1 = [|
+            {   // Entry length = 16384
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |];
+            };
+            {   // Entry length = 12288
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 12288UL ); Data( [||], 16384UL ); |];
+            };
+        |]
+        let entry2 = [|
+            {   // Entry length = 8192
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 20480UL ); |];
+            };
+        |]
+
+        let logGuid = Guid.NewGuid()
+        let logData1 = genLogData 1048576 0 entry1 logGuid seq1 2097152UL 3145728UL
+        let logData2 = genLogData 1048576 65536 entry2 logGuid seq2 2097152UL 3145728UL
+        Array.blit logData2 65536 logData1 65536 8192
+
+        let r = VhdxReader.ReadActiveLogSequense logData1 logGuid
+        if flg then
+            Assert.StrictEqual( 2, r.Length )
+            Assert.StrictEqual( 4u, r.[0].DescriptorCount )
+            Assert.True( r.[0].Descriptors.[0].IsData )
+            Assert.True( r.[0].Descriptors.[1].IsData )
+            Assert.True( r.[0].Descriptors.[2].IsData )
+            Assert.True( r.[0].Descriptors.[3].IsZero )
+            Assert.StrictEqual( 2u, r.[1].DescriptorCount )
+            Assert.True( r.[1].Descriptors.[0].IsData )
+            Assert.True( r.[1].Descriptors.[1].IsData )
+        else
+            Assert.StrictEqual( 1, r.Length )
+            Assert.StrictEqual( 1u, r.[0].DescriptorCount )
+            Assert.True( r.[0].Descriptors.[0].IsData )
+
+    // Even if multiple valid sequences exist consecutively, each sequence is evaluated separately.
+    [<Fact>]
+    member _.ReadActiveLogSequense_003 () =
+        let entry1 = [|
+            {   // Entry length = 16384
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |];
+            };
+            {   // Entry length = 12288
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 12288UL ); Data( [||], 16384UL ); |];
+            };
+        |]
+        let entry2 = [|
+            {   // Entry length = 8192
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 20480UL ); |];
+            };
+        |]
+
+        let logGuid = Guid.NewGuid()
+        let logData1 = genLogData 1048576 0 entry1 logGuid 1UL 2097152UL 3145728UL
+        let logData2 = genLogData 1048576 28672 entry2 logGuid 3UL 2097152UL 3145728UL
+        Array.blit logData2 28672 logData1 28672 8192
+
+        let r = VhdxReader.ReadActiveLogSequense logData1 logGuid
+        Assert.StrictEqual( 1, r.Length )
+        Assert.StrictEqual( 1u, r.[0].DescriptorCount )
+        Assert.True( r.[0].Descriptors.[0].IsData )
 
     [<Fact>]
-    member _.ReadLogEntry_004 () =
+    member _.ReadActiveLogSequense_004 () =
         let entry = [|
             {
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [|
-                    for i = 1 to 254 do
-                        yield Data( [||], 0UL )
-                |];
+                Descriptor = [| Data( [||], 20480UL ); |];
             };
         |]
         let logGuid = Guid.NewGuid()
-        let logData = genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
-        let r = VhdxReader.ReadLogEntry logData 0u logGuid
-        Assert.True( r.IsSome )
-        Assert.StrictEqual( 254, r.Value.Descriptors.Length )
+        let logData1 = genLogData 1048576 0 entry logGuid 0UL 2097152UL 3145728UL
+        let r = VhdxReader.ReadActiveLogSequense logData1 logGuid
+        Assert.StrictEqual( 1, r.Length )
+        Assert.StrictEqual( 1u, r.[0].DescriptorCount )
+        Assert.True( r.[0].Descriptors.[0].IsData )
+
+    [<Fact>]
+    member _.ReadActiveLogSequense_005 () =
+        let entry1 = [|
+            {   // Entry length = 16384
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |];
+            };
+        |]
+        let entry2 = [|
+            {   // Entry length = 8192
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 20480UL ); |];
+            };
+        |]
+
+        let logGuid = Guid.NewGuid()
+        let logData1 = genLogData 1048576 8192 entry1 logGuid 50UL 2097152UL 3145728UL
+        let logData2 = genLogData 1048576 65536 entry2 logGuid 100UL 2097152UL 3145728UL
+        Array.blit logData2 65536 logData1 32768 8192
+
+        let r = VhdxReader.ReadActiveLogSequense logData1 logGuid
+        Assert.StrictEqual( 1, r.Length )
+        Assert.StrictEqual( 4u, r.[0].DescriptorCount )
+        Assert.True( r.[0].Descriptors.[0].IsData )
+        Assert.True( r.[0].Descriptors.[1].IsData )
+        Assert.True( r.[0].Descriptors.[2].IsData )
+        Assert.True( r.[0].Descriptors.[3].IsZero )
+
+    [<Theory>]
+    [<InlineData( 0, "The log data length must not be empty" )>]
+    [<InlineData( 524288, "The log data length must be in units of 1MB" )>]
+    member _.ReadActiveLogSequense_Fail_001 ( len : int32 ) ( exmsg : string ) =
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxReader.ReadActiveLogSequense ( Array.zeroCreate<byte> len ) ( Guid() ) |> ignore
+            )
+        Assert.StartsWith( exmsg, r.Message )
+
+

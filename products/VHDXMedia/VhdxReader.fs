@@ -547,12 +547,13 @@ type VhdxReader() =
                         None
                     else
                         // Retrieve the data sector
-                        let dataSectores = [
-                            for i in 0u .. dataSectorCount - 1u do
-                                let d = VhdxReader.ReadLogDataSector logEntryData ( dataSectorPos + i * 4096u ) sequenceNumber
-                                if d.Length = 4084 then
-                                    d
-                        ]
+                        let dataSectores =
+                            if dataSectorCount > 0u then [
+                                for i in 0u .. dataSectorCount - 1u do
+                                    let d = VhdxReader.ReadLogDataSector logEntryData ( dataSectorPos + i * 4096u ) sequenceNumber
+                                    if d.Length = 4084 then d
+                            ]
+                            else List.Empty
                         if dataSectores.Length <> int32 dataSectorCount then
                             None
                         else
@@ -584,12 +585,19 @@ type VhdxReader() =
     ///  Retrieved log entry value list.
     /// </returns>
     static member ReadActiveLogSequense ( logData : byte[] ) ( headerLogGuid : Guid ) : LogEntry list =
+
+        if logData.Length <= 0 then
+            raise <| VhdxMediaException( sprintf "The log data length must not be empty." )
+        if ( logData.Length &&& 0x000FFFFF ) <> 0 then
+            raise <| VhdxMediaException( sprintf "The log data length must be in units of 1MB. Length=%d" logData.Length )
+        let logDataLen = uint32 logData.Length
+
         let rec getCurrentSeq ( pos : uint32 ) ( acc : LogEntry list ) =
             match VhdxReader.ReadLogEntry logData pos headerLogGuid with
             | Some x ->
                 match acc with
                 | h :: _ ->
-                    if h.SequenceNumber + 1UL = x.SequenceNumber then
+                    if h.SequenceNumber + 1UL = x.SequenceNumber && h.Tail = x.Tail then
                         getCurrentSeq ( pos + x.EntryLength ) ( x :: acc )
                     else
                         acc |> List.rev
@@ -611,20 +619,18 @@ type VhdxReader() =
 
             let nextActiveSeq, nextCurTail =
                 if curSeq.Length = 0 || r then
-                    activeSeq, ( ( curTail + 4096u ) % ( uint32 logData.Length ) )
+                    ( activeSeq, ( ( curTail + 4096u ) % logDataLen ) )
+                elif activeSeq.Length = 0 then
+                    // If the active sequence is empty, set the retrieved sequence as the active sequence.
+                    ( curSeq, ( ( curTail + SeqTotalLen ) % logDataLen ) )
                 else
                     // The current entry appears to be correct.
-                    let asSecNum =
-                        if activeSeq.Length = 0 then
-                            0UL
-                        else
-                            activeSeq.[0].SequenceNumber
                     let nas =
-                        if asSecNum < curSeq.[0].SequenceNumber then
+                        if activeSeq.[0].SequenceNumber < curSeq.[0].SequenceNumber then
                             curSeq
                         else
                             activeSeq
-                    nas, ( ( curTail + SeqTotalLen ) % ( uint32 logData.Length ) )
+                    ( nas, ( ( curTail + SeqTotalLen ) % logDataLen ) )
 
             if nextCurTail < curTail then
                 nextActiveSeq
@@ -718,7 +724,7 @@ type VhdxReader() =
         else
             // Interpretation of Region table entries.
             let entries =
-                [
+                if entryCount > 0u then [
                     for i in 0u .. entryCount - 1u do
                         let entryOffset = 16u + i * 32u
                         let guid = ByteFunc.ReadGuid data entryOffset
@@ -740,6 +746,7 @@ type VhdxReader() =
                                 Required = required = 1u;
                             }
                 ]
+                else List.Empty
 
             // Check if there is any overlap in the regions.
             let entries_Check =
