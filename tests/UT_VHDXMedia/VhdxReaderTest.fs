@@ -148,6 +148,56 @@ type VhdxReaderTest_Test () =
             Array.blit v firstChunkSize logBuffer 0 secondChunkSize
         logBuffer
 
+    let genLogEntry ( descriptor : TestLogDesc[] ) =
+        let ddindex =
+            descriptor
+            |> Array.mapFold ( fun s itr ->
+                if itr.IsData then
+                    ( s, s + 1u )
+                else
+                    ( 0u, s )
+            ) 0u
+            |> fst
+        {
+            Signature = 0u;
+            Checksum = 0u;
+            EntryLength = 0u;
+            Tail = 0u;
+            SequenceNumber = 0UL;
+            DescriptorCount = 1u;
+            LogGuid = Guid();
+            FlushedFileOffset = 0UL;
+            LastFileOffset = 0UL;
+            Descriptors = [
+                for i = 0 to descriptor.Length - 1 do
+                    match descriptor.[i] with
+                    | Zero( x, y ) ->
+                        LogDescriptor.Zero({
+                            ZeroSignature = 0u;
+                            ZeroLength = x;
+                            FileOffset = y;
+                            SequenceNumber = 0UL;
+                        });
+                    | Data( x, y ) ->
+                        LogDescriptor.Data({
+                            DataSignature = 0u;
+                            TrailingBytes = x.[ 4092 .. 4095 ];
+                            LeadingBytes = x.[ 0 .. 7 ]
+                            FileOffset = y;
+                            SequenceNumber = 0UL;
+                            ddIndex = ddindex.[i];
+                        });
+            ]
+            DataSectors = [
+                for i = 0 to descriptor.Length - 1 do
+                    match descriptor.[i] with
+                    | Data( x, _ ) ->
+                        yield x.[ 8 .. 4091 ];
+                    | _ -> ()
+            ];
+        };
+
+
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -991,4 +1041,248 @@ type VhdxReaderTest_Test () =
             )
         Assert.StartsWith( exmsg, r.Message )
 
+    [<Theory>]
+    [<InlineData( 1UL, 4096u, "The offset(" )>]
+    [<InlineData( 4095UL, 4096u, "The offset(" )>]
+    [<InlineData( 4096UL, 1u, "The length(" )>]
+    [<InlineData( 4096UL, 4095u, "The length(" )>]
+    member _.ReadBytesWithLog_Fail_001 ( offset : uint64 ) ( len : uint32 ) ( exmsg : string ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u,false )
+            try
+                let! r =
+                    Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                        let! _ = VhdxReader.ReadBytesWithLog [] 1048576UL fa offset len
+                        ()
+                    } )
+                Assert.StartsWith( exmsg, r.Message )
+            finally
+                fa.Close()
+                File.Delete fname
+        }
 
+    [<Fact>]
+    member _.ReadBytesWithLog_Fail_002 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u,false )
+            try
+                let! r =
+                    Assert.ThrowsAsync<ArgumentOutOfRangeException>( fun () -> task {
+                        let! _ = VhdxReader.ReadBytesWithLog [] 1048576UL fa 1048576UL 4096u
+                        ()
+                    } )
+                ()
+            finally
+                fa.Close()
+                File.Delete fname
+        }
+
+    [<Fact>]
+    member _.ReadBytesWithLog_Length0_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u,false )
+            try
+                let! r = VhdxReader.ReadBytesWithLog [] 1048576UL fa 0UL 0u
+                Assert.Empty r
+            finally
+                fa.Close()
+                File.Delete fname
+        }
+
+    [<Fact>]
+    member _.ReadBytesWithLog_Empty_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let firstBytes = Array.zeroCreate<byte> 4096
+            Random.Shared.NextBytes firstBytes
+            File.WriteAllBytes( fname, firstBytes )
+            let fa = FileAccessor( fname, 1u,false )
+            Assert.StrictEqual( 4096UL, fa.FileSize )
+
+            try
+                let! r = VhdxReader.ReadBytesWithLog [] 1048576UL fa 0UL 4096u
+                Assert.StrictEqual( 4096, r.Length )
+                Assert.True(( firstBytes = r ))
+            finally
+                fa.Close()
+                File.Delete fname
+        }
+
+    [<Fact>]
+    member _.ReadBytesWithLog_Empty_002 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let firstBytes = Array.zeroCreate<byte> 4096
+            Random.Shared.NextBytes firstBytes
+            File.WriteAllBytes( fname, firstBytes )
+            let fa = FileAccessor( fname, 1u,false )
+            Assert.StrictEqual( 4096UL, fa.FileSize )
+
+            try
+                let! r = VhdxReader.ReadBytesWithLog [] 1048576UL fa 4096UL 4096u
+                for itr in r do
+                    Assert.StrictEqual( 0uy, itr )
+            finally
+                fa.Close()
+                File.Delete fname
+        }
+
+//          | 0 .. 4095 | 4096 .. 8191 | 8192 .. 12287 | 12288 .. 16383 | 16384 .. 20479 | 20480 .. 24575 | 24576 .. 28671 |
+// file     |------------------------Random 16KB------------------------|                :                :                :
+// zero     :           |-----4KB------|               :                :                :                :                :
+// data     :           :              |--Random 4KB---|                :                |---Random 4KB---|                :
+//          :           :              :               :                :                :                :                :
+// test_001 |Raed target|              :               :                :                :                :                :
+// test_002 :           :              :               :                |---Raed target--|                :                :
+// test_003 |--------Raed target-------|               :                :                :                :                :
+// test_004 :           :              |-----------Raed target----------|                :                :                :
+// test_005 :           :              :               :                :                |-----------Raed target-----------|
+
+    [<Fact>]
+    member _.ReadBytesWithLog_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let firstBytes = Array.zeroCreate<byte>( 4096 * 4 )
+            Random.Shared.NextBytes firstBytes
+            File.WriteAllBytes( fname, firstBytes )
+            let fa = FileAccessor( fname, 1u,false )
+            Assert.StrictEqual( uint64 firstBytes.Length, fa.FileSize )
+
+            let data0 = Array.zeroCreate<byte>( 4096 )
+            let data1 = Array.zeroCreate<byte>( 4096 )
+            Random.Shared.NextBytes data0
+            Random.Shared.NextBytes data1
+            let entry = [
+                genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
+                genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+            ]
+
+            try
+                let! r = VhdxReader.ReadBytesWithLog entry 1048576UL fa 0UL 4096u
+                Assert.StrictEqual( 4096, r.Length )
+                Assert.True(( firstBytes.[ 0 .. 4095 ] = r.[ 0 .. 4095 ] ))
+            finally
+                fa.Close()
+                File.Delete fname
+        }
+
+    [<Fact>]
+    member _.ReadBytesWithLog_002 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let firstBytes = Array.zeroCreate<byte>( 4096 * 4 )
+            Random.Shared.NextBytes firstBytes
+            File.WriteAllBytes( fname, firstBytes )
+            let fa = FileAccessor( fname, 1u,false )
+            Assert.StrictEqual( uint64 firstBytes.Length, fa.FileSize )
+
+            let data0 = Array.zeroCreate<byte>( 4096 )
+            let data1 = Array.zeroCreate<byte>( 4096 )
+            Random.Shared.NextBytes data0
+            Random.Shared.NextBytes data1
+            let entry = [
+                genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
+                genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+            ]
+
+            try
+                let! r = VhdxReader.ReadBytesWithLog entry 1048576UL fa 16384UL 4096u
+                Assert.StrictEqual( 4096, r.Length )
+                for i = 0 to 4095 do
+                    Assert.StrictEqual( 0uy, r.[i] )
+            finally
+                fa.Close()
+                File.Delete fname
+        }
+
+    [<Fact>]
+    member _.ReadBytesWithLog_003 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let firstBytes = Array.zeroCreate<byte>( 4096 * 4 )
+            Random.Shared.NextBytes firstBytes
+            File.WriteAllBytes( fname, firstBytes )
+            let fa = FileAccessor( fname, 1u,false )
+            Assert.StrictEqual( uint64 firstBytes.Length, fa.FileSize )
+
+            let data0 = Array.zeroCreate<byte>( 4096 )
+            let data1 = Array.zeroCreate<byte>( 4096 )
+            Random.Shared.NextBytes data0
+            Random.Shared.NextBytes data1
+            let entry = [
+                genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
+                genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+            ]
+
+            try
+                let! r = VhdxReader.ReadBytesWithLog entry 1048576UL fa 0UL 8192u
+                Assert.StrictEqual( 8192, r.Length )
+                Assert.True(( firstBytes.[ 0 .. 4095 ] = r.[ 0 .. 4095 ] ))
+                for i = 4096 to 8191 do
+                    Assert.StrictEqual( 0uy, r.[i] )
+            finally
+                fa.Close()
+                File.Delete fname
+        }
+
+    [<Fact>]
+    member _.ReadBytesWithLog_004 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let firstBytes = Array.zeroCreate<byte>( 4096 * 4 )
+            Random.Shared.NextBytes firstBytes
+            File.WriteAllBytes( fname, firstBytes )
+            let fa = FileAccessor( fname, 1u,false )
+            Assert.StrictEqual( uint64 firstBytes.Length, fa.FileSize )
+
+            let data0 = Array.zeroCreate<byte>( 4096 )
+            let data1 = Array.zeroCreate<byte>( 4096 )
+            Random.Shared.NextBytes data0
+            Random.Shared.NextBytes data1
+            let entry = [
+                genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
+                genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+            ]
+
+            try
+                let! r = VhdxReader.ReadBytesWithLog entry 1048576UL fa 8192UL 8192u
+                Assert.StrictEqual( 8192, r.Length )
+                Assert.True(( data0 = r.[ 0 .. 4095 ] ))
+                Assert.True(( firstBytes.[ 12288 .. 16383 ] = r.[ 4096 .. 8191 ] ))
+            finally
+                fa.Close()
+                File.Delete fname
+        }
+
+    [<Fact>]
+    member _.ReadBytesWithLog_005 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let firstBytes = Array.zeroCreate<byte>( 4096 * 4 )
+            Random.Shared.NextBytes firstBytes
+            File.WriteAllBytes( fname, firstBytes )
+            let fa = FileAccessor( fname, 1u,false )
+            Assert.StrictEqual( uint64 firstBytes.Length, fa.FileSize )
+
+            let data0 = Array.zeroCreate<byte>( 4096 )
+            let data1 = Array.zeroCreate<byte>( 4096 )
+            Random.Shared.NextBytes data0
+            Random.Shared.NextBytes data1
+            let entry = [
+                genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
+                genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+            ]
+
+            try
+                let! r = VhdxReader.ReadBytesWithLog entry 1048576UL fa 20480UL 8192u
+                Assert.StrictEqual( 8192, r.Length )
+                Assert.True(( data1 = r.[ 0 .. 4095 ] ))
+                for i = 4096 to 8191 do
+                    Assert.StrictEqual( 0uy, r.[i] )
+            finally
+                fa.Close()
+                File.Delete fname
+        }
