@@ -711,42 +711,44 @@ type VhdxReader() =
     /// </returns>
     static member ReadRegionTable ( data : byte[] ) ( fileLen : uint64 ) : RegionTable option =
 
+        if data.Length <> 65536 then
+            raise <| VhdxMediaException( "The region table must be 64KB length." )
+
         // Interpretation of the region table header
         let signature = ByteFunc.ReadU32BE data 0u
         let checksum = ByteFunc.ReadU32LE data 4u
         let entryCount = ByteFunc.ReadU32LE data 8u
         let signature_Check = signature = 0x72656769u
         let checksum_Check = VhdxCommons.CheckHeaderChecksum data checksum
-        let entryCount_Check = 0u <= entryCount && entryCount <= 2047u
+        let entryCount_Check = 1u <= entryCount && entryCount <= 2047u
 
         if not signature_Check || not checksum_Check || not entryCount_Check then
             None
         else
             // Interpretation of Region table entries.
-            let entries =
-                if entryCount > 0u then [
-                    for i in 0u .. entryCount - 1u do
-                        let entryOffset = 16u + i * 32u
-                        let guid = ByteFunc.ReadGuid data entryOffset
-                        let fileOffsetBytes = ByteFunc.ReadU64LE data ( entryOffset + 16u )
-                        let lengthBytes = ByteFunc.ReadU32LE data ( entryOffset + 24u )
-                        let required = ByteFunc.ReadU32LE data ( entryOffset + 28u )
+            let entries = [
+                for i in 0u .. entryCount - 1u do
+                    let entryOffset = 16u + i * 32u
+                    let guid = ByteFunc.ReadGuid data entryOffset
+                    let fileOffsetBytes = ByteFunc.ReadU64LE data ( entryOffset + 16u )
+                    let lengthBytes = ByteFunc.ReadU32LE data ( entryOffset + 24u )
+                    let required = ByteFunc.ReadU32LE data ( entryOffset + 28u )
 
-                        let fileOffsetBytes_Check = ( fileOffsetBytes &&& 0xFFFFFUL ) = 0UL && fileOffsetBytes >= 0x100000UL
-                        let lengthBytes_Check1 = ( lengthBytes &&& 0xFFFFFu ) = 0u
-                        let lengthBytes_Check2 =
-                            let w = fileOffsetBytes + uint64 lengthBytes
-                            w <= 0x400000000000UL && w <= fileLen
+                    let fileOffsetBytes_Check =
+                        ( fileOffsetBytes &&& 0xFFFFFUL ) = 0UL && fileOffsetBytes >= 0x100000UL && fileOffsetBytes < 0x400000000000UL
+                    let lengthBytes_Check1 = ( lengthBytes &&& 0xFFFFFu ) = 0u && lengthBytes >= 0x100000u && lengthBytes < 0x80000000u
+                    let lengthBytes_Check2 =
+                        let w = fileOffsetBytes + uint64 lengthBytes
+                        w <= 0x400000000000UL && w <= fileLen
 
-                        if fileOffsetBytes_Check && lengthBytes_Check1 && lengthBytes_Check2 then
-                            yield {
-                                Guid = guid;
-                                FileOffset = fileOffsetBytes;
-                                Length = lengthBytes;
-                                Required = required = 1u;
-                            }
-                ]
-                else List.Empty
+                    if fileOffsetBytes_Check && lengthBytes_Check1 && lengthBytes_Check2 then
+                        yield {
+                            Guid = guid;
+                            FileOffset = fileOffsetBytes;
+                            Length = lengthBytes;
+                            Required = required = 1u;
+                        }
+            ]
 
             // Check if there is any overlap in the regions.
             let entries_Check =
@@ -757,7 +759,14 @@ type VhdxReader() =
                     itr.[1].FileOffset < ( itr.[0].FileOffset + uint64 itr.[0].Length ) 
                 )
                 |> not
-            if entries.Length <> int32 entryCount || not entries_Check then
+
+            let guid_check =
+                entries
+                |> List.distinctBy _.Guid
+                |> List.length
+                |> (=) entries.Length
+
+            if entries.Length <> int32 entryCount || not entries_Check || not guid_check then
                 None
             else
                 {

@@ -1,6 +1,6 @@
 //=============================================================================
 // Haruka Software Storage.
-// VhdxReaderTest.fs : Test cases for VhdxReader class.
+// VhdxReaderTest1.fs : Test cases for VhdxReader class.
 //
 
 //=============================================================================
@@ -42,7 +42,7 @@ type TestLogEntry = {
 //=============================================================================
 // Class implementation
 
-type VhdxReaderTest_Test () =
+type VhdxReaderTest1_Test () =
 
     let logEntryHeader
         ( entryLength : uint32 )

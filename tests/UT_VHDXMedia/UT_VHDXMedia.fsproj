@@ -20,7 +20,8 @@
 
   <ItemGroup>
     <Compile Include="VhdxCommonsTest.fs" />
-    <Compile Include="VhdxReaderTest.fs" />
+    <Compile Include="VhdxReaderTest1.fs" />
+    <Compile Include="VhdxReaderTest2.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 
