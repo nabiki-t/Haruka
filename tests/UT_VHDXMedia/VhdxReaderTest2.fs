@@ -73,6 +73,149 @@ type VhdxReaderTest2_Test () =
             ];
         } pos patch
 
+    let genMetadataTable ( len : int ) ( mdi : MetadataTableEntry[] ) : byte[] =
+        let v = Array.zeroCreate<byte> len
+        ByteFunc.WriteU64BE v 0u 0x6D65746164617461UL
+        ByteFunc.WriteU16LE v 10u ( uint16 mdi.Length )
+        mdi
+        |> Array.iteri( fun idx itr ->
+            let pos = 32 + idx * 32
+            ByteFunc.WriteGuid v ( uint32 pos ) itr.ItemId
+            ByteFunc.WriteU32LE v ( uint32 pos + 16u ) itr.Offset
+            ByteFunc.WriteU32LE v ( uint32 pos + 20u ) itr.Length
+            let f =  ( if itr.IsUser then 1uy else 0uy ) ||| ( if itr.IsVirtualDisk then 2uy else 0uy ) ||| ( if itr.IsRequired then 4uy else 0uy )
+            v.[ pos + 24 ] <- f
+            Array.blit itr.Data 0 v ( int32 itr.Offset ) itr.Data.Length
+        )
+        v
+
+    let genFileParameter ( blockSize : uint32 ) ( leaveBlockAllocated : bool ) ( hasParent : bool ) : byte[] =
+        let v = Array.zeroCreate<byte> 8
+        ByteFunc.WriteU32LE v 0u blockSize
+        v.[4] <- ( if leaveBlockAllocated then 1uy else 0uy ) ||| ( if hasParent then 2uy else 0uy )
+        v
+
+    let genVirtualDiskSize ( virtualDiskSize : uint64 ) : byte[] =
+        let v = Array.zeroCreate<byte> 8
+        ByteFunc.WriteU64LE v 0u virtualDiskSize
+        v
+
+    let genVirtualDiskId ( virtualDiskId : Guid ) : byte[] =
+        let v = Array.zeroCreate<byte> 16
+        ByteFunc.WriteGuid v 0u virtualDiskId
+        v
+
+    let genLogicalSectorSize ( logicalSectorSize : uint32 ) : byte[] =
+        let v = Array.zeroCreate<byte> 4
+        ByteFunc.WriteU32LE v 0u logicalSectorSize
+        v
+
+    let genPhysicalSectorSize ( physicalSectorSize : uint32 ) : byte[] =
+        let v = Array.zeroCreate<byte> 4
+        ByteFunc.WriteU32LE v 0u physicalSectorSize
+        v
+
+    let genParentLocator ( parentLocator : ( string * string ) [] ) : byte[] =
+        let parentLocator_u16 =
+            parentLocator
+            |> Array.map ( fun ( e, v ) -> ( Encoding.Unicode.GetBytes e, Encoding.Unicode.GetBytes v ) )
+        let offset, valueLen =
+            parentLocator_u16
+            |> Array.mapFold ( fun pos ( e, v ) -> ( uint32 pos, uint32( pos + e.Length ) ), pos + e.Length + v.Length ) 0
+        let buflen = 32 + 12 * parentLocator.Length + valueLen
+        let v = Array.zeroCreate<byte> buflen
+
+        // parent locator header
+        ByteFunc.WriteGuid v 0u ( Guid "B04AEFB7-D19E-4A81-B789-25B8E9445913" )
+        ByteFunc.WriteU16LE v 18u ( uint16 parentLocator.Length )
+
+        // parent locator entry, entry and value
+        offset
+        |> Array.iteri ( fun idx ( eo, vo ) ->
+            // parent locator entry
+            let pos = 32 + 12 * idx |> uint32
+            ByteFunc.WriteU32LE v ( pos + 0u ) eo
+            ByteFunc.WriteU32LE v ( pos + 4u ) vo
+            let e16, v16 = parentLocator_u16.[idx]
+            ByteFunc.WriteU16LE v ( pos + 8u ) ( uint16 e16.Length )
+            ByteFunc.WriteU16LE v ( pos + 8u ) ( uint16 v16.Length )
+            // entry
+            Array.blit e16 0 v ( int eo ) e16.Length
+            // value
+            Array.blit v16 0 v ( int vo ) v16.Length
+        )
+        v
+
+    let defMetadataTable ( vdi : VirtualDiskInfo ) : byte[] =
+        let fileParameter = genFileParameter vdi.PayloadBlockSize vdi.LeaveBlockAllocated vdi.HasParent
+        let fileParameterLen = uint32 fileParameter.Length
+        let virtualDiskSize = genVirtualDiskSize vdi.VirtualDiskSize
+        let virtualDiskSizeLen = uint32 virtualDiskSize.Length
+        let virtualDiskId = genVirtualDiskId vdi.VirtualDiskId
+        let virtualDiskIdLen = uint32 virtualDiskId.Length
+        let logicalSectorSize = genLogicalSectorSize ( Blocksize.toUInt32 vdi.LogicalSectorSize )
+        let logicalSectorSizeLen = uint32 logicalSectorSize.Length
+        let physicalSectorSize = genPhysicalSectorSize ( Blocksize.toUInt32 vdi.PhysicalSectorSize )
+        let physicalSectorSizeLen = uint32 physicalSectorSize.Length
+        let parentLocator = genParentLocator ( vdi.ParentLocator |> Seq.map ( fun kv -> kv.Key, kv.Value ) |> Seq.toArray )
+        let parentLocatorLen = uint32 parentLocator.Length
+        let mdi = [|
+            {   // FileParameter
+                ItemId = Guid( "CAA16737-FA36-4D43-B3B6-33F0AA44E76B" );
+                Offset = 65536u;
+                Length = fileParameterLen;  // 8 bytes
+                IsUser = false;
+                IsVirtualDisk = false;
+                IsRequired = true;
+                Data = fileParameter;
+            };
+            {   // VirtualDiskSize
+                ItemId = Guid( "2FA54224-CD1B-4876-B211-5DBED83BF4B8" );
+                Offset = 65536u + fileParameterLen; // 65544
+                Length = virtualDiskSizeLen;        // 8 bytes
+                IsUser = false;
+                IsVirtualDisk = true;
+                IsRequired = true;
+                Data = virtualDiskSize;
+            };
+            {   // VirtualDiskId
+                ItemId = Guid( "BECA12AB-B2E6-4523-93EF-C309E000C746" );
+                Offset = 65536u + fileParameterLen + virtualDiskSizeLen; // 65552
+                Length = virtualDiskIdLen; // 16 bytes
+                IsUser = false;
+                IsVirtualDisk = true;
+                IsRequired = true;
+                Data = virtualDiskId;
+            };
+            {   // LogicalSectorSize
+                ItemId = Guid( "8141BF1D-A96F-4709-BA47-F233A8FAAB5F" );
+                Offset = 65536u + fileParameterLen + virtualDiskSizeLen + virtualDiskIdLen; // 65568
+                Length = logicalSectorSizeLen; // 4 bytes
+                IsUser = false;
+                IsVirtualDisk = true;
+                IsRequired = true;
+                Data = logicalSectorSize;
+            };
+            {   // PhysicalSectorSize
+                ItemId = Guid( "CDA348C7-445D-4471-9CC9-E9885251C556" );
+                Offset = 65536u + fileParameterLen + virtualDiskSizeLen + virtualDiskIdLen + logicalSectorSizeLen; // 65572
+                Length = physicalSectorSizeLen; // 4 bytes
+                IsUser = false;
+                IsVirtualDisk = true;
+                IsRequired = true;
+                Data = physicalSectorSize;
+            };
+            {   // ParentLocator
+                ItemId = Guid( "A8D35F2D-B30B-454D-ABF7-D3D84834AB0C" );
+                Offset = 65536u + fileParameterLen + virtualDiskSizeLen + virtualDiskIdLen + logicalSectorSizeLen + physicalSectorSizeLen; // 65576
+                Length = parentLocatorLen;
+                IsUser = false;
+                IsVirtualDisk = false;
+                IsRequired = true;
+                Data = parentLocator;
+            };
+        |]
+        genMetadataTable 1048576 mdi
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -292,3 +435,44 @@ type VhdxReaderTest2_Test () =
             Assert.True( r.IsSome )
         else
             Assert.True( r.IsNone )
+
+    [<Theory>]
+    [<InlineData( 0, "The metadata region must be at least 1 MB" )>]
+    [<InlineData( 1048575, "The metadata region must be at least 1 MB" )>]
+    [<InlineData( 1048577, "The metadata region must be a multiple of 1 MB" )>]
+    member _.ReadMetadata_Fail_001( len : int ) ( expmsg : string ) =
+        let v = Array.zeroCreate<byte> len
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxReader.ReadMetadata v |> ignore
+            )
+        Assert.StartsWith( expmsg, r.Message )
+
+    static member m_ReadMetadata_Fail_002_data : obj[][] = [|
+        [|  // Signature
+            0; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |];
+            "The signatures in the metadata table do not match";
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_ReadMetadata_Fail_002_data" )>]
+    member _.ReadMetadata_Fail_002 ( pos1 : int ) ( patch1 : byte[] ) ( expmsg : string ) =
+        let vdi = {
+            PayloadBlockSize = 1048576u;
+            LeaveBlockAllocated = false;
+            HasParent = false;
+            VirtualDiskSize = 1073741824UL;
+            VirtualDiskId = Guid();
+            LogicalSectorSize = Blocksize.BS_512;
+            PhysicalSectorSize = Blocksize.BS_512;
+            ParentLocator = [||] |> Map<string,string>;
+        }
+        let v = defMetadataTable vdi
+        Array.blit patch1 0 v pos1 patch1.Length
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxReader.ReadMetadata v |> ignore
+            )
+        Assert.StartsWith( expmsg, r.Message )
+

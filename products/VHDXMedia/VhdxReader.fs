@@ -788,13 +788,18 @@ type VhdxReader() =
     /// </returns>
     static member ReadMetadata ( data : byte[] ) : VirtualDiskInfo =
 
+        if data.Length < 0x00100000 then
+            raise <| VhdxMediaException( "The metadata region must be at least 1 MB." )
+        if data.Length &&& 0x000FFFFF <> 0 then
+            raise <| VhdxMediaException( "The metadata region must be a multiple of 1 MB." )
+
         let signature = ByteFunc.ReadU64BE data 0u        // signature
         let mtEntryCount = ByteFunc.ReadU16LE data 10u    // Entry count
 
         if signature <> 0x6D65746164617461UL then
             let msg = sprintf "The signatures in the metadata table do not match. Signature=0x%016X" signature
             raise <| VhdxMediaException( msg )
-        if mtEntryCount > 2047us then
+        if mtEntryCount <= 0us || mtEntryCount > 2047us then
             let msg = sprintf "The number of metadata entries is invalid. Count=%d" mtEntryCount
             raise <| VhdxMediaException( msg )
 
