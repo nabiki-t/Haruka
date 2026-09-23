@@ -827,8 +827,9 @@ type VhdxReader() =
                             Data = Array.empty;
                         }
                     elif offset < 0x10000u ||                           // The offset must be 64KB or more.
-                            length < 1u ||                              // Length is 1 byte or more
-                            uint32 data.Length  < offset + length ||    // The entire area belongs to the metadata area.
+                            length < 1u ||                              // Length must be 1 byte or more
+                            offset + length < offset ||                 // Arithmetic overflow must not occur.
+                            uint32 data.Length < offset + length ||     // The entire area belongs to the metadata area.
                             0x100000u < length then                     // Length must be 1MB or less
                         ()
                     else
@@ -852,6 +853,18 @@ type VhdxReader() =
         if 1024 < userEntCount then
             let msg = sprintf "The number of user entries is incorrect. Count=%d" userEntCount
             raise <| VhdxMediaException( msg )
+
+        let duplicate_Check =
+            metadataItems
+            |> List.filter ( fun itr -> itr.Length > 0u )
+            |> List.sortBy _.Offset
+            |> List.windowed 2
+            |> List.exists ( fun itr ->
+                itr.[1].Offset < ( itr.[0].Offset + itr.[0].Length ) 
+            )
+            |> not
+        if not duplicate_Check then
+            raise <| VhdxMediaException( "There are metadata items with overlapping ranges." )
 
         // Retrieve file parameters
         let fileParamItem =

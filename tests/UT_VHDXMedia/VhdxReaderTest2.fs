@@ -146,76 +146,85 @@ type VhdxReaderTest2_Test () =
         )
         v
 
+    let defFileParameterMTE ( data : byte[] ) =
+        {
+            ItemId = Guid( "CAA16737-FA36-4D43-B3B6-33F0AA44E76B" );
+            Offset = 0u;
+            Length = uint32 data.Length;
+            IsUser = false;
+            IsVirtualDisk = false;
+            IsRequired = true;
+            Data = data;
+        };
+
+    let defVirtualDiskSizeMTE ( data : byte[] ) =
+        {
+            ItemId = Guid( "2FA54224-CD1B-4876-B211-5DBED83BF4B8" );
+            Offset = 0u;
+            Length = uint32 data.Length;
+            IsUser = false;
+            IsVirtualDisk = true;
+            IsRequired = true;
+            Data = data;
+        };
+
+    let defVirtualDiskIdMTE ( data : byte[] ) =
+        {
+            ItemId = Guid( "BECA12AB-B2E6-4523-93EF-C309E000C746" );
+            Offset = 0u;
+            Length = uint32 data.Length;
+            IsUser = false;
+            IsVirtualDisk = true;
+            IsRequired = true;
+            Data = data;
+        };
+
+    let defLogicalSectorSizeMTE ( data : byte[] ) =
+        {
+            ItemId = Guid( "8141BF1D-A96F-4709-BA47-F233A8FAAB5F" );
+            Offset = 0u;
+            Length = uint32 data.Length;
+            IsUser = false;
+            IsVirtualDisk = true;
+            IsRequired = true;
+            Data = data;
+        };
+
+    let defPhysicalSectorSizeMTE ( data : byte[] ) =
+        {
+            ItemId = Guid( "CDA348C7-445D-4471-9CC9-E9885251C556" );
+            Offset = 0u;
+            Length = uint32 data.Length;
+            IsUser = false;
+            IsVirtualDisk = true;
+            IsRequired = true;
+            Data = data;
+        };
+
+    let defParentLocatorMTE ( data : byte[] ) =
+        {
+            ItemId = Guid( "A8D35F2D-B30B-454D-ABF7-D3D84834AB0C" );
+            Offset = 0u;
+            Length = uint32 data.Length;
+            IsUser = false;
+            IsVirtualDisk = false;
+            IsRequired = true;
+            Data = data;
+        };
+
     let defMetadataTable ( vdi : VirtualDiskInfo ) : byte[] =
-        let fileParameter = genFileParameter vdi.PayloadBlockSize vdi.LeaveBlockAllocated vdi.HasParent
-        let fileParameterLen = uint32 fileParameter.Length
-        let virtualDiskSize = genVirtualDiskSize vdi.VirtualDiskSize
-        let virtualDiskSizeLen = uint32 virtualDiskSize.Length
-        let virtualDiskId = genVirtualDiskId vdi.VirtualDiskId
-        let virtualDiskIdLen = uint32 virtualDiskId.Length
-        let logicalSectorSize = genLogicalSectorSize ( Blocksize.toUInt32 vdi.LogicalSectorSize )
-        let logicalSectorSizeLen = uint32 logicalSectorSize.Length
-        let physicalSectorSize = genPhysicalSectorSize ( Blocksize.toUInt32 vdi.PhysicalSectorSize )
-        let physicalSectorSizeLen = uint32 physicalSectorSize.Length
-        let parentLocator = genParentLocator ( vdi.ParentLocator |> Seq.map ( fun kv -> kv.Key, kv.Value ) |> Seq.toArray )
-        let parentLocatorLen = uint32 parentLocator.Length
-        let mdi = [|
-            {   // FileParameter
-                ItemId = Guid( "CAA16737-FA36-4D43-B3B6-33F0AA44E76B" );
-                Offset = 65536u;
-                Length = fileParameterLen;  // 8 bytes
-                IsUser = false;
-                IsVirtualDisk = false;
-                IsRequired = true;
-                Data = fileParameter;
-            };
-            {   // VirtualDiskSize
-                ItemId = Guid( "2FA54224-CD1B-4876-B211-5DBED83BF4B8" );
-                Offset = 65536u + fileParameterLen; // 65544
-                Length = virtualDiskSizeLen;        // 8 bytes
-                IsUser = false;
-                IsVirtualDisk = true;
-                IsRequired = true;
-                Data = virtualDiskSize;
-            };
-            {   // VirtualDiskId
-                ItemId = Guid( "BECA12AB-B2E6-4523-93EF-C309E000C746" );
-                Offset = 65536u + fileParameterLen + virtualDiskSizeLen; // 65552
-                Length = virtualDiskIdLen; // 16 bytes
-                IsUser = false;
-                IsVirtualDisk = true;
-                IsRequired = true;
-                Data = virtualDiskId;
-            };
-            {   // LogicalSectorSize
-                ItemId = Guid( "8141BF1D-A96F-4709-BA47-F233A8FAAB5F" );
-                Offset = 65536u + fileParameterLen + virtualDiskSizeLen + virtualDiskIdLen; // 65568
-                Length = logicalSectorSizeLen; // 4 bytes
-                IsUser = false;
-                IsVirtualDisk = true;
-                IsRequired = true;
-                Data = logicalSectorSize;
-            };
-            {   // PhysicalSectorSize
-                ItemId = Guid( "CDA348C7-445D-4471-9CC9-E9885251C556" );
-                Offset = 65536u + fileParameterLen + virtualDiskSizeLen + virtualDiskIdLen + logicalSectorSizeLen; // 65572
-                Length = physicalSectorSizeLen; // 4 bytes
-                IsUser = false;
-                IsVirtualDisk = true;
-                IsRequired = true;
-                Data = physicalSectorSize;
-            };
-            {   // ParentLocator
-                ItemId = Guid( "A8D35F2D-B30B-454D-ABF7-D3D84834AB0C" );
-                Offset = 65536u + fileParameterLen + virtualDiskSizeLen + virtualDiskIdLen + logicalSectorSizeLen + physicalSectorSizeLen; // 65576
-                Length = parentLocatorLen;
-                IsUser = false;
-                IsVirtualDisk = false;
-                IsRequired = true;
-                Data = parentLocator;
-            };
-        |]
-        genMetadataTable 1048576 mdi
+        let mte =
+            [|
+                defFileParameterMTE( genFileParameter vdi.PayloadBlockSize vdi.LeaveBlockAllocated vdi.HasParent );
+                defVirtualDiskSizeMTE( genVirtualDiskSize vdi.VirtualDiskSize );
+                defVirtualDiskIdMTE( genVirtualDiskId vdi.VirtualDiskId );
+                defLogicalSectorSizeMTE( genLogicalSectorSize ( Blocksize.toUInt32 vdi.LogicalSectorSize ) );
+                defPhysicalSectorSizeMTE( genPhysicalSectorSize ( Blocksize.toUInt32 vdi.PhysicalSectorSize ) );
+                defParentLocatorMTE( genParentLocator ( vdi.ParentLocator |> Seq.map ( fun kv -> kv.Key, kv.Value ) |> Seq.toArray ) );
+            |]
+            |> Array.mapFold( fun pos itr -> ( { itr with Offset = pos }, pos + itr.Length ) ) 65536u
+            |> fst
+        genMetadataTable 1048576 mte
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -448,16 +457,56 @@ type VhdxReaderTest2_Test () =
             )
         Assert.StartsWith( expmsg, r.Message )
 
-    static member m_ReadMetadata_Fail_002_data : obj[][] = [|
+    static member m_ReadMetadata_Header_Fail_001_data : obj[][] = [|
         [|  // Signature
             0; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |];
             "The signatures in the metadata table do not match";
         |];
+        [|  // EntryCount equals zero.
+            10; [| 0x00uy; 0x00uy; |];
+            "The number of metadata entries is invalid";
+        |];
+        [|  // EntryCount equals 2048.
+            10; [| 0x00uy; 0x08uy; |];
+            "The number of metadata entries is invalid";
+        |];
+        [|  // EntryCount equals -1.
+            10; [| 0xFFuy; 0xFFuy; |];
+            "The number of metadata entries is invalid";
+        |];
+        [|  // Offset equals 65535.
+            48; [| 0xFFuy; 0xFFuy; 0x00uy; 0x00uy; |];
+            "There are invalid metadata entry";
+        |];
+        [|  // Offset equals 0 and length is greator than zero.
+            48; [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            "There are invalid metadata entry";
+        |];
+        [|  // Offset equals 0 and length is greator than zero.
+            48; [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            "There are invalid metadata entry";
+        |];
+        [|  // Length equals 0 and offset is greator than zero.
+            52; [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            "There are invalid metadata entry";
+        |];
+        [|  // offset(FFFC0000) + length(80000) overflow. 
+            48; [| 0x00uy; 0x00uy; 0xFCuy; 0xFFuy; 0x00uy; 0x00uy; 0x08uy; 0x00uy; |];
+            "There are invalid metadata entry";
+        |];
+        [|  // offset(C0000) + length(40001) exceeds data.Length.
+            48; [| 0x00uy; 0x00uy; 0x0Cuy; 0x00uy; 0x01uy; 0x00uy; 0x04uy; 0x00uy; |];
+            "There are invalid metadata entry";
+        |];
+        [|  // The length exceeds 1M.
+            52; [| 0x01uy; 0x00uy; 0x10uy; 0x00uy; |];
+            "There are invalid metadata entry";
+        |];
     |]
 
     [<Theory>]
-    [<MemberData( "m_ReadMetadata_Fail_002_data" )>]
-    member _.ReadMetadata_Fail_002 ( pos1 : int ) ( patch1 : byte[] ) ( expmsg : string ) =
+    [<MemberData( "m_ReadMetadata_Header_Fail_001_data" )>]
+    member _.ReadMetadata_Header_Fail_001 ( pos1 : int ) ( patch1 : byte[] ) ( expmsg : string ) =
         let vdi = {
             PayloadBlockSize = 1048576u;
             LeaveBlockAllocated = false;
@@ -476,3 +525,71 @@ type VhdxReaderTest2_Test () =
             )
         Assert.StartsWith( expmsg, r.Message )
 
+    [<Fact>]
+    member _.ReadMetadata_Header_Fail_002 () =
+        let v =
+            [|
+                for i = 0 to 1024 do
+                    {
+                        ItemId = Guid.NewGuid();
+                        Offset = 0u;
+                        Length = 0u;
+                        IsUser = true;
+                        IsVirtualDisk = true;
+                        IsRequired = false;
+                        Data = [||];
+                    };
+            |]
+            |> genMetadataTable 1048576
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxReader.ReadMetadata v |> ignore
+            )
+        Assert.StartsWith( "The number of user entries is incorrect", r.Message )
+
+    [<Theory>]
+    [<InlineData( 0x10000u, 0x10u, 0x10000u, 0x10u, 0x10030u, 0x10u )>]
+    [<InlineData( 0x10000u, 0x30u, 0x10000u, 0x10u, 0x10030u, 0x10u )>]
+    [<InlineData( 0x10000u, 0x30u, 0x10010u, 0x10u, 0x10030u, 0x10u )>]
+    [<InlineData( 0x10000u, 0x30u, 0x10020u, 0x10u, 0x10030u, 0x10u )>]
+    [<InlineData( 0x10000u, 0x10u, 0x10000u, 0x30u, 0x10030u, 0x10u )>]
+    [<InlineData( 0x10010u, 0x10u, 0x10000u, 0x30u, 0x10030u, 0x10u )>]
+    [<InlineData( 0x10020u, 0x10u, 0x10000u, 0x30u, 0x10030u, 0x10u )>]
+    [<InlineData( 0x10030u, 0x10u, 0x10010u, 0x20u, 0x10000u, 0x20u )>]
+    member _.ReadMetadata_Header_Fail_003 ( a : uint32 ) ( b : uint32 ) ( c : uint32 ) ( d : uint32 ) ( e : uint32 ) ( f : uint32 ) =
+        let v =
+            [|
+                {
+                    ItemId = Guid.NewGuid();
+                    Offset = a;
+                    Length = b;
+                    IsUser = false;
+                    IsVirtualDisk = true;
+                    IsRequired = true;
+                    Data = Array.zeroCreate<byte>( int32 b );
+                };
+                {
+                    ItemId = Guid.NewGuid();
+                    Offset = c;
+                    Length = d;
+                    IsUser = false;
+                    IsVirtualDisk = true;
+                    IsRequired = true;
+                    Data = Array.zeroCreate<byte>( int32 d );
+                };
+                {
+                    ItemId = Guid.NewGuid();
+                    Offset = e;
+                    Length = f;
+                    IsUser = false;
+                    IsVirtualDisk = true;
+                    IsRequired = true;
+                    Data = Array.zeroCreate<byte>( int32 f );
+                };
+            |]
+            |> genMetadataTable 1048576
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxReader.ReadMetadata v |> ignore
+            )
+        Assert.StartsWith( "There are metadata items with overlapping ranges", r.Message )
