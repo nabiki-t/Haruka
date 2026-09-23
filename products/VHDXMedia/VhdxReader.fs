@@ -856,15 +856,49 @@ type VhdxReader() =
 
         let duplicate_Check =
             metadataItems
-            |> List.filter ( fun itr -> itr.Length > 0u )
-            |> List.sortBy _.Offset
-            |> List.windowed 2
-            |> List.exists ( fun itr ->
+            |> Seq.filter ( fun itr -> itr.Length > 0u )
+            |> Seq.sortBy _.Offset
+            |> Seq.windowed 2
+            |> Seq.exists ( fun itr ->
                 itr.[1].Offset < ( itr.[0].Offset + itr.[0].Length ) 
             )
             |> not
         if not duplicate_Check then
             raise <| VhdxMediaException( "There are metadata items with overlapping ranges." )
+
+        let itemID_Check1 =
+            metadataItems
+            |> Seq.filter _.IsUser
+            |> Seq.distinctBy _.ItemId
+            |> Seq.length
+            |> (=) metadataItems.Length
+        if not itemID_Check1 then
+            raise <| VhdxMediaException( "There are items with duplicate ItemIDs among the items where IsUser is true." )
+
+        let itemID_Check2 =
+            metadataItems
+            |> Seq.filter ( _.IsUser >> not )
+            |> Seq.distinctBy _.ItemId
+            |> Seq.length
+            |> (=) metadataItems.Length
+        if not itemID_Check2 then
+            raise <| VhdxMediaException( "There are items with duplicate ItemIDs among the items where IsUser is false." )
+
+        let required_Check =
+            let knownIDs = [|
+                VhdxCommons.METADATA_FILE_PARAM;
+                VhdxCommons.METADATA_VIRT_DISK_SIZE;
+                VhdxCommons.METADATA_VIRT_DISK_ID;
+                VhdxCommons.METADATA_LOGI_SECTOR_SIZE;
+                VhdxCommons.METADATA_LOGI_SECTOR_SIZE;
+                VhdxCommons.METADATA_PARENT_LOC;
+            |]
+            metadataItems
+            |> Seq.choose ( fun itr -> if itr.IsRequired then Some itr.ItemId else None )
+            |> Seq.except knownIDs
+            |> Seq.isEmpty
+        if not required_Check then
+            raise <| VhdxMediaException( "There are unknown item for which IsRequired is true." )
 
         // Retrieve file parameters
         let fileParamItem =

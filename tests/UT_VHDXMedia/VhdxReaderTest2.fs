@@ -565,7 +565,7 @@ type VhdxReaderTest2_Test () =
                     Length = b;
                     IsUser = false;
                     IsVirtualDisk = true;
-                    IsRequired = true;
+                    IsRequired = false;
                     Data = Array.zeroCreate<byte>( int32 b );
                 };
                 {
@@ -574,7 +574,7 @@ type VhdxReaderTest2_Test () =
                     Length = d;
                     IsUser = false;
                     IsVirtualDisk = true;
-                    IsRequired = true;
+                    IsRequired = false;
                     Data = Array.zeroCreate<byte>( int32 d );
                 };
                 {
@@ -583,7 +583,7 @@ type VhdxReaderTest2_Test () =
                     Length = f;
                     IsUser = false;
                     IsVirtualDisk = true;
-                    IsRequired = true;
+                    IsRequired = false;
                     Data = Array.zeroCreate<byte>( int32 f );
                 };
             |]
@@ -593,3 +593,43 @@ type VhdxReaderTest2_Test () =
                 VhdxReader.ReadMetadata v |> ignore
             )
         Assert.StartsWith( "There are metadata items with overlapping ranges", r.Message )
+
+    [<Fact>]
+    member _.ReadMetadata_Header_Fail_004 () =
+        let gid = Guid.NewGuid();
+        let v =
+            [|
+                {
+                    ItemId = VhdxCommons.METADATA_FILE_PARAM;
+                    Offset = 65536u;
+                    Length = 16u;
+                    IsUser = false;
+                    IsVirtualDisk = true;
+                    IsRequired = true;
+                    Data = Array.zeroCreate<byte>( 16 );
+                };
+                {
+                    ItemId = Guid.NewGuid();
+                    Offset = 65552u;
+                    Length = 16u;
+                    IsUser = false;
+                    IsVirtualDisk = true;
+                    IsRequired = true;
+                    Data = Array.zeroCreate<byte>( 16 );
+                };
+                {
+                    ItemId = VhdxCommons.METADATA_VIRT_DISK_SIZE;
+                    Offset = 65568u;
+                    Length = 16u;
+                    IsUser = false;
+                    IsVirtualDisk = true;
+                    IsRequired = true;
+                    Data = Array.zeroCreate<byte>( 16 );
+                };
+            |]
+            |> genMetadataTable 1048576
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxReader.ReadMetadata v |> ignore
+            )
+        Assert.StartsWith( "There are unknown item for which IsRequired is true", r.Message )
