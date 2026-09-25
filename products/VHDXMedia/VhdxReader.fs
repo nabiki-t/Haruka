@@ -871,7 +871,7 @@ type VhdxReader() =
             |> Seq.filter _.IsUser
             |> Seq.distinctBy _.ItemId
             |> Seq.length
-            |> (=) metadataItems.Length
+            |> (=) userEntCount
         if not itemID_Check1 then
             raise <| VhdxMediaException( "There are items with duplicate ItemIDs among the items where IsUser is true." )
 
@@ -880,7 +880,7 @@ type VhdxReader() =
             |> Seq.filter ( _.IsUser >> not )
             |> Seq.distinctBy _.ItemId
             |> Seq.length
-            |> (=) metadataItems.Length
+            |> (=) ( metadataItems.Length - userEntCount )
         if not itemID_Check2 then
             raise <| VhdxMediaException( "There are items with duplicate ItemIDs among the items where IsUser is false." )
 
@@ -890,12 +890,13 @@ type VhdxReader() =
                 VhdxCommons.METADATA_VIRT_DISK_SIZE;
                 VhdxCommons.METADATA_VIRT_DISK_ID;
                 VhdxCommons.METADATA_LOGI_SECTOR_SIZE;
-                VhdxCommons.METADATA_LOGI_SECTOR_SIZE;
+                VhdxCommons.METADATA_PHY_SECTOR_SIZE;
                 VhdxCommons.METADATA_PARENT_LOC;
             |]
             metadataItems
             |> Seq.choose ( fun itr -> if itr.IsRequired then Some itr.ItemId else None )
             |> Seq.except knownIDs
+            |> Seq.toArray
             |> Seq.isEmpty
         if not required_Check then
             raise <| VhdxMediaException( "There are unknown item for which IsRequired is true." )
@@ -906,7 +907,7 @@ type VhdxReader() =
             |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_FILE_PARAM )
         if fileParamItem.IsNone then
             raise <| VhdxMediaException( "Metadata item(file parameter) missing" )
-        if fileParamItem.Value.Length < 8u then
+        if fileParamItem.Value.Length <> 8u then
             raise <| VhdxMediaException( "Invalid Length of metadata item(file parameter)." )
         let payloadBlockSize = ByteFunc.ReadU32LE fileParamItem.Value.Data 0u
         let leaveBlockAllocated = ( fileParamItem.Value.Data.[4] &&& 0x01uy ) = 0x01uy
