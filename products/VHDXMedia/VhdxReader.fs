@@ -925,7 +925,7 @@ type VhdxReader() =
             |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_VIRT_DISK_SIZE )
         if diskSizeItem.IsNone then
             raise <| VhdxMediaException( "Metadata item(virtual disk size) missing" )
-        if diskSizeItem.Value.Length < 8u then
+        if diskSizeItem.Value.Length <> 8u then
             let msg = sprintf "Length of metadata item(virtual disk size) is invalid. Length=%d" diskSizeItem.Value.Length
             raise <| VhdxMediaException( msg )
         let virtualDiskSize = ByteFunc.ReadU64LE diskSizeItem.Value.Data 0u
@@ -943,7 +943,7 @@ type VhdxReader() =
             |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_VIRT_DISK_ID )
         if diskIDItem.IsNone then
             raise <| VhdxMediaException( "Metadata item(virtual disk ID) missing." )
-        if diskIDItem.Value.Length < 16u then
+        if diskIDItem.Value.Length <> 16u then
             let msg = sprintf "Length of metadata item(virtual disk ID) is invalid. Length=%d" diskIDItem.Value.Length
             raise <| VhdxMediaException( msg )
         let VirtualDiskId = ByteFunc.ReadGuid diskIDItem.Value.Data 0u
@@ -954,7 +954,7 @@ type VhdxReader() =
             |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_LOGI_SECTOR_SIZE )
         if logiSecSizeItem.IsNone then
             raise <| VhdxMediaException( "Metadata item(logical sector size) missing." )
-        if logiSecSizeItem.Value.Length < 4u then
+        if logiSecSizeItem.Value.Length <> 4u then
             let msg = sprintf "Length of metadata item(logical sector size) is invalid. Length=%d" logiSecSizeItem.Value.Length
             raise <| VhdxMediaException( msg )
         let logicalSectorSize = ByteFunc.ReadU32LE logiSecSizeItem.Value.Data 0u
@@ -963,16 +963,16 @@ type VhdxReader() =
             let msg = sprintf "Incorrect logical sector size. Size=%d" logicalSectorSize
             raise <| VhdxMediaException( msg )
         if virtualDiskSize % uint64 logicalSectorSize <> 0UL then
-            let msg = sprintf "The virtual disk size(%d) is not a multiple of the logical sector size." virtualDiskSize
+            let msg = sprintf "The virtual disk size is not a multiple of the logical sector size. Disk=%d, Sector=%d" virtualDiskSize logicalSectorSize
             raise <| VhdxMediaException( msg )
 
         // Retrieve the physical sector size.
         let physSecSizeItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_LOGI_SECTOR_SIZE )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_PHY_SECTOR_SIZE )
         if physSecSizeItem.IsNone then
             raise <| VhdxMediaException( "Metadata item(physical sector size) missing" )
-        if physSecSizeItem.Value.Length < 4u then
+        if physSecSizeItem.Value.Length <> 4u then
             let msg = sprintf "Length of metadata item(physical sector size) is invalid. Length=%d" physSecSizeItem.Value.Length
             raise <| VhdxMediaException( msg )
         let physicalSectorSize = ByteFunc.ReadU32LE physSecSizeItem.Value.Data 0u
