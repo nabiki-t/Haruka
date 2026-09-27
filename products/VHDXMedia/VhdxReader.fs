@@ -998,7 +998,7 @@ type VhdxReader() =
                     let msg = sprintf "The type of metadata item (parent locator) is unknown. Locator Type=%s" ( locatorType.ToString() )
                     raise <| VhdxMediaException( msg )
                 let keyValueCount = ByteFunc.ReadU16LE parLocItem.Value.Data 18u
-                if parLocItem.Value.Length < 20u + uint32 keyValueCount * 12u then
+                if ( parLocItem.Value.Length < 20u + uint32 keyValueCount * 12u ) || keyValueCount = 0us then
                     let msg = sprintf "The number of metadata item(parent locator) is invalid. Count=%d" keyValueCount
                     raise <| VhdxMediaException( msg )
                 let data = parLocItem.Value.Data
@@ -1031,16 +1031,18 @@ type VhdxReader() =
                     let msg = sprintf "There are invalid metadata item(Parent locator). Expected=%d, Retrieved=%d" keyValueCount parLocEntry.Length
                     raise <| VhdxMediaException( msg )
                 let m = parLocEntry |> Map
+                if m.ContainsKey "parent_linkage2" then
+                    raise <| VhdxMediaException( "parent_linkage2 key must not be present in parent locator." )
                 if m.ContainsKey "parent_linkage" |> not then
-                    raise <| VhdxMediaException( "Missing parent_linkage in metadata item(Parent locator)." )
+                    raise <| VhdxMediaException( "Missing parent_linkage in parent locator." )
                 let r, _ = Guid.TryParse m.[ "parent_linkage" ]
                 if not r then
-                    raise <| VhdxMediaException( "Invalid format of parent_linkage in metadata item(Parent locator)." )
+                    raise <| VhdxMediaException( "Invalid format of parent_linkage in parent locator." )
                 let pathCheck =
                     [| "relative_path"; "volume_path"; "absolute_win32_path"; |]
                     |> Array.exists m.ContainsKey
                 if not pathCheck then
-                    let msg = "Metadata item(parent locator) does not contain relative_path, volume_path, or absolute_win32_path."
+                    let msg = "parent locator does not contain relative_path, volume_path, or absolute_win32_path."
                     raise <| VhdxMediaException( msg )
                 m
             else

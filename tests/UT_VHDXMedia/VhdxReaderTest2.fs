@@ -131,8 +131,11 @@ type VhdxReaderTest2_Test () =
             |> Array.map ( fun ( e, v ) -> ( Encoding.Unicode.GetBytes e, Encoding.Unicode.GetBytes v ) )
         let offset, valueLen =
             parentLocator_u16
-            |> Array.mapFold ( fun pos ( e, v ) -> ( uint32 pos, uint32( pos + e.Length ) ), pos + e.Length + v.Length ) 0
-        let buflen = 32 + 12 * parentLocator.Length + valueLen
+            |> Array.mapFold
+                ( fun pos ( e, v ) ->
+                    ( uint32 pos, uint32( pos + e.Length ) ), pos + e.Length + v.Length
+                ) 0
+        let buflen = 20 + 12 * parentLocator.Length + valueLen
         let v = Array.zeroCreate<byte> buflen
 
         // parent locator header
@@ -143,16 +146,19 @@ type VhdxReaderTest2_Test () =
         offset
         |> Array.iteri ( fun idx ( eo, vo ) ->
             // parent locator entry
-            let pos = 32 + 12 * idx |> uint32
-            ByteFunc.WriteU32LE v ( pos + 0u ) eo
-            ByteFunc.WriteU32LE v ( pos + 4u ) vo
+            let pos = 20 + 12 * idx |> uint32
+            let headerlen = 20 + 12 * parentLocator.Length |> uint32
+            let eoh = eo + headerlen
+            let voh = vo + headerlen
+            ByteFunc.WriteU32LE v ( pos + 0u ) eoh
+            ByteFunc.WriteU32LE v ( pos + 4u ) voh
             let e16, v16 = parentLocator_u16.[idx]
             ByteFunc.WriteU16LE v ( pos + 8u ) ( uint16 e16.Length )
-            ByteFunc.WriteU16LE v ( pos + 8u ) ( uint16 v16.Length )
+            ByteFunc.WriteU16LE v ( pos + 10u ) ( uint16 v16.Length )
             // entry
-            Array.blit e16 0 v ( int eo ) e16.Length
+            Array.blit e16 0 v ( int eoh ) e16.Length
             // value
-            Array.blit v16 0 v ( int vo ) v16.Length
+            Array.blit v16 0 v ( int voh ) v16.Length
         )
         v
 
@@ -1076,3 +1082,127 @@ type VhdxReaderTest2_Test () =
             Assert.StrictEqual( Blocksize.BS_512, r.PhysicalSectorSize )
         else
             Assert.StrictEqual( Blocksize.BS_4096, r.PhysicalSectorSize )
+
+    [<Fact>]
+    member _.ReadMetadata_ParentLocator_Fail_001 () =
+        [|
+            defFileParameterMTE( genFileParameter 0x00100000u true true );
+            defVirtualDiskSizeMTE( genVirtualDiskSize 67108864UL );
+            defVirtualDiskIdMTE( genVirtualDiskId ( Guid.NewGuid() ) );
+            defLogicalSectorSizeMTE( genLogicalSectorSize 512u );
+            defPhysicalSectorSizeMTE( genPhysicalSectorSize 512u );
+        |]
+        |> updateMTEOffset
+        |> genMetadataTable 1048576
+        |> checkReadMetadataFailResult "Metadata item(parent locator) missing"
+
+    [<Theory>]
+    [<InlineData( 0 )>]
+    [<InlineData( 19 )>]
+    member _.ReadMetadata_ParentLocator_Fail_002 ( len : int32 ) =
+        [|
+            defFileParameterMTE( genFileParameter 0x00100000u true true );
+            defVirtualDiskSizeMTE( genVirtualDiskSize 67108864UL );
+            defVirtualDiskIdMTE( genVirtualDiskId ( Guid.NewGuid() ) );
+            defLogicalSectorSizeMTE( genLogicalSectorSize 512u );
+            defPhysicalSectorSizeMTE( genPhysicalSectorSize 512u );
+            defParentLocatorMTE( Array.zeroCreate<byte> len );
+        |]
+        |> updateMTEOffset
+        |> genMetadataTable 1048576
+        |> checkReadMetadataFailResult "Length of metadata item(parent locator) is invalid"
+
+    static member m_ReadMetadata_ParentLocator_Fail_003_data : obj[][] = [|
+        [|  // LocatorType
+            0;   [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |];
+            "The type of metadata item (parent locator) is unknown";
+        |];
+        [|  // KeyValueCount
+            18;  [| 0x00uy; 0x00uy; |];
+            "The number of metadata item(parent locator) is invalid";
+        |];
+        [|  // KeyValueCount
+            18;  [| 0xFFuy; 0xFFuy; |];
+            "The number of metadata item(parent locator) is invalid";
+        |];
+        [|  // KeyValueCount
+            18;  [| 0x17uy; 0x00uy; |];
+            "The number of metadata item(parent locator) is invalid";
+        |];
+        [|  // KeyOffset equals zero
+            20;  [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            "There are invalid metadata item(Parent locator)";
+        |];
+        [|  // ValueOffset equals zero
+            24;  [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            "There are invalid metadata item(Parent locator)";
+        |];
+        [|  // KeyLength equals zero
+            28;  [| 0x00uy; 0x00uy; |];
+            "There are invalid metadata item(Parent locator)";
+        |];
+        [|  // ValueLength equals zero
+            30;  [| 0x00uy; 0x00uy; |];
+            "There are invalid metadata item(Parent locator)";
+        |];
+        [|  // KeyOffset is a negative number.
+            20;  [| 0x00uy; 0x00uy; 0x00uy; 0x80uy; |];
+            "There are invalid metadata item(Parent locator)";
+        |];
+        [|  // KeyOffset is a negative number.
+            24;  [| 0x00uy; 0x00uy; 0x00uy; 0x80uy; |];
+            "There are invalid metadata item(Parent locator)";
+        |];
+        [|  // KeyOffset + KeyLength exceeds the data length.
+            20;  [| 0x0Buy; 0x01uy; 0x00uy; 0x00uy; |];
+            "There are invalid metadata item(Parent locator)";
+        |];
+        [|  // ValueOffset + ValueLength exceeds the data length.
+            24;  [| 0xDBuy; 0x00uy; 0x00uy; 0x00uy; |];
+            "There are invalid metadata item(Parent locator)";
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_ReadMetadata_ParentLocator_Fail_003_data" )>]
+    member _.ReadMetadata_ParentLocator_Fail_003 ( pos1 : int ) ( patch1 : byte[] ) ( expmsg : string ) =
+        // total ( 20 + 12 * 4 ) + 104 + 38 + 34 + 50 = 294 bytes
+        let parentLocatorData = [|
+            ( "parent_linkage", "{aaaaaaaa-bbbb-cccc-dddd-eeeeeeffffff}" ); // ( 14 + 38 ) * 2 bytes = 104
+            ( "relative_path", "a.vhdx" );                                  // ( 13 + 6 ) * 2 bytes = 38
+            ( "volume_path", "b.vhdx" );                                    // ( 11 + 6 ) * 2 bytes = 34
+            ( "absolute_win32_path", "c.vhdx" );                            // ( 19 + 6 ) * 2 bytes = 50
+        |]
+        let v = genParentLocator parentLocatorData
+        Array.blit patch1 0 v pos1 patch1.Length
+        [|
+            defFileParameterMTE( genFileParameter 0x00100000u true true );
+            defVirtualDiskSizeMTE( genVirtualDiskSize 67108864UL );
+            defVirtualDiskIdMTE( genVirtualDiskId ( Guid.NewGuid() ) );
+            defLogicalSectorSizeMTE( genLogicalSectorSize 512u );
+            defPhysicalSectorSizeMTE( genPhysicalSectorSize 512u );
+            defParentLocatorMTE( v );
+        |]
+        |> updateMTEOffset
+        |> genMetadataTable 1048576
+        |> checkReadMetadataFailResult expmsg
+
+    [<Theory>]
+    [<InlineData( "parent_linkage2", "bbb", "relative_path", "aaa", "parent_linkage2 key must not be present in parent locator" )>]
+    [<InlineData( "aaa", "bbb", "relative_path", "aaa", "Missing parent_linkage in parent locator" )>]
+    [<InlineData( "parent_linkage", "bbb", "relative_path", "aaa", "Invalid format of parent_linkage in parent locator" )>]
+    [<InlineData( "parent_linkage", "{aaaaaaaa-bbbb-cccc-dddd-eeeeeeffffff}", "aaa", "bbb", "parent locator does not contain relative_path, volume_path" )>]
+    member _.ReadMetadata_ParentLocator_Fail_004 ( key1 : string ) ( value1 : string ) ( key2 : string ) ( value2 : string ) ( expmsg : string ) =
+        let parentLocatorData = [| ( key1, value1 ); ( key2, value2 ); |]
+        let v = genParentLocator parentLocatorData
+        [|
+            defFileParameterMTE( genFileParameter 0x00100000u true true );
+            defVirtualDiskSizeMTE( genVirtualDiskSize 67108864UL );
+            defVirtualDiskIdMTE( genVirtualDiskId ( Guid.NewGuid() ) );
+            defLogicalSectorSizeMTE( genLogicalSectorSize 512u );
+            defPhysicalSectorSizeMTE( genPhysicalSectorSize 512u );
+            defParentLocatorMTE( v );
+        |]
+        |> updateMTEOffset
+        |> genMetadataTable 1048576
+        |> checkReadMetadataFailResult expmsg
