@@ -1030,6 +1030,13 @@ type VhdxReader() =
                 if parLocEntry.Length <> int32 keyValueCount then
                     let msg = sprintf "There are invalid metadata item(Parent locator). Expected=%d, Retrieved=%d" keyValueCount parLocEntry.Length
                     raise <| VhdxMediaException( msg )
+                let dupCheck =
+                    parLocEntry
+                    |> Seq.distinctBy fst
+                    |> Seq.length
+                    |> (=) parLocEntry.Length
+                if not dupCheck then
+                    raise <| VhdxMediaException( "parent locator key must be unique." )
                 let m = parLocEntry |> Map
                 if m.ContainsKey "parent_linkage2" then
                     raise <| VhdxMediaException( "parent_linkage2 key must not be present in parent locator." )

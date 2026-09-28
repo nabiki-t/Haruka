@@ -1188,6 +1188,7 @@ type VhdxReaderTest2_Test () =
         |> checkReadMetadataFailResult expmsg
 
     [<Theory>]
+    [<InlineData( "aaa", "bbb", "aaa", "ccc", "parent locator key must be unique" )>]
     [<InlineData( "parent_linkage2", "bbb", "relative_path", "aaa", "parent_linkage2 key must not be present in parent locator" )>]
     [<InlineData( "aaa", "bbb", "relative_path", "aaa", "Missing parent_linkage in parent locator" )>]
     [<InlineData( "parent_linkage", "bbb", "relative_path", "aaa", "Invalid format of parent_linkage in parent locator" )>]
@@ -1206,3 +1207,59 @@ type VhdxReaderTest2_Test () =
         |> updateMTEOffset
         |> genMetadataTable 1048576
         |> checkReadMetadataFailResult expmsg
+
+    static member m_ReadMetadata_ParentLocator_001_data : obj[][] = [|
+        [| [|
+            ( "parent_linkage", "{aaaaaaaa-bbbb-cccc-dddd-eeeeeeffffff}" );
+            ( "relative_path", "aaa" );
+        |] |];
+        [| [|
+            ( "volume_path", "aaa" );
+            ( "parent_linkage", "{aaaaaaaa-bbbb-cccc-dddd-eeeeeeffffff}" );
+        |] |];
+        [| [|
+            ( "parent_linkage", "{aaaaaaaa-bbbb-cccc-dddd-eeeeeeffffff}" );
+            ( "absolute_win32_path", "aaa" );
+        |] |];
+        [| [|
+            ( "relative_path", "aaa" );
+            ( "parent_linkage", "{aaaaaaaa-bbbb-cccc-dddd-eeeeeeffffff}" );
+            ( "absolute_win32_path", "b" );
+            ( "volume_path", "c" );
+            ( "a", "c" );
+        |] |];
+        [| [|
+            ( "b", String.replicate 32767 "b" );
+            ( "parent_linkage", "{aaaaaaaa-bbbb-cccc-dddd-eeeeeeffffff}" );
+            ( "absolute_win32_path", "aaa" );
+        |] |];
+        [| [|
+            ( String.replicate 32767 "a", "a" );
+            ( "parent_linkage", "{aaaaaaaa-bbbb-cccc-dddd-eeeeeeffffff}" );
+            ( "absolute_win32_path", "aaa" );
+        |] |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_ReadMetadata_ParentLocator_001_data" )>]
+    member _.ReadMetadata_ParentLocator_001 ( parentLocatorData : ( string * string )[] ) =
+        let v = genParentLocator parentLocatorData
+        let r =
+            [|
+                defFileParameterMTE( genFileParameter 0x00100000u true true );
+                defVirtualDiskSizeMTE( genVirtualDiskSize 67108864UL );
+                defVirtualDiskIdMTE( genVirtualDiskId ( Guid.NewGuid() ) );
+                defLogicalSectorSizeMTE( genLogicalSectorSize 512u );
+                defPhysicalSectorSizeMTE( genPhysicalSectorSize 512u );
+                defParentLocatorMTE( v );
+            |]
+            |> updateMTEOffset
+            |> genMetadataTable 1048576
+            |> VhdxReader.ReadMetadata
+        Assert.StrictEqual( parentLocatorData.Length, r.ParentLocator.Count )
+        for ( k, v ) in parentLocatorData do
+            let l1 = v.Length
+            let l2 = r.ParentLocator.[ k ].Length
+            if l1 <> l2 then
+                Assert.True(( l1 = l2 ))
+            Assert.StrictEqual( v, r.ParentLocator.[ k ] )
