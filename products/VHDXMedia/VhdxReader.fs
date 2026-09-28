@@ -1092,8 +1092,14 @@ type VhdxReader() =
             | 3UL -> BatEntryStatePB.PayloadUnapped
             | 6UL -> BatEntryStatePB.PayloadFullyPresent
             | 7UL -> BatEntryStatePB.PayloadPartiallyPresent
-            | _ -> BatEntryStatePB.PayloadNotPresent
+            | _ ->
+                let msg = "A reserved payload BAT entry state value was specified."
+                raise <| VhdxMediaException( msg )
+
         let fileOffset = entry &&& 0xFFFFFFFFFFFFFFF8UL
+        if fileOffset &&& 0x00000000000FFFFFUL <> 0UL then
+                let msg = "The FileOffset value of the payload BAT entry must be a multiple of 1 MB."
+                raise <| VhdxMediaException( msg )
 
         {
             BatEntryIndex = idx;
@@ -1123,9 +1129,13 @@ type VhdxReader() =
             match entry &&& 0x0000000000000007UL with
             | 0UL -> BatEntryStateSB.SectorBitmapNotPresent
             | 6UL -> BatEntryStateSB.SectorBitmapPresent
-            | _ -> BatEntryStateSB.SectorBitmapNotPresent
+            | _ ->
+                let msg = "A reserved sector bitmap BAT entry state value was specified."
+                raise <| VhdxMediaException( msg )
         let fileOffset = entry &&& 0xFFFFFFFFFFFFFFF8UL
-
+        if fileOffset &&& 0x00000000000FFFFFUL <> 0UL then
+                let msg = "The FileOffset value of the sector bitmap BAT entry must be a multiple of 1 MB."
+                raise <| VhdxMediaException( msg )
         struct ( idx, state, fileOffset )
 
     /// <summary>
