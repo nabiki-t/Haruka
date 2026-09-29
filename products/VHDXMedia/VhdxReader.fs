@@ -1098,8 +1098,8 @@ type VhdxReader() =
 
         let fileOffset = entry &&& 0xFFFFFFFFFFFFFFF8UL
         if fileOffset &&& 0x00000000000FFFFFUL <> 0UL then
-                let msg = "The FileOffset value of the payload BAT entry must be a multiple of 1 MB."
-                raise <| VhdxMediaException( msg )
+            let msg = "The FileOffset value of the payload BAT entry must be a multiple of 1 MB."
+            raise <| VhdxMediaException( msg )
 
         {
             BatEntryIndex = idx;
@@ -1134,8 +1134,8 @@ type VhdxReader() =
                 raise <| VhdxMediaException( msg )
         let fileOffset = entry &&& 0xFFFFFFFFFFFFFFF8UL
         if fileOffset &&& 0x00000000000FFFFFUL <> 0UL then
-                let msg = "The FileOffset value of the sector bitmap BAT entry must be a multiple of 1 MB."
-                raise <| VhdxMediaException( msg )
+            let msg = "The FileOffset value of the sector bitmap BAT entry must be a multiple of 1 MB."
+            raise <| VhdxMediaException( msg )
         struct ( idx, state, fileOffset )
 
     /// <summary>
@@ -1180,10 +1180,9 @@ type VhdxReader() =
                 raise <| VhdxMediaException( fa.FileName, msg )
 
             // Read payload BAT entries
-            let payloads = [|
-                for i in 0UL .. payloadBlockCount - 1UL ->
-                    VhdxReader.GetPayloadBlockEntry fileData chunkRatio i
-            |]
+            let payloads = Array.zeroCreate<PayloadBATEntry>( int payloadBlockCount )
+            for i in 0UL .. payloadBlockCount - 1UL do
+                payloads.[ int i ] <- VhdxReader.GetPayloadBlockEntry fileData chunkRatio i
 
             // Read sector bitmap blocks
             let sectorBitmapBlock = Array.zeroCreate<SectorBitmapBATEntry>( int sectorBitmapBlockCount )
@@ -1206,6 +1205,28 @@ type VhdxReader() =
                         FileOffset = pos;
                         Bitmap = bitmapData;
                     }
+
+            let duplicate_Check =
+                let payloads_ol =
+                    payloads
+                    |> Seq.filter ( fun itr -> itr.FileOffset > 0UL )
+                    |> Seq.map ( fun itr -> struct( itr.FileOffset, virtualDiskInfo.PayloadBlockSize ) )
+                let sectorBitmapBlock_ol =
+                    sectorBitmapBlock
+                    |> Seq.filter ( fun itr -> itr.FileOffset > 0UL )
+                    |> Seq.map ( fun itr -> struct( itr.FileOffset, 1048576u ) )
+
+                [| payloads_ol; sectorBitmapBlock_ol; |]
+                |> Seq.concat
+                |> Seq.sortBy ( fun struct( o, _ ) -> o )
+                |> Seq.windowed 2
+                |> Seq.exists ( fun itr ->
+                    let struct( ao, al ) = itr.[0]
+                    let struct( bo, bl ) = itr.[1]
+                    bo < ( ao + uint64 al )
+                )
+            if duplicate_Check then
+                raise <| VhdxMediaException( "The regions indicated by BAT entries must not overlap." )
 
             return {
                 BATRegionOffset = batRegion.FileOffset;

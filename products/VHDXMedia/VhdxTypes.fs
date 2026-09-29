@@ -252,6 +252,7 @@ type BatEntryStatePB =
     | PayloadPartiallyPresent
 
 /// Payload BAT entry
+[<Struct>]
 type PayloadBATEntry = {
     // index number of this BAT entry within BAT table.
     BatEntryIndex : uint64;
@@ -267,6 +268,7 @@ type BatEntryStateSB =
     | SectorBitmapNotPresent
     | SectorBitmapPresent
 
+[<Struct>]
 type SectorBitmapBATEntry = {
     // index number of this BAT entry within BAT table.
     BatEntryIndex : uint64;

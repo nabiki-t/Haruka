@@ -44,6 +44,22 @@ type VhdxReaderTest3_Test () =
         )
         v
 
+    let defBatEntries ( pbsize : uint32 ) ( chunkRatio : uint32 ) ( batEntryCount : uint32 ) ( hasParent : bool ) : byte[] =
+        let v = [|
+            for i in 0u .. batEntryCount - 1u do
+                if i % ( chunkRatio + 1u ) = chunkRatio then
+                    // sector bitmap
+                    if hasParent then
+                        ( 6uy, uint64 ( pbsize * i ) + 1048576UL )
+                    else
+                        ( 0uy, 0UL )
+                else
+                    // payload block
+                    ( 6uy,  uint64 ( pbsize * i ) + 1048576UL )
+        |]
+        genBATEntries v
+
+
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -206,3 +222,82 @@ type VhdxReaderTest3_Test () =
                 VhdxReader.GetSectorBitmapBlockEntry v 4UL 0UL |> ignore
             )
         Assert.StartsWith( "The FileOffset value of the sector bitmap BAT entry must be a multiple of 1 MB", r.Message )
+
+    [<Fact>]
+    member _.ReadBat_Fail_001 () =
+        task {
+            // chunkSize : 4GB
+            // chunkRatio : 16
+            // payloadBlockCount : 256
+            // sectorBitmapBlockCount : 16
+            // batEntryCount : 271
+            let vdi : VirtualDiskInfo = {
+                PayloadBlockSize = 268435456u;      // 256MB
+                LeaveBlockAllocated = false;
+                HasParent = false;
+                VirtualDiskSize = 68719476736UL;    // 64GB
+                VirtualDiskId = Guid();
+                LogicalSectorSize = Blocksize.BS_512;
+                PhysicalSectorSize = Blocksize.BS_512;
+                ParentLocator = Map.empty;
+            }
+
+            let batRegion : RegionEntry = {
+                Guid = VhdxCommons.REGENT_TYPE_BAT;
+                FileOffset = 0UL;
+                Length = 0u;
+                Required = true;
+            }
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxReader.ReadBat [] 0UL fa batRegion vdi
+                    ()
+                } )
+            Assert.StartsWith( "The BAT entry has insufficient data length", r.Message )
+        }
+
+    [<Fact>]
+    member _.ReadBat_Fail_002 () =
+        task {
+            // chunkSize : 4GB
+            // chunkRatio : 16
+            // payloadBlockCount : 256
+            // sectorBitmapBlockCount : 16
+            // batEntryCount : 271
+            let vdi : VirtualDiskInfo = {
+                PayloadBlockSize = 268435456u;      // 256MB
+                LeaveBlockAllocated = false;
+                HasParent = false;
+                VirtualDiskSize = 68719476736UL;    // 64GB
+                VirtualDiskId = Guid();
+                LogicalSectorSize = Blocksize.BS_512;
+                PhysicalSectorSize = Blocksize.BS_512;
+                ParentLocator = Map.empty;
+            }
+
+            let batRegion : RegionEntry = {
+                Guid = VhdxCommons.REGENT_TYPE_BAT;
+                FileOffset = 0UL;
+                Length = 1048576ul;
+                Required = true;
+            }
+
+            let batData = defBatEntries vdi.PayloadBlockSize 16u 271u false
+            ByteFunc.WriteU64LE batData 8u 1048576UL
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            do! fa.SetFileSize 1048576UL
+            do! fa.Write 0UL ( ArraySegment batData )
+
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxReader.ReadBat [] 1048576UL fa batRegion vdi
+                    ()
+                } )
+            Assert.StartsWith( "The regions indicated by BAT entries must not overlap", r.Message )
+        }
