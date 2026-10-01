@@ -70,16 +70,16 @@ type VhdxReaderTest3_Test () =
 
     static member m_GetPayloadBlockEntry_001_data : obj[][] = [|
         [|
-            0UL; 0UL; BatEntryStatePB.PayloadNotPresent; 0x100000UL;
+            0UL; 0UL; BatEntryStatePB.PayloadNotPresent; 0x000000UL;
         |];
         [|
-            1UL; 1UL; BatEntryStatePB.PayloadUndefined; 0x200000UL;
+            1UL; 1UL; BatEntryStatePB.PayloadUndefined; 0x000000UL;
         |];
         [|
-            2UL; 2UL; BatEntryStatePB.PayloadZero; 0x300000UL;
+            2UL; 2UL; BatEntryStatePB.PayloadZero; 0x000000UL;
         |];
         [|
-            3UL; 3UL; BatEntryStatePB.PayloadUnapped; 0x400000UL;
+            3UL; 3UL; BatEntryStatePB.PayloadUnapped; 0x000000UL;
         |];
         [|
             4UL; 5UL; BatEntryStatePB.PayloadFullyPresent; 0x600000UL;
@@ -88,7 +88,7 @@ type VhdxReaderTest3_Test () =
             5UL; 6UL; BatEntryStatePB.PayloadPartiallyPresent; 0x700000UL;
         |];
         [|
-            6UL; 7UL; BatEntryStatePB.PayloadNotPresent; 0x800000UL;
+            6UL; 7UL; BatEntryStatePB.PayloadNotPresent; 0x000000UL;
         |];
         [|
             7UL; 8UL; BatEntryStatePB.PayloadUndefined; 0x000000UL;
@@ -137,7 +137,7 @@ type VhdxReaderTest3_Test () =
     member _.GetPayloadBlockEntry_Fail_002 () =
         let v =
             [|
-                ( 0uy, 0x1FFFFFUL );  // payload 0
+                ( 7uy, 0x1FFFFFUL );  // payload 0
             |]
             |> genBATEntries
         let r =
@@ -148,10 +148,10 @@ type VhdxReaderTest3_Test () =
 
     static member m_GetSectorBitmapBlockEntry_001_data : obj[][] = [|
         [|
-            0UL; 4UL; BatEntryStateSB.SectorBitmapNotPresent; 0x500000UL;
+            0UL; 4UL; BatEntryStateSB.SectorBitmapNotPresent; 0x000000UL;
         |];
         [|
-            1UL; 9UL; BatEntryStateSB.SectorBitmapPresent; 0x000000UL;
+            1UL; 9UL; BatEntryStateSB.SectorBitmapPresent; 0xA00000UL;
         |];
     |]
 
@@ -169,7 +169,7 @@ type VhdxReaderTest3_Test () =
                 ( 7uy, 0x700000UL );  // payload 5
                 ( 0uy, 0x800000UL );  // payload 6
                 ( 1uy, 0x900000UL );  // payload 7
-                ( 6uy, 0x000000UL );  // sector bitmap 1
+                ( 6uy, 0xA00000UL );  // sector bitmap 1
             |]
             |> genBATEntries
         let struct ( entryIndex, state, fileOffset ) = VhdxReader.GetSectorBitmapBlockEntry v 4UL idx
@@ -219,7 +219,7 @@ type VhdxReaderTest3_Test () =
             [|
                 for i = 0 to 3 do
                     ( 0uy, 0x100000UL );    // payload 0 - 3
-                ( 0uy, 0x1FFFFFUL );        // sector bitmap 0
+                ( 6uy, 0x1FFFFFUL );        // sector bitmap 0
             |]
             |> genBATEntries
         let r =
@@ -266,9 +266,14 @@ type VhdxReaderTest3_Test () =
         }
 
     [<Theory>]
-    [<InlineData( 8u )>]
-    [<InlineData( 128u )>]
-    member _.ReadBat_Fail_002 ( patchpos : uint32 ) =
+    [<InlineData( 8u,   0x100006UL,           0x2000000000UL,       "The regions indicated by BAT entries must not overlap" )>]
+    [<InlineData( 128u, 0x100006UL,           0x2000000000UL,       "The regions indicated by BAT entries must not overlap" )>]
+    [<InlineData( 8u,   0x1000000006UL,       0x1000000000UL,       "Invalid file offset in the payload BAT entry" )>]
+    [<InlineData( 8u,   0xFF0100006UL,        0x1000000000UL,       "Invalid file offset in the payload BAT entry" )>]
+    [<InlineData( 8u,   0xFFFFFFFFFFF00006UL, 0x7FFFFFFFFFFFFFFFUL, "Invalid file offset in the payload BAT entry" )>]
+    [<InlineData( 128u, 0x2000000006UL,       0x2000000000UL,       "Invalid file offset in the sector bitmap BAT entry" )>]
+    [<InlineData( 128u, 0xFFFFFFFFFFF00006UL, 0x7FFFFFFFFFFFFFFFUL, "Invalid file offset in the sector bitmap BAT entry" )>]
+    member _.ReadBat_Fail_002 ( patchpos : uint32 ) ( patch : uint64 ) ( lastFileSize : uint64 ) ( expmsg : string ) =
         task {
             // chunkSize : 4GB
             // chunkRatio : 16
@@ -279,7 +284,7 @@ type VhdxReaderTest3_Test () =
                 PayloadBlockSize = 268435456u;      // 256MB
                 LeaveBlockAllocated = false;
                 HasParent = true;
-                VirtualDiskSize = 68719476736UL;    // 64GB
+                VirtualDiskSize = 0x1000000000UL;    // 64GB
                 VirtualDiskId = Guid();
                 LogicalSectorSize = Blocksize.BS_512;
                 PhysicalSectorSize = Blocksize.BS_512;
@@ -294,7 +299,7 @@ type VhdxReaderTest3_Test () =
             }
 
             let batData = defBatEntries vdi.PayloadBlockSize 16u 272u false
-            ByteFunc.WriteU64LE batData patchpos 1048576UL
+            ByteFunc.WriteU64LE batData patchpos patch
 
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, 1u, false )
@@ -303,8 +308,9 @@ type VhdxReaderTest3_Test () =
 
             let! r =
                 Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
-                    let! _ = VhdxReader.ReadBat [] 68719476736UL fa batRegion vdi
+                    let! _ = VhdxReader.ReadBat [] lastFileSize fa batRegion vdi
                     ()
                 } )
-            Assert.StartsWith( "The regions indicated by BAT entries must not overlap", r.Message )
+            Assert.StartsWith( expmsg, r.Message )
         }
+

@@ -1084,19 +1084,25 @@ type VhdxReader() =
     static member GetPayloadBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( pbIndex : uint64 ) : PayloadBATEntry =
         let idx = ( pbIndex / chunkRatio ) * ( chunkRatio + 1UL ) + ( pbIndex % chunkRatio )
         let entry = ByteFunc.ReadU64LE batData ( uint32 idx * 8u )
-        let state =
-            match entry &&& 0x0000000000000007UL with
-            | 0UL -> BatEntryStatePB.PayloadNotPresent
-            | 1UL -> BatEntryStatePB.PayloadUndefined
-            | 2UL -> BatEntryStatePB.PayloadZero
-            | 3UL -> BatEntryStatePB.PayloadUnapped
-            | 6UL -> BatEntryStatePB.PayloadFullyPresent
-            | 7UL -> BatEntryStatePB.PayloadPartiallyPresent
+        let state, fileOffset =
+            let flag = entry &&& 0x0000000000000007UL
+            match flag with
+            | 0UL ->
+                BatEntryStatePB.PayloadNotPresent, 0UL
+            | 1UL ->
+                BatEntryStatePB.PayloadUndefined, 0UL
+            | 2UL ->
+                BatEntryStatePB.PayloadZero, 0UL
+            | 3UL ->
+                BatEntryStatePB.PayloadUnapped, 0UL
+            | 6UL ->
+                BatEntryStatePB.PayloadFullyPresent, ( entry &&& 0xFFFFFFFFFFFFFFF8UL )
+            | 7UL ->
+                BatEntryStatePB.PayloadPartiallyPresent, ( entry &&& 0xFFFFFFFFFFFFFFF8UL )
             | _ ->
                 let msg = "A reserved payload BAT entry state value was specified."
                 raise <| VhdxMediaException( msg )
 
-        let fileOffset = entry &&& 0xFFFFFFFFFFFFFFF8UL
         if fileOffset &&& 0x00000000000FFFFFUL <> 0UL then
             let msg = "The FileOffset value of the payload BAT entry must be a multiple of 1 MB."
             raise <| VhdxMediaException( msg )
@@ -1125,14 +1131,16 @@ type VhdxReader() =
     static member GetSectorBitmapBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( sbbIndex : uint64 ) : struct( uint64 * BatEntryStateSB * uint64 ) =
         let idx = sbbIndex * ( chunkRatio + 1UL ) + chunkRatio
         let entry = ByteFunc.ReadU64LE batData ( uint32 idx * 8u )
-        let state =
+        let state, fileOffset =
             match entry &&& 0x0000000000000007UL with
-            | 0UL -> BatEntryStateSB.SectorBitmapNotPresent
-            | 6UL -> BatEntryStateSB.SectorBitmapPresent
+            | 0UL ->
+                BatEntryStateSB.SectorBitmapNotPresent, 0UL
+            | 6UL ->
+                BatEntryStateSB.SectorBitmapPresent, ( entry &&& 0xFFFFFFFFFFFFFFF8UL )
             | _ ->
                 let msg = "A reserved sector bitmap BAT entry state value was specified."
                 raise <| VhdxMediaException( msg )
-        let fileOffset = entry &&& 0xFFFFFFFFFFFFFFF8UL
+
         if fileOffset &&& 0x00000000000FFFFFUL <> 0UL then
             let msg = "The FileOffset value of the sector bitmap BAT entry must be a multiple of 1 MB."
             raise <| VhdxMediaException( msg )
@@ -1182,7 +1190,12 @@ type VhdxReader() =
             // Read payload BAT entries
             let payloads = Array.zeroCreate<PayloadBATEntry>( int payloadBlockCount )
             for i in 0UL .. payloadBlockCount - 1UL do
-                payloads.[ int i ] <- VhdxReader.GetPayloadBlockEntry fileData chunkRatio i
+                let pbe = VhdxReader.GetPayloadBlockEntry fileData chunkRatio i
+                if lastFileSize <= pbe.FileOffset ||
+                    lastFileSize < pbe.FileOffset + uint64 virtualDiskInfo.PayloadBlockSize ||
+                    pbe.FileOffset + uint64 virtualDiskInfo.PayloadBlockSize < pbe.FileOffset then
+                        raise <| VhdxMediaException( "Invalid file offset in the payload BAT entry." )
+                payloads.[ int i ] <- pbe
 
             // Read sector bitmap blocks
             let sectorBitmapBlock = Array.zeroCreate<SectorBitmapBATEntry>( int sectorBitmapBlockCount )
@@ -1198,6 +1211,8 @@ type VhdxReader() =
                     }
                 else
                     let struct( idx, stat, pos ) = VhdxReader.GetSectorBitmapBlockEntry fileData chunkRatio i
+                    if lastFileSize <= pos || lastFileSize < pos + 0x100000UL || pos + 0x100000UL < pos then
+                        raise <| VhdxMediaException( "Invalid file offset in the sector bitmap BAT entry." )
                     let! bitmapData = VhdxReader.ReadBytesWithLog log lastFileSize fa pos 0x100000u
                     sectorBitmapBlock.[ int i ] <- {
                         BatEntryIndex = idx;
