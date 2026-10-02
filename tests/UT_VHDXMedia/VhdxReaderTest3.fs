@@ -65,6 +65,13 @@ type VhdxReaderTest3_Test () =
         |]
         genBATEntries v
 
+    let defaultBatRegion : RegionEntry = {
+        Guid = VhdxCommons.REGENT_TYPE_BAT;
+        FileOffset = 0UL;
+        Length = 1048576ul;
+        Required = true;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -246,12 +253,9 @@ type VhdxReaderTest3_Test () =
                 PhysicalSectorSize = Blocksize.BS_512;
                 ParentLocator = Map.empty;
             }
-
-            let batRegion : RegionEntry = {
-                Guid = VhdxCommons.REGENT_TYPE_BAT;
-                FileOffset = 0UL;
-                Length = 0u;
-                Required = true;
+            let batRegion = {
+                defaultBatRegion with
+                    Length = 0u;
             }
 
             let fname = Path.GetTempFileName()
@@ -267,7 +271,7 @@ type VhdxReaderTest3_Test () =
 
     [<Theory>]
     [<InlineData( 8u,   0x100006UL,           0x2000000000UL,       "The regions indicated by BAT entries must not overlap" )>]
-    [<InlineData( 128u, 0x100006UL,           0x2000000000UL,       "The regions indicated by BAT entries must not overlap" )>]
+    [<InlineData( 128u, 0x1100006UL,           0x2000000000UL,      "The regions indicated by BAT entries must not overlap" )>]
     [<InlineData( 8u,   0x1000000006UL,       0x1000000000UL,       "Invalid file offset in the payload BAT entry" )>]
     [<InlineData( 8u,   0xFF0100006UL,        0x1000000000UL,       "Invalid file offset in the payload BAT entry" )>]
     [<InlineData( 8u,   0xFFFFFFFFFFF00006UL, 0x7FFFFFFFFFFFFFFFUL, "Invalid file offset in the payload BAT entry" )>]
@@ -291,14 +295,7 @@ type VhdxReaderTest3_Test () =
                 ParentLocator = Map.empty;
             }
 
-            let batRegion : RegionEntry = {
-                Guid = VhdxCommons.REGENT_TYPE_BAT;
-                FileOffset = 0UL;
-                Length = 1048576ul;
-                Required = true;
-            }
-
-            let batData = defBatEntries vdi.PayloadBlockSize 16u 272u false
+            let batData = defBatEntries vdi.PayloadBlockSize 16u 272u true
             ByteFunc.WriteU64LE batData patchpos patch
 
             let fname = Path.GetTempFileName()
@@ -308,9 +305,116 @@ type VhdxReaderTest3_Test () =
 
             let! r =
                 Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
-                    let! _ = VhdxReader.ReadBat [] lastFileSize fa batRegion vdi
+                    let! _ = VhdxReader.ReadBat [] lastFileSize fa defaultBatRegion vdi
                     ()
                 } )
             Assert.StartsWith( expmsg, r.Message )
         }
 
+    [<Fact>]
+    member _.ReadBat_001 () =
+        task {
+            // chunkSize : 4GB
+            // chunkRatio : 16
+            // payloadBlockCount : 256
+            // sectorBitmapBlockCount : 16
+            // batEntryCount : 272
+            let vdi : VirtualDiskInfo = {
+                PayloadBlockSize = 268435456u;      // 256MB
+                LeaveBlockAllocated = false;
+                HasParent = true;
+                VirtualDiskSize = 0x1000000000UL;    // 64GB
+                VirtualDiskId = Guid();
+                LogicalSectorSize = Blocksize.BS_512;
+                PhysicalSectorSize = Blocksize.BS_512;
+                ParentLocator = Map.empty;
+            }
+
+            let sbdata = [|
+                for i = 0 to 15 do
+                    let v = Array.zeroCreate<byte> 1048576
+                    Random.Shared.NextBytes v
+                    yield v
+            |]
+
+            let batData = defBatEntries vdi.PayloadBlockSize 16u 272u true
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            do! fa.SetFileSize 17825792UL   // 17MB
+            do! fa.Write 0UL ( ArraySegment batData )
+
+            for idx = 0 to 15 do
+                do! fa.Write ( ( uint64 idx + 1UL ) * 1048576UL ) ( ArraySegment sbdata.[idx] )
+
+            let! r = VhdxReader.ReadBat [] 0x2000000000UL fa defaultBatRegion vdi
+            Assert.StrictEqual( 0UL, r.BATRegionOffset )
+            Assert.StrictEqual( 1048576ul, r.BATRegionLength )
+            Assert.StrictEqual( 0x100000000UL, r.ChunkSize )    // 4GB
+            Assert.StrictEqual( 16UL, r.ChunkRatio )
+            Assert.StrictEqual( 256UL, r.PayloadBlockCount )
+            Assert.StrictEqual( 16UL, r.SectorBitmapBlockCount )
+            Assert.StrictEqual( 272UL, r.BatEntryCount )
+
+            Assert.StrictEqual( 0UL, r.Payloads.[0].BatEntryIndex )
+            Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, r.Payloads.[0].State )
+            Assert.StrictEqual( 17825792UL, r.Payloads.[0].FileOffset )
+
+            Assert.StrictEqual( 270UL, r.Payloads.[255].BatEntryIndex )
+            Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, r.Payloads.[255].State )
+            Assert.StrictEqual( 17UL * 1048576UL + 255UL * 1048576UL * 256UL, r.Payloads.[255].FileOffset )
+
+            for i = 0 to 15 do
+                Assert.StrictEqual( ( uint64 i + 1UL ) * 17UL - 1UL, r.SectorBitmap.[i].BatEntryIndex )
+                Assert.StrictEqual( BatEntryStateSB.SectorBitmapPresent, r.SectorBitmap.[i].SBState )
+                Assert.StrictEqual( ( uint64 i + 1UL ) * 1048576UL, r.SectorBitmap.[i].FileOffset )
+                Assert.True( sbdata.[i] = r.SectorBitmap.[i].Bitmap )
+        }
+
+    [<Fact>]
+    member _.ReadBat_002 () =
+        task {
+            // chunkSize : 4GB
+            // chunkRatio : 16
+            // payloadBlockCount : 256
+            // sectorBitmapBlockCount : 16
+            // batEntryCount : 271
+            let vdi : VirtualDiskInfo = {
+                PayloadBlockSize = 268435456u;      // 256MB
+                LeaveBlockAllocated = false;
+                HasParent = false;
+                VirtualDiskSize = 0x1000000000UL;    // 64GB
+                VirtualDiskId = Guid();
+                LogicalSectorSize = Blocksize.BS_512;
+                PhysicalSectorSize = Blocksize.BS_512;
+                ParentLocator = Map.empty;
+            }
+
+            let batData = defBatEntries vdi.PayloadBlockSize 16u 272u true  // Set values ​​in the sector bitmap entries.
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            do! fa.SetFileSize 1048576UL   // 1MB
+            do! fa.Write 0UL ( ArraySegment batData )
+
+            let! r = VhdxReader.ReadBat [] 0x2000000000UL fa defaultBatRegion vdi
+            Assert.StrictEqual( 0UL, r.BATRegionOffset )
+            Assert.StrictEqual( 1048576ul, r.BATRegionLength )
+            Assert.StrictEqual( 0x100000000UL, r.ChunkSize )    // 4GB
+            Assert.StrictEqual( 16UL, r.ChunkRatio )
+            Assert.StrictEqual( 256UL, r.PayloadBlockCount )
+            Assert.StrictEqual( 16UL, r.SectorBitmapBlockCount )
+            Assert.StrictEqual( 271UL, r.BatEntryCount )
+
+            Assert.StrictEqual( 0UL, r.Payloads.[0].BatEntryIndex )
+            Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, r.Payloads.[0].State )
+            Assert.StrictEqual( 17825792UL, r.Payloads.[0].FileOffset )
+
+            Assert.StrictEqual( 270UL, r.Payloads.[255].BatEntryIndex )
+            Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, r.Payloads.[255].State )
+            Assert.StrictEqual( 17UL * 1048576UL + 255UL * 1048576UL * 256UL, r.Payloads.[255].FileOffset )
+
+            for i = 0 to 15 do
+                Assert.StrictEqual( ( uint64 i + 1UL ) * 17UL - 1UL, r.SectorBitmap.[i].BatEntryIndex )
+                Assert.StrictEqual( BatEntryStateSB.SectorBitmapNotPresent, r.SectorBitmap.[i].SBState )
+                Assert.StrictEqual( 0UL, r.SectorBitmap.[i].FileOffset )
+                Assert.Empty( r.SectorBitmap.[i].Bitmap )
+        }
