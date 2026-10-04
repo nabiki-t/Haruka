@@ -286,8 +286,8 @@ type VhdxReader() =
                 let c2 = immheader0.Version = 1us
                 let c3 = immheader0.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
                 let c4 = immheader0.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
-                let c5 = ( int32 immheader0.LogLength ) > 0
-                let c6 = ( int64 immheader0.LogOffset ) > 0L
+                let c5 = ( int32 immheader0.LogLength ) >= 1048576
+                let c6 = ( int64 immheader0.LogOffset ) >= 1048576L
                 let c7 = immheader0.LogOffset + ( uint64 immheader0.LogLength ) <= fileSize
                 let c8 = immheader0.LogOffset + ( uint64 immheader0.LogLength ) <= 0x0000400000000000UL   // 64TB or less
                 c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8
@@ -318,8 +318,8 @@ type VhdxReader() =
                 let c2 = immheader1.Version = 1us
                 let c3 = immheader1.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
                 let c4 = immheader1.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
-                let c5 = ( int32 immheader1.LogLength ) >= 0
-                let c6 = ( int64 immheader1.LogOffset ) >= 0L
+                let c5 = ( int32 immheader1.LogLength ) >= 1048576
+                let c6 = ( int64 immheader1.LogOffset ) >= 1048576L
                 let c7 = immheader1.LogOffset + ( uint64 immheader1.LogLength ) <= fileSize
                 let c8 = immheader1.LogOffset + ( uint64 immheader1.LogLength ) <= 0x0000400000000000UL   // 64TB or less
                 c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8
