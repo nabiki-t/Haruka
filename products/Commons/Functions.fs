@@ -1205,6 +1205,65 @@ type Functions() =
         let eBlkPos = sBlkPos_u64 + trBlks
         ( sBlkPos_u64 <= mediaBlks && trBlks <= mediaBlks && eBlkPos <= mediaBlks && eBlkPos >= sBlkPos_u64 && eBlkPos >= trBlks )
 
+    /// <summary>
+    ///  Determine whether two regions specified by offset and length overlap.
+    /// </summary>
+    /// <param name="pos1">
+    ///  Region 1 start position.
+    /// </param>
+    /// <param name="len1">
+    ///  Region 1 length.
+    /// </param>
+    /// <param name="pos2">
+    ///  Region 2 start position.
+    /// </param>
+    /// <param name="len2">
+    ///  Region 2 length.
+    /// </param>
+    /// <returns>
+    ///  Returns true if the regions overlap.
+    /// </returns>
+    static member CheckOverlap_uint64 ( pos1 : uint64 ) ( len1 : uint64 ) ( pos2 : uint64 ) ( len2 : uint64 ) : bool =
+        if len1 = 0UL && len2 = 0UL then
+            pos1 = pos2
+        elif len1 = 0UL then
+            pos2 <= pos1 && ( pos1 - pos2 ) < len2
+        elif len2 = 0UL then
+            pos1 <= pos2 && ( pos2 - pos1 ) < len1
+        elif pos1 >= pos2 then
+            ( pos1 - pos2 ) < len2
+        else
+            ( pos2 - pos1 ) < len1
+
+    /// <summary>
+    ///  Determine whether two regions specified by offset and length overlap.
+    /// </summary>
+    /// <param name="pos1">
+    ///  Region 1 start position.
+    /// </param>
+    /// <param name="len1">
+    ///  Region 1 length.
+    /// </param>
+    /// <param name="pos2">
+    ///  Region 2 start position.
+    /// </param>
+    /// <param name="len2">
+    ///  Region 2 length.
+    /// </param>
+    /// <returns>
+    ///  Returns true if the regions overlap.
+    /// </returns>
+    static member CheckOverlap_uint32 ( pos1 : uint32 ) ( len1 : uint32 ) ( pos2 : uint32 ) ( len2 : uint32 ) : bool =
+        if len1 = 0u && len2 = 0u then
+            pos1 = pos2
+        elif len1 = 0u then
+            pos2 <= pos1 && ( pos1 - pos2 ) < len2
+        elif len2 = 0u then
+            pos1 <= pos2 && ( pos2 - pos1 ) < len1
+        elif pos1 >= pos2 then
+            ( pos1 - pos2 ) < len2
+        else
+            ( pos2 - pos1 ) < len1
 
     /// <summary>
     ///  Convert option type value to ValueOption.

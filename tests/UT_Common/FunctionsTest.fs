@@ -1609,45 +1609,82 @@ type Functions_Test () =
         let r = Functions.GenUniqueNumber ( (+) 1uy ) 0uy v
         Assert.True(( r = 0uy ))
 
-    [<Fact>]
-    member _.CheckAccessRange_001() =
-        Assert.True(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 0UL ) 0UL 0UL 1UL ))
+    [<Theory>]
+    [<InlineData( 0UL, 0UL, 0UL, 1UL, true )>]
+    [<InlineData( 0UL, 0UL, 10UL, 10UL, true )>]
+    [<InlineData( 0UL, 100UL, 10UL, 10UL, true )>]
+    [<InlineData( 0UL, 101UL, 10UL, 10UL, false )>]
+    [<InlineData( 9UL, 10UL, 10UL, 10UL, true )>]
+    [<InlineData( 9UL, 11UL, 10UL, 10UL, false )>]
+    [<InlineData( 10UL, 0UL, 10UL, 10UL, true )>]
+    [<InlineData( 10UL, 1UL, 10UL, 10UL, false )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFEUL, 10UL, 0xFFFFFFFFFFFFFFFFUL, 10UL, true )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFEUL, 11UL, 0xFFFFFFFFFFFFFFFFUL, 10UL, false )>]
+    member _.CheckAccessRange_001 ( sBlkPos : uint64 ) ( trBytes : uint64 ) ( mediaBlks : uint64 ) ( blkSize : uint64 ) ( expr : bool ) =
+        let r = Functions.CheckAccessRange ( blkcnt_me.ofUInt64 sBlkPos ) trBytes mediaBlks blkSize
+        Assert.StrictEqual( expr, r )
 
-    [<Fact>]
-    member _.CheckAccessRange_002() =
-        Assert.True(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 0UL ) 0UL 10UL 10UL ))
+    [<Theory>]
+    [<InlineData( 0UL,  10UL, 20UL, 10UL, false )>]
+    [<InlineData( 0UL,  10UL, 20UL, 0UL,  false )>]
+    [<InlineData( 0UL,  10UL, 10UL, 10UL, false )>]
+    [<InlineData( 0UL,  10UL, 10UL, 0UL,  false )>]
+    [<InlineData( 0UL,  20UL, 10UL, 20UL, true  )>]
+    [<InlineData( 0UL,  20UL, 10UL, 10UL, true  )>]
+    [<InlineData( 0UL,  20UL, 10UL, 0UL,  true  )>]
+    [<InlineData( 10UL, 20UL, 10UL, 30UL, true  )>]
+    [<InlineData( 10UL, 20UL, 10UL, 20UL, true  )>]
+    [<InlineData( 10UL, 20UL, 10UL, 10UL, true  )>]
+    [<InlineData( 10UL, 20UL, 10UL, 0UL,  true  )>]
+    [<InlineData( 20UL, 20UL, 0UL,  50UL, true  )>]
+    [<InlineData( 20UL, 20UL, 0UL,  40UL, true  )>]
+    [<InlineData( 20UL, 20UL, 0UL,  30UL, true  )>]
+    [<InlineData( 20UL, 20UL, 0UL,  20UL, false )>]
+    [<InlineData( 20UL, 20UL, 0UL,  10UL, false )>]
+    [<InlineData( 20UL, 20UL, 0UL,  0UL,  false )>]
+    [<InlineData( 10UL, 0UL,  20UL, 10UL, false )>]
+    [<InlineData( 10UL, 0UL,  20UL, 0UL,  false )>]
+    [<InlineData( 10UL, 0UL,  10UL, 10UL, true  )>]
+    [<InlineData( 10UL, 0UL,  10UL, 0UL,  true  )>]
+    [<InlineData( 10UL, 0UL,  0UL,  20UL, true  )>]
+    [<InlineData( 10UL, 0UL,  0UL,  10UL, false )>]
+    [<InlineData( 10UL, 0UL,  0UL,  0UL,  false )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFF0UL, 255UL, 0xFFFFFFFFFFFFFFF5UL, 10UL, true )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFF5UL, 10UL, 0xFFFFFFFFFFFFFFF0UL, 255UL, true )>]
+    member _.CheckOverlap_uint64_001 ( a : uint64 ) ( b : uint64 ) ( c : uint64 ) ( d: uint64 ) ( expr : bool ) =
+        let r = Functions.CheckOverlap_uint64 a b c d
+        Assert.StrictEqual( expr, r )
 
-    [<Fact>]
-    member _.CheckAccessRange_003() =
-        Assert.True(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 0UL ) 100UL 10UL 10UL ))
-
-    [<Fact>]
-    member _.CheckAccessRange_004() =
-        Assert.False(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 0UL ) 101UL 10UL 10UL ))
-
-    [<Fact>]
-    member _.CheckAccessRange_005() =
-        Assert.True(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 9UL ) 10UL 10UL 10UL ))
-
-    [<Fact>]
-    member _.CheckAccessRange_006() =
-        Assert.False(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 9UL ) 11UL 10UL 10UL ))
-
-    [<Fact>]
-    member _.CheckAccessRange_007() =
-        Assert.True(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 10UL ) 0UL 10UL 10UL ))
-
-    [<Fact>]
-    member _.CheckAccessRange_008() =
-        Assert.False(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 10UL ) 1UL 10UL 10UL ))
-
-    [<Fact>]
-    member _.CheckAccessRange_009() =
-        Assert.True(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 0xFFFFFFFFFFFFFFFEUL ) 10UL 0xFFFFFFFFFFFFFFFFUL 10UL ))
-
-    [<Fact>]
-    member _.CheckAccessRange_010() =
-        Assert.False(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 0xFFFFFFFFFFFFFFFEUL ) 11UL 0xFFFFFFFFFFFFFFFFUL 10UL ))
+    [<Theory>]
+    [<InlineData( 0u,  10u, 20u, 10u, false )>]
+    [<InlineData( 0u,  10u, 20u, 0u,  false )>]
+    [<InlineData( 0u,  10u, 10u, 10u, false )>]
+    [<InlineData( 0u,  10u, 10u, 0u,  false )>]
+    [<InlineData( 0u,  20u, 10u, 20u, true  )>]
+    [<InlineData( 0u,  20u, 10u, 10u, true  )>]
+    [<InlineData( 0u,  20u, 10u, 0u,  true  )>]
+    [<InlineData( 10u, 20u, 10u, 30u, true  )>]
+    [<InlineData( 10u, 20u, 10u, 20u, true  )>]
+    [<InlineData( 10u, 20u, 10u, 10u, true  )>]
+    [<InlineData( 10u, 20u, 10u, 0u,  true  )>]
+    [<InlineData( 20u, 20u, 0u,  50u, true  )>]
+    [<InlineData( 20u, 20u, 0u,  40u, true  )>]
+    [<InlineData( 20u, 20u, 0u,  30u, true  )>]
+    [<InlineData( 20u, 20u, 0u,  20u, false )>]
+    [<InlineData( 20u, 20u, 0u,  10u, false )>]
+    [<InlineData( 20u, 20u, 0u,  0u,  false )>]
+    [<InlineData( 10u, 0u,  20u, 10u, false )>]
+    [<InlineData( 10u, 0u,  20u, 0u,  false )>]
+    [<InlineData( 10u, 0u,  10u, 10u, true  )>]
+    [<InlineData( 10u, 0u,  10u, 0u,  true  )>]
+    [<InlineData( 10u, 0u,  0u,  20u, true  )>]
+    [<InlineData( 10u, 0u,  0u,  10u, false )>]
+    [<InlineData( 10u, 0u,  0u,  0u,  false )>]
+    [<InlineData( 0xFFFFFFF0u, 255u, 0xFFFFFFF5u, 10u, true )>]
+    [<InlineData( 0xFFFFFFF5u, 10u, 0xFFFFFFF0u, 255u, true )>]
+    member _.CheckOverlap_uint32_001 ( a : uint32 ) ( b : uint32 ) ( c : uint32 ) ( d: uint32 ) ( expr : bool ) =
+        let r = Functions.CheckOverlap_uint32 a b c d
+        Assert.StrictEqual( expr, r )
 
     [<Fact>]
     member _.CompareMultiLevelKey_001() =
