@@ -417,6 +417,66 @@ type VhdxReaderTest3_Test () =
             |];
             "No valid region table exists"
         |];
+        [|
+            [|
+                let v = VhdxReaderTest2_Test.defReginTable 32 [| 0x00uy; 0x00uy; 0x10uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x10uy; 0x00uy; |]
+                ( 0x30000UL, v );
+                ( 0x40000UL, v );
+            |];
+            "No valid region table exists"
+        |];
+        [|
+            [|
+                // missing metadata resion entry in region table 1
+                let v =
+                    VhdxReaderTest2_Test.genRegionTable {
+                        Signature = 0x72656769u
+                        Checksum = 0u;
+                        EntryCount = 0u;
+                        Entries = [{
+                            Guid = VhdxCommons.REGENT_TYPE_BAT;
+                            FileOffset = 2097152UL;
+                            Length = 1048576u;
+                            Required = true;
+                        }];
+                    } 0 [||]
+                ( 0x30000UL, v );
+                ( 0x40000UL, [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |] );   // The signature of region table 2 is corrupted
+            |];
+            "Metadata region not found"
+        |];
+        [|
+            [|
+                // missing BAT resion entry in region table 1
+                let v =
+                    VhdxReaderTest2_Test.genRegionTable {
+                        Signature = 0x72656769u
+                        Checksum = 0u;
+                        EntryCount = 0u;
+                        Entries = [{
+                            Guid = VhdxCommons.REGENT_TYPE_METADATA;
+                            FileOffset = 2097152UL;
+                            Length = 1048576u;
+                            Required = true;
+                        }];
+                    } 0 [||]
+                ( 0x30000UL, v );
+                ( 0x40000UL, [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |] );   // The signature of region table 2 is corrupted
+            |];
+            "BAT region not found"
+        |];
+        [|
+            [|
+                ( 0x200000UL, [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |] );
+            |];
+            "The signatures in the metadata table do not match"
+        |];
+        [|
+            [|
+                ( 0x300000UL, [| 0x04uy; |] );
+            |];
+            "A reserved payload BAT entry state value was specified"
+        |];
     |]
 
     [<Theory>]

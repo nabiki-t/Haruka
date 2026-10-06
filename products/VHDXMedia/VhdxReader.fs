@@ -84,9 +84,19 @@ type VhdxReader() =
             let regionTables =
                 [
                     if regionTable1.IsSome then
-                        yield regionTable1.Value;
+                        let r =
+                            regionTable1.Value.Entries
+                            |> List.exists ( fun itr ->
+                                Functions.CheckOverlap_uint64 immheader.LogOffset ( uint64 immheader.LogLength ) itr.FileOffset itr.FileOffset
+                            )
+                        if not r then yield regionTable1.Value;
                     if regionTable2.IsSome then
-                        yield regionTable2.Value;
+                        let r =
+                            regionTable2.Value.Entries
+                            |> List.exists ( fun itr ->
+                                Functions.CheckOverlap_uint64 immheader.LogOffset ( uint64 immheader.LogLength ) itr.FileOffset itr.FileOffset
+                            )
+                        if not r then yield regionTable2.Value;
                 ]
             let currentRegionTable =
                 if regionTables.Length = 0 then
@@ -756,7 +766,7 @@ type VhdxReader() =
                 |> List.sortBy _.FileOffset
                 |> List.windowed 2
                 |> List.exists ( fun itr ->
-                    itr.[1].FileOffset < ( itr.[0].FileOffset + uint64 itr.[0].Length ) 
+                    Functions.CheckOverlap_uint64 itr.[0].FileOffset ( uint64 itr.[0].Length ) itr.[1].FileOffset ( uint64 itr.[1].Length )
                 )
                 |> not
 
@@ -860,7 +870,7 @@ type VhdxReader() =
             |> Seq.sortBy _.Offset
             |> Seq.windowed 2
             |> Seq.exists ( fun itr ->
-                itr.[1].Offset < ( itr.[0].Offset + itr.[0].Length ) 
+                Functions.CheckOverlap_uint32 itr.[0].Offset itr.[0].Length itr.[1].Offset itr.[1].Length
             )
             |> not
         if not duplicate_Check then
