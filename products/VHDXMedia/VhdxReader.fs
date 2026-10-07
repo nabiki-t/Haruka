@@ -87,14 +87,14 @@ type VhdxReader() =
                         let r =
                             regionTable1.Value.Entries
                             |> List.exists ( fun itr ->
-                                Functions.CheckOverlap_uint64 immheader.LogOffset ( uint64 immheader.LogLength ) itr.FileOffset itr.FileOffset
+                                Functions.CheckOverlap_uint64 immheader.LogOffset ( uint64 immheader.LogLength ) itr.FileOffset ( uint64 itr.Length )
                             )
                         if not r then yield regionTable1.Value;
                     if regionTable2.IsSome then
                         let r =
                             regionTable2.Value.Entries
                             |> List.exists ( fun itr ->
-                                Functions.CheckOverlap_uint64 immheader.LogOffset ( uint64 immheader.LogLength ) itr.FileOffset itr.FileOffset
+                                Functions.CheckOverlap_uint64 immheader.LogOffset ( uint64 immheader.LogLength ) itr.FileOffset ( uint64 itr.Length )
                             )
                         if not r then yield regionTable2.Value;
                 ]
@@ -122,6 +122,46 @@ type VhdxReader() =
 
             // Read BAT
             let! batEntries = VhdxReader.ReadBat log lastFileSize fa batRegion.Value virtualDiskInfo
+
+            // Verify that the area indicated by the BAT entry does not overlap with the log area.
+            batEntries.Payloads
+            |> Array.iter ( fun itr ->
+                if itr.State = BatEntryStatePB.PayloadFullyPresent || itr.State = BatEntryStatePB.PayloadPartiallyPresent then
+                    let r = Functions.CheckOverlap_uint64 immheader.LogOffset ( uint64 immheader.LogLength ) itr.FileOffset ( uint64 virtualDiskInfo.PayloadBlockSize )
+                    if r then
+                        raise <| VhdxMediaException( fa.FileName, "The payload must not overlap with the log area." )
+            )
+            batEntries.SectorBitmap
+            |> Array.iter ( fun itr ->
+                if itr.SBState = BatEntryStateSB.SectorBitmapPresent then
+                    let r = Functions.CheckOverlap_uint64 immheader.LogOffset ( uint64 immheader.LogLength ) itr.FileOffset 0x100000UL
+                    if r then
+                        raise <| VhdxMediaException( fa.FileName, "The sector bitmap must not overlap with the log area." )
+            )
+
+            // Verify that the area indicated by the BAT entry does not overlap with the another area.
+            batEntries.Payloads
+            |> Array.iter ( fun pitr ->
+                if pitr.State = BatEntryStatePB.PayloadFullyPresent || pitr.State = BatEntryStatePB.PayloadPartiallyPresent then
+                    let r =
+                        currentRegionTable.Entries
+                        |> List.exists ( fun ritr ->
+                            Functions.CheckOverlap_uint64 pitr.FileOffset ( uint64 virtualDiskInfo.PayloadBlockSize ) ritr.FileOffset ( uint64 ritr.Length )
+                        )
+                    if r then
+                        raise <| VhdxMediaException( fa.FileName, "The payload must not overlap with other areas." )
+            )
+            batEntries.SectorBitmap
+            |> Array.iter ( fun sitr ->
+                if sitr.SBState = BatEntryStateSB.SectorBitmapPresent then
+                    let r =
+                        currentRegionTable.Entries
+                        |> List.exists ( fun ritr ->
+                            Functions.CheckOverlap_uint64 sitr.FileOffset 0x100000UL ritr.FileOffset ( uint64 ritr.Length )
+                        )
+                    if r then
+                        raise <| VhdxMediaException( fa.FileName, "The sector bitmap must not overlap with other areas." )
+            )
 
             if virtualDiskInfo.HasParent then
                 // For differential VHDX files, if a PartiallyPresent payload BAT entry exists,
@@ -1113,9 +1153,13 @@ type VhdxReader() =
                 let msg = "A reserved payload BAT entry state value was specified."
                 raise <| VhdxMediaException( msg )
 
-        if fileOffset &&& 0x00000000000FFFFFUL <> 0UL then
-            let msg = "The FileOffset value of the payload BAT entry must be a multiple of 1 MB."
-            raise <| VhdxMediaException( msg )
+        if state = BatEntryStatePB.PayloadFullyPresent || state = BatEntryStatePB.PayloadPartiallyPresent then
+            if fileOffset &&& 0x00000000000FFFFFUL <> 0UL then
+                let msg = "The FileOffset value of the payload BAT entry must be a multiple of 1 MB."
+                raise <| VhdxMediaException( msg )
+            if fileOffset < 0x100000UL then
+                let msg = "The FileOffset value of the payload BAT entry must be at least 1 MB."
+                raise <| VhdxMediaException( msg )
 
         {
             BatEntryIndex = idx;
@@ -1146,14 +1190,18 @@ type VhdxReader() =
             | 0UL ->
                 BatEntryStateSB.SectorBitmapNotPresent, 0UL
             | 6UL ->
-                BatEntryStateSB.SectorBitmapPresent, ( entry &&& 0xFFFFFFFFFFFFFFF8UL )
+                let fs = entry &&& 0xFFFFFFFFFFFFFFF8UL
+                if fs &&& 0xFFFFFUL <> 0UL then
+                    let msg = "The FileOffset value of the sector bitmap BAT entry must be a multiple of 1 MB."
+                    raise <| VhdxMediaException( msg )
+                if fs < 0x100000UL then
+                    let msg = "The FileOffset value of the sector bitmap BAT entry must be at least 1 MB."
+                    raise <| VhdxMediaException( msg )
+                BatEntryStateSB.SectorBitmapPresent, fs
             | _ ->
                 let msg = "A reserved sector bitmap BAT entry state value was specified."
                 raise <| VhdxMediaException( msg )
 
-        if fileOffset &&& 0x00000000000FFFFFUL <> 0UL then
-            let msg = "The FileOffset value of the sector bitmap BAT entry must be a multiple of 1 MB."
-            raise <| VhdxMediaException( msg )
         struct ( idx, state, fileOffset )
 
     /// <summary>
@@ -1223,7 +1271,11 @@ type VhdxReader() =
                     let struct( idx, stat, pos ) = VhdxReader.GetSectorBitmapBlockEntry fileData chunkRatio i
                     if lastFileSize <= pos || lastFileSize < pos + 0x100000UL || pos + 0x100000UL < pos then
                         raise <| VhdxMediaException( "Invalid file offset in the sector bitmap BAT entry." )
-                    let! bitmapData = VhdxReader.ReadBytesWithLog log lastFileSize fa pos 0x100000u
+                    let! bitmapData =
+                        if stat = BatEntryStateSB.SectorBitmapPresent then
+                            VhdxReader.ReadBytesWithLog log lastFileSize fa pos 0x100000u
+                        else
+                            Task.FromResult [||]
                     sectorBitmapBlock.[ int i ] <- {
                         BatEntryIndex = idx;
                         SBState = stat;

@@ -139,11 +139,13 @@ type VhdxReaderTest3_Test () =
             )
         Assert.StartsWith( "A reserved payload BAT entry state value was specified", r.Message )
 
-    [<Fact>]
-    member _.GetPayloadBlockEntry_Fail_002 () =
+    [<Theory>]
+    [<InlineData( 6uy )>]
+    [<InlineData( 7uy )>]
+    member _.GetPayloadBlockEntry_Fail_002 ( s : byte ) =
         let v =
             [|
-                ( 7uy, 0x1FFFFFUL );  // payload 0
+                ( s, 0x1FFFFFUL );  // payload 0
             |]
             |> genBATEntries
         let r =
@@ -151,6 +153,22 @@ type VhdxReaderTest3_Test () =
                 VhdxReader.GetPayloadBlockEntry v 4UL 0UL |> ignore
             )
         Assert.StartsWith( "The FileOffset value of the payload BAT entry must be a multiple of 1 MB", r.Message )
+
+    [<Theory>]
+    [<InlineData( 6uy )>]
+    [<InlineData( 7uy )>]
+    member _.GetPayloadBlockEntry_Fail_003 ( s : byte ) =
+        let v =
+            [|
+                ( s, 0UL );  // payload 0
+            |]
+            |> genBATEntries
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxReader.GetPayloadBlockEntry v 4UL 0UL |> ignore
+            )
+        Assert.StartsWith( "The FileOffset value of the payload BAT entry must be at least 1 MB", r.Message )
+
 
     static member m_GetSectorBitmapBlockEntry_001_data : obj[][] = [|
         [| 0UL; 4UL; BatEntryStateSB.SectorBitmapNotPresent; 0x000000UL; |];
@@ -223,6 +241,21 @@ type VhdxReaderTest3_Test () =
                 VhdxReader.GetSectorBitmapBlockEntry v 4UL 0UL |> ignore
             )
         Assert.StartsWith( "The FileOffset value of the sector bitmap BAT entry must be a multiple of 1 MB", r.Message )
+
+    [<Fact>]
+    member _.GetSectorBitmapBlockEntry_Fail_003 () =
+        let v =
+            [|
+                for i = 0 to 3 do
+                    ( 0uy, 0x100000UL );    // payload 0 - 3
+                ( 6uy, 0UL );               // sector bitmap 0
+            |]
+            |> genBATEntries
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxReader.GetSectorBitmapBlockEntry v 4UL 0UL |> ignore
+            )
+        Assert.StartsWith( "The FileOffset value of the sector bitmap BAT entry must be at least 1 MB", r.Message )
 
     [<Fact>]
     member _.ReadBat_Fail_001 () =
@@ -339,6 +372,39 @@ type VhdxReaderTest3_Test () =
 
     [<Fact>]
     member _.ReadBat_002 () =
+        task {
+            // batEntryCount : 272
+            let vdi = {
+                defaultVDI with
+                    HasParent = true;
+            }
+            let batData = Array.replicate 272 ( 0uy, 0UL ) |> genBATEntries
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            try
+                do! fa.SetFileSize 17825792UL   // 17MB
+                do! fa.Write 0UL ( ArraySegment batData )
+
+                let! r = VhdxReader.ReadBat [] 0x2000000000UL fa defaultBatRegion vdi
+                Assert.StrictEqual( 0UL, r.BATRegionOffset )
+                Assert.StrictEqual( 1048576ul, r.BATRegionLength )
+                Assert.StrictEqual( 256UL, r.PayloadBlockCount )
+                Assert.StrictEqual( 16UL, r.SectorBitmapBlockCount )
+                Assert.StrictEqual( 272UL, r.BatEntryCount )
+
+                for i = 0 to 15 do
+                    Assert.StrictEqual( ( uint64 i + 1UL ) * 17UL - 1UL, r.SectorBitmap.[i].BatEntryIndex )
+                    Assert.StrictEqual( BatEntryStateSB.SectorBitmapNotPresent, r.SectorBitmap.[i].SBState )
+                    Assert.StrictEqual( 0UL, r.SectorBitmap.[i].FileOffset )
+                    Assert.Empty r.SectorBitmap.[i].Bitmap
+
+            finally
+                fa.Close()
+                GlbFunc.DeleteFile fname
+        }
+
+    [<Fact>]
+    member _.ReadBat_003 () =
         task {
             let batData = defBatEntries defaultVDI.PayloadBlockSize 16u 272u true  // Set values ​​in the sector bitmap entries.
             let fname = Path.GetTempFileName()
@@ -492,12 +558,47 @@ type VhdxReaderTest3_Test () =
 
                 let! r =
                     Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
-                    let! _ = VhdxReader.ReadVhdx fa
-                    ()
-                })
+                        let! _ = VhdxReader.ReadVhdx fa
+                        ()
+                    })
                 Assert.StartsWith( expmsg, r.Message )
 
             finally
                 fa.Close()
                 GlbFunc.DeleteFile fname
+        }
+
+    [<Fact>]
+    member _.ReadVhdx_Fail_003 () =
+        task {
+            let pfname = Path.GetTempFileName()
+            let pfa = FileAccessor( pfname, 1u, false )
+            let cfname = Path.GetTempFileName()
+            let cfa = FileAccessor( cfname, 1u, false )
+            try
+                do! VhdxCreator.Create None pfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
+                do! VhdxCreator.Create ( Some pfa ) cfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
+                do! cfa.SetFileSize 0xF00000UL
+                let! cstr = VhdxReader.ReadVhdx cfa
+
+                // update first payload block to PartiallyPresent
+                let pos1 = cstr.BAT.Payloads.[0].BatEntryIndex * 8UL + cstr.BAT.BATRegionOffset
+                do! cfa.Write pos1 ( ArraySegment [| 0x07uy; 0x00uy; 0xA0uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] )
+
+                // update first sector bitmap to NotPresent
+                let pos2 = cstr.BAT.SectorBitmap.[0].BatEntryIndex * 8UL + cstr.BAT.BATRegionOffset
+                do! cfa.Write pos2 ( ArraySegment [| 0x00uy |] )
+
+                let! r =
+                    Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                        let! _ = VhdxReader.ReadVhdx cfa
+                        ()
+                    })
+                Assert.StartsWith( "There is no sector bitmap BAT entry corresponding to the payload BAT entry for PartiallyPresent", r.Message )
+
+            finally
+                pfa.Close()
+                cfa.Close()
+                GlbFunc.DeleteFile pfname
+                GlbFunc.DeleteFile cfname
         }
