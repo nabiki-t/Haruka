@@ -64,6 +64,35 @@ type VhdxReaderTest3_Test () =
         |]
         genBATEntries v
 
+    let createDynamicVHDXFileAndTest ( f : ( FileAccessor -> Task ) ) : Task =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            try
+                do! VhdxCreator.Create None fa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
+                do! f fa
+            finally
+                fa.Close()
+                GlbFunc.DeleteFile fname
+        }
+
+    let createDifferencingVHDXFileAndTest ( f : ( FileAccessor -> Task ) ) : Task =
+        task {
+            let pfname = Path.GetTempFileName()
+            let pfa = FileAccessor( pfname, 1u, false )
+            let cfname = Path.GetTempFileName()
+            let cfa = FileAccessor( cfname, 1u, false )
+            try
+                do! VhdxCreator.Create None pfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
+                do! VhdxCreator.Create ( Some pfa ) cfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
+                do! f cfa
+            finally
+                pfa.Close()
+                cfa.Close()
+                GlbFunc.DeleteFile pfname
+                GlbFunc.DeleteFile cfname
+        }
+
     // chunkSize : 4GB
     // chunkRatio : 16
     // payloadBlockCount : 256
@@ -548,57 +577,208 @@ type VhdxReaderTest3_Test () =
     [<Theory>]
     [<MemberData( "m_ReadVhdx_Fail_002_data" )>]
     member _.ReadVhdx_Fail_002 ( patch : ( uint64 * byte[] )[] ) ( expmsg : string ) =
+        createDynamicVHDXFileAndTest ( fun fa -> task {
+            for ( patchpos, patchdata ) in patch do
+                do! fa.Write patchpos ( ArraySegment patchdata )
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxReader.ReadVhdx fa
+                    ()
+                })
+            Assert.StartsWith( expmsg, r.Message )
+        } )
+
+    [<Fact>]
+    member _.ReadVhdx_Fail_003 () =
+        createDynamicVHDXFileAndTest ( fun fa -> task {
+            let! cstr = VhdxReader.ReadVhdx fa
+
+            // The payload overlaps with the log area.
+            let pos1 = cstr.BAT.Payloads.[0].BatEntryIndex * 8UL + cstr.BAT.BATRegionOffset
+            let wv = Array.zeroCreate<byte> 8
+            ByteFunc.WriteU64LE wv 0u cstr.ImmHeader.LogOffset
+            wv.[0] <- 7uy
+            do! fa.Write pos1 ( ArraySegment wv )
+
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxReader.ReadVhdx fa
+                    ()
+                })
+            Assert.StartsWith( "The payload must not overlap with the log area", r.Message )
+        } )
+
+    [<Fact>]
+    member _.ReadVhdx_Fail_004 () =
+        createDifferencingVHDXFileAndTest ( fun cfa -> task {
+            let! cstr = VhdxReader.ReadVhdx cfa
+
+            // The sector bitmap overlaps with the log area.
+            let pos1 = cstr.BAT.SectorBitmap.[0].BatEntryIndex * 8UL + cstr.BAT.BATRegionOffset
+            let wv = Array.zeroCreate<byte> 8
+            ByteFunc.WriteU64LE wv 0u cstr.ImmHeader.LogOffset
+            wv.[0] <- 6uy
+            do! cfa.Write pos1 ( ArraySegment wv )
+
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxReader.ReadVhdx cfa
+                    ()
+                })
+            Assert.StartsWith( "The sector bitmap must not overlap with the log area", r.Message )
+        } )
+
+    [<Fact>]
+    member _.ReadVhdx_Fail_005 () =
+        createDynamicVHDXFileAndTest ( fun fa -> task {
+            let! cstr = VhdxReader.ReadVhdx fa
+
+            // The payload overlaps with the BAT or metadata area.
+            let pos1 = cstr.BAT.Payloads.[0].BatEntryIndex * 8UL + cstr.BAT.BATRegionOffset
+            let wv = Array.zeroCreate<byte> 8
+            ByteFunc.WriteU64LE wv 0u cstr.Region.Entries.[0].FileOffset
+            wv.[0] <- 7uy
+            do! fa.Write pos1 ( ArraySegment wv )
+
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxReader.ReadVhdx fa
+                    ()
+                })
+            Assert.StartsWith( "The payload must not overlap with other areas", r.Message )
+        } )
+
+    [<Fact>]
+    member _.ReadVhdx_Fail_006 () =
+        createDifferencingVHDXFileAndTest ( fun cfa -> task {
+            let! cstr = VhdxReader.ReadVhdx cfa
+
+            // The sector bitmap overlaps with the BAT or metadata area.
+            let pos1 = cstr.BAT.SectorBitmap.[0].BatEntryIndex * 8UL + cstr.BAT.BATRegionOffset
+            let wv = Array.zeroCreate<byte> 8
+            ByteFunc.WriteU64LE wv 0u cstr.Region.Entries.[0].FileOffset
+            wv.[0] <- 6uy
+            do! cfa.Write pos1 ( ArraySegment wv )
+
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxReader.ReadVhdx cfa
+                    ()
+                })
+            Assert.StartsWith( "The sector bitmap must not overlap with other areas", r.Message )
+        } )
+
+    [<Fact>]
+    member _.ReadVhdx_Fail_007 () =
+        createDifferencingVHDXFileAndTest ( fun cfa -> task {
+            do! cfa.SetFileSize 0xF00000UL
+            let! cstr = VhdxReader.ReadVhdx cfa
+
+            // update first payload block to PartiallyPresent
+            let pos1 = cstr.BAT.Payloads.[0].BatEntryIndex * 8UL + cstr.BAT.BATRegionOffset
+            do! cfa.Write pos1 ( ArraySegment [| 0x07uy; 0x00uy; 0xA0uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] )
+
+            // update first sector bitmap to NotPresent
+            let pos2 = cstr.BAT.SectorBitmap.[0].BatEntryIndex * 8UL + cstr.BAT.BATRegionOffset
+            do! cfa.Write pos2 ( ArraySegment [| 0x00uy |] )
+
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxReader.ReadVhdx cfa
+                    ()
+                })
+            Assert.StartsWith( "There is no sector bitmap BAT entry corresponding to the payload BAT entry for PartiallyPresent", r.Message )
+        } )
+
+    [<Fact>]
+    member _.ReadVhdx_Fail_008 () =
+        createDynamicVHDXFileAndTest ( fun fa -> task {
+            do! fa.SetFileSize 0xF00000UL
+            let! cstr = VhdxReader.ReadVhdx fa
+
+            // update first payload block to PartiallyPresent
+            let pos1 = cstr.BAT.Payloads.[0].BatEntryIndex * 8UL + cstr.BAT.BATRegionOffset
+            do! fa.Write pos1 ( ArraySegment [| 0x07uy; 0x00uy; 0xA0uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] )
+
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxReader.ReadVhdx fa
+                    ()
+                })
+            Assert.StartsWith( "A fixed or dynamic VHDX file exists with a payload BAT entry for PartiallyPresent", r.Message )
+        } )
+
+    [<Fact>]
+    member _.ReadVhdx_001 () =
+        createDynamicVHDXFileAndTest ( fun fa -> task {
+            let! cstr = VhdxReader.ReadVhdx fa
+            Assert.StrictEqual( 0x100000u, cstr.ImmHeader.LogLength )
+            Assert.False( cstr.VDI.HasParent )
+            Assert.StrictEqual( 0x100000u, cstr.VDI.PayloadBlockSize )
+            Assert.StrictEqual( 0x4000000UL, cstr.VDI.VirtualDiskSize )
+            Assert.StrictEqual( Blocksize.BS_512, cstr.VDI.LogicalSectorSize )
+            Assert.StrictEqual( 64UL, cstr.BAT.PayloadBlockCount )
+            Assert.StrictEqual( 1UL, cstr.BAT.SectorBitmapBlockCount )
+        } )
+
+    [<Fact>]
+    member _.ReadVhdx_002 () =
+        createDifferencingVHDXFileAndTest ( fun fa -> task {
+            let! cstr = VhdxReader.ReadVhdx fa
+            Assert.StrictEqual( 0x100000u, cstr.ImmHeader.LogLength )
+            Assert.True( cstr.VDI.HasParent )
+            Assert.StrictEqual( 0x100000u, cstr.VDI.PayloadBlockSize )
+            Assert.StrictEqual( 0x4000000UL, cstr.VDI.VirtualDiskSize )
+            Assert.StrictEqual( Blocksize.BS_512, cstr.VDI.LogicalSectorSize )
+            Assert.StrictEqual( 64UL, cstr.BAT.PayloadBlockCount )
+            Assert.StrictEqual( 1UL, cstr.BAT.SectorBitmapBlockCount )
+        } )
+
+    [<Fact>]
+    member _.ReadVhdx_003 () =
+        createDynamicVHDXFileAndTest ( fun fa -> task {
+            let initialFileSize = fa.FileSize
+            let! cstr = VhdxReader.ReadVhdx fa
+            let idx = [
+                sec4k_me.ofUInt64 48UL;    // Region Table 1
+                sec4k_me.ofUInt64 64UL;    // Region Table 2
+                for itr in cstr.Region.Entries do
+                    sec4k_me.ofUInt64( itr.FileOffset / 4096UL )
+            ]
+            do! VhdxCorrupter.Inject fa idx
+            let! cstr2 = VhdxReader.ReadVhdx fa
+
+            Assert.StrictEqual( cstr.Creator, cstr2.Creator )
+            Assert.StrictEqual( cstr.ImmHeader.Signature, cstr2.ImmHeader.Signature )
+            Assert.StrictEqual( cstr.ImmHeader.LogVersion, cstr2.ImmHeader.LogVersion )
+            Assert.StrictEqual( cstr.ImmHeader.Version, cstr2.ImmHeader.Version )
+            Assert.StrictEqual( cstr.ImmHeader.LogLength, cstr2.ImmHeader.LogLength )
+            Assert.StrictEqual( cstr.ImmHeader.LogOffset, cstr2.ImmHeader.LogOffset )
+            Assert.StrictEqual( cstr.ImmHeader.Offset, cstr2.ImmHeader.Offset )
+            Assert.StrictEqual( initialFileSize, cstr2.LastFileSize )
+            Assert.StrictEqual( initialFileSize, cstr.LastFileSize )
+            Assert.StrictEqual( cstr.Region, cstr2.Region )
+            Assert.StrictEqual( cstr.VDI, cstr2.VDI )
+            Assert.StrictEqual( cstr.BAT, cstr2.BAT )
+            Assert.Empty( cstr.Log )
+            Assert.NotEmpty( cstr2.Log )
+        } )
+
+    [<Fact>]
+    member _.ReadAllStructures_Fail_001 () =
         task {
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, 1u, false )
             try
-                do! VhdxCreator.Create None fa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
-                for ( patchpos, patchdata ) in patch do
-                    do! fa.Write patchpos ( ArraySegment patchdata )
-
                 let! r =
                     Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
-                        let! _ = VhdxReader.ReadVhdx fa
+                        let! _ = VhdxReader.ReadAllStructures fa
                         ()
-                    })
-                Assert.StartsWith( expmsg, r.Message )
-
+                    } )
+                Assert.StartsWith( "The VHDX file is too small", r.Message )
             finally
                 fa.Close()
                 GlbFunc.DeleteFile fname
         }
 
-    [<Fact>]
-    member _.ReadVhdx_Fail_003 () =
-        task {
-            let pfname = Path.GetTempFileName()
-            let pfa = FileAccessor( pfname, 1u, false )
-            let cfname = Path.GetTempFileName()
-            let cfa = FileAccessor( cfname, 1u, false )
-            try
-                do! VhdxCreator.Create None pfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
-                do! VhdxCreator.Create ( Some pfa ) cfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
-                do! cfa.SetFileSize 0xF00000UL
-                let! cstr = VhdxReader.ReadVhdx cfa
 
-                // update first payload block to PartiallyPresent
-                let pos1 = cstr.BAT.Payloads.[0].BatEntryIndex * 8UL + cstr.BAT.BATRegionOffset
-                do! cfa.Write pos1 ( ArraySegment [| 0x07uy; 0x00uy; 0xA0uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] )
-
-                // update first sector bitmap to NotPresent
-                let pos2 = cstr.BAT.SectorBitmap.[0].BatEntryIndex * 8UL + cstr.BAT.BATRegionOffset
-                do! cfa.Write pos2 ( ArraySegment [| 0x00uy |] )
-
-                let! r =
-                    Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
-                        let! _ = VhdxReader.ReadVhdx cfa
-                        ()
-                    })
-                Assert.StartsWith( "There is no sector bitmap BAT entry corresponding to the payload BAT entry for PartiallyPresent", r.Message )
-
-            finally
-                pfa.Close()
-                cfa.Close()
-                GlbFunc.DeleteFile pfname
-                GlbFunc.DeleteFile cfname
-        }

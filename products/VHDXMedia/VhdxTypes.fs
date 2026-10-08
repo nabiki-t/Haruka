@@ -69,14 +69,6 @@ type VhdxHeader = {
     Signature : uint32
     /// CRC-32C Checksum
     Checksum : uint32
-    /// Sequence number
-//    SequenceNumber : uint64
-    /// File write GUID
-//    FileWriteGuid : Guid
-    /// Data write GUID
-//    DataWriteGuid : Guid
-    /// Log GUID
-//    LogGuid : Guid
     /// Log version. Allways zero.
     LogVersion : uint16
     /// VHDX format version. Always 1.
