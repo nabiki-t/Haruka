@@ -31,7 +31,7 @@ open Haruka.Test
 //=============================================================================
 // Class implementation
 
-type VhdxReaderTest3_Test () =
+type VhdxReader_Test3 () =
 
     let genBATEntries ( ent : ( byte * uint64 )[] ) : byte[] =
         let v = Array.zeroCreate<byte> ( ent.Length * 8 )
@@ -514,7 +514,7 @@ type VhdxReaderTest3_Test () =
         |];
         [|
             [|
-                let v = VhdxReaderTest2_Test.defReginTable 32 [| 0x00uy; 0x00uy; 0x10uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x10uy; 0x00uy; |]
+                let v = VhdxReader_Test2.defReginTable 32 [| 0x00uy; 0x00uy; 0x10uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x10uy; 0x00uy; |]
                 ( 0x30000UL, v );
                 ( 0x40000UL, v );
             |];
@@ -524,7 +524,7 @@ type VhdxReaderTest3_Test () =
             [|
                 // missing metadata resion entry in region table 1
                 let v =
-                    VhdxReaderTest2_Test.genRegionTable {
+                    VhdxReader_Test2.genRegionTable {
                         Signature = 0x72656769u
                         Checksum = 0u;
                         EntryCount = 0u;
@@ -544,7 +544,7 @@ type VhdxReaderTest3_Test () =
             [|
                 // missing BAT resion entry in region table 1
                 let v =
-                    VhdxReaderTest2_Test.genRegionTable {
+                    VhdxReader_Test2.genRegionTable {
                         Signature = 0x72656769u
                         Checksum = 0u;
                         EntryCount = 0u;

@@ -42,7 +42,7 @@ type TestLogEntry = {
 //=============================================================================
 // Class implementation
 
-type VhdxReaderTest1_Test () =
+type VhdxReader_Test1 () =
 
     let logEntryHeader
         ( entryLength : uint32 )
