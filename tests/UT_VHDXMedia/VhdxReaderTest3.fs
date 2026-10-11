@@ -64,35 +64,6 @@ type VhdxReader_Test3 () =
         |]
         genBATEntries v
 
-    let createDynamicVHDXFileAndTest ( f : ( FileAccessor -> Task ) ) : Task =
-        task {
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, false )
-            try
-                do! VhdxCreator.Create None fa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
-                do! f fa
-            finally
-                fa.Close()
-                GlbFunc.DeleteFile fname
-        }
-
-    let createDifferencingVHDXFileAndTest ( f : ( FileAccessor -> Task ) ) : Task =
-        task {
-            let pfname = Path.GetTempFileName()
-            let pfa = FileAccessor( pfname, 1u, false )
-            let cfname = Path.GetTempFileName()
-            let cfa = FileAccessor( cfname, 1u, false )
-            try
-                do! VhdxCreator.Create None pfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
-                do! VhdxCreator.Create ( Some pfa ) cfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
-                do! f cfa
-            finally
-                pfa.Close()
-                cfa.Close()
-                GlbFunc.DeleteFile pfname
-                GlbFunc.DeleteFile cfname
-        }
-
     // chunkSize : 4GB
     // chunkRatio : 16
     // payloadBlockCount : 256
@@ -115,6 +86,36 @@ type VhdxReader_Test3 () =
         Length = 1048576ul;
         Required = true;
     }
+
+    static member createDynamicVHDXFileAndTest ( f : ( FileAccessor -> Task ) ) : Task =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            try
+                do! VhdxCreator.Create None fa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
+                do! f fa
+            finally
+                fa.Close()
+                GlbFunc.DeleteFile fname
+        }
+
+    static member createDifferencingVHDXFileAndTest ( f : ( FileAccessor -> FileAccessor -> Task ) ) : Task =
+        task {
+            let pfname = Path.GetTempFileName()
+            let pfa = FileAccessor( pfname, 1u, false )
+            let cfname = Path.GetTempFileName()
+            let cfa = FileAccessor( cfname, 1u, false )
+            try
+                do! VhdxCreator.Create None pfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
+                do! VhdxCreator.Create ( Some pfa ) cfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
+                do! f pfa cfa
+            finally
+                pfa.Close()
+                cfa.Close()
+                GlbFunc.DeleteFile pfname
+                GlbFunc.DeleteFile cfname
+        }
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -577,7 +578,7 @@ type VhdxReader_Test3 () =
     [<Theory>]
     [<MemberData( "m_ReadVhdx_Fail_002_data" )>]
     member _.ReadVhdx_Fail_002 ( patch : ( uint64 * byte[] )[] ) ( expmsg : string ) =
-        createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
             for ( patchpos, patchdata ) in patch do
                 do! fa.Write patchpos ( ArraySegment patchdata )
             let! r =
@@ -590,7 +591,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_003 () =
-        createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
             let! cstr = VhdxReader.ReadVhdx fa
 
             // The payload overlaps with the log area.
@@ -610,7 +611,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_004 () =
-        createDifferencingVHDXFileAndTest ( fun cfa -> task {
+        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun _ cfa -> task {
             let! cstr = VhdxReader.ReadVhdx cfa
 
             // The sector bitmap overlaps with the log area.
@@ -630,7 +631,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_005 () =
-        createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
             let! cstr = VhdxReader.ReadVhdx fa
 
             // The payload overlaps with the BAT or metadata area.
@@ -650,7 +651,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_006 () =
-        createDifferencingVHDXFileAndTest ( fun cfa -> task {
+        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun _ cfa -> task {
             let! cstr = VhdxReader.ReadVhdx cfa
 
             // The sector bitmap overlaps with the BAT or metadata area.
@@ -670,7 +671,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_007 () =
-        createDifferencingVHDXFileAndTest ( fun cfa -> task {
+        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun _ cfa -> task {
             do! cfa.SetFileSize 0xF00000UL
             let! cstr = VhdxReader.ReadVhdx cfa
 
@@ -692,7 +693,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_008 () =
-        createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
             do! fa.SetFileSize 0xF00000UL
             let! cstr = VhdxReader.ReadVhdx fa
 
@@ -710,7 +711,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_001 () =
-        createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
             let! cstr = VhdxReader.ReadVhdx fa
             Assert.StrictEqual( 0x100000u, cstr.ImmHeader.LogLength )
             Assert.False( cstr.VDI.HasParent )
@@ -723,7 +724,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_002 () =
-        createDifferencingVHDXFileAndTest ( fun fa -> task {
+        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun _ fa -> task {
             let! cstr = VhdxReader.ReadVhdx fa
             Assert.StrictEqual( 0x100000u, cstr.ImmHeader.LogLength )
             Assert.True( cstr.VDI.HasParent )
@@ -736,7 +737,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_003 () =
-        createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
             let initialFileSize = fa.FileSize
             let! cstr = VhdxReader.ReadVhdx fa
             let idx = [

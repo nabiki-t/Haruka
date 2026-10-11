@@ -44,7 +44,7 @@ type TestLogEntry = {
 
 type VhdxReader_Test1 () =
 
-    let logEntryHeader
+    static member logEntryHeader
         ( entryLength : uint32 )
         ( tail : uint32 )
         ( sequenceNumber : uint64 )
@@ -65,7 +65,7 @@ type VhdxReader_Test1 () =
             yield! BitConverter.GetBytes lastFileOffset     // lastFileOffset
         |]
 
-    let zeroDiscriptor
+    static member zeroDiscriptor
         ( zeroLength : uint64 )
         ( fileOffset : uint64 )
         ( sequenceNumber : uint64 ) =
@@ -77,7 +77,7 @@ type VhdxReader_Test1 () =
             yield! BitConverter.GetBytes sequenceNumber     // SequenceNumber
         |]
 
-    let dataDiscriptor
+    static member dataDiscriptor
         ( trailingBytes : byte[] )
         ( leadingBytes : byte[] )
         ( fileOffset : uint64 )
@@ -90,7 +90,7 @@ type VhdxReader_Test1 () =
             yield! BitConverter.GetBytes sequenceNumber     // SequenceNumber
         |]
 
-    let genLogData
+    static member genLogData
         ( logLength : int32 )
         ( startPos : int32 )    // 4KB unit
         ( logEntries : TestLogEntry[] )
@@ -108,16 +108,16 @@ type VhdxReader_Test1 () =
                     let entryLength = headerlength + dataCount * 4096
                     let effSN = ( sequenceNumber + uint64 i )
                     // log entry header
-                    yield! logEntryHeader ( uint32 entryLength ) ( uint32 startPos ) effSN ( uint32 logents.Length ) logGuid flushedFileOffset lastFileOffset
+                    yield! VhdxReader_Test1.logEntryHeader ( uint32 entryLength ) ( uint32 startPos ) effSN ( uint32 logents.Length ) logGuid flushedFileOffset lastFileOffset
                     // descriptor
                     for itr2 in logents do
                         match itr2 with
                         | Zero( x, y ) ->
-                            yield! zeroDiscriptor x y effSN
+                            yield! VhdxReader_Test1.zeroDiscriptor x y effSN
                         | Data( x, y ) ->
                             let trailingBytes = if x.Length > 0 then x.[ 4092 .. 4095 ] else Array.zeroCreate<byte> 4
                             let leadingBytes = if x.Length > 0 then x.[ 0 .. 7 ] else Array.zeroCreate<byte> 8
-                            yield! dataDiscriptor trailingBytes leadingBytes y effSN
+                            yield! VhdxReader_Test1.dataDiscriptor trailingBytes leadingBytes y effSN
                     // padding
                     let padlength = headerlength - ( 64 + logents.Length * 32 )
                     yield! Array.zeroCreate<byte> padlength
@@ -148,7 +148,7 @@ type VhdxReader_Test1 () =
             Array.blit v firstChunkSize logBuffer 0 secondChunkSize
         logBuffer
 
-    let genLogEntry ( descriptor : TestLogDesc[] ) =
+    static member genLogEntry ( descriptor : TestLogDesc[] ) =
         let ddindex =
             descriptor
             |> Array.mapFold ( fun s itr ->
@@ -196,7 +196,6 @@ type VhdxReader_Test1 () =
                     | _ -> ()
             ];
         };
-
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -760,7 +759,7 @@ type VhdxReader_Test1 () =
             };
         |]
         let logGuid = Guid()
-        let logData = genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL
+        let logData = VhdxReader_Test1.genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL
         Array.blit patch2Data 0 logData patch2Pos patch2Data.Length
         let r = VhdxReader.ReadLogEntry logData 0u logGuid
         Assert.True( r.IsNone )
@@ -785,7 +784,7 @@ type VhdxReader_Test1 () =
             };
         |]
         let logGuid = Guid.NewGuid()
-        let logData = genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
+        let logData = VhdxReader_Test1.genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
         let r = VhdxReader.ReadLogEntry logData 0u logGuid
         Assert.True( r.IsSome )
         let signature = r.Value.Signature |> int32 |> IPAddress.NetworkToHostOrder |> BitConverter.GetBytes |> Encoding.UTF8.GetString
@@ -836,7 +835,7 @@ type VhdxReader_Test1 () =
             };
         |]
         let logGuid = Guid.NewGuid()
-        let logData = genLogData 1048576 pos entry logGuid 99UL 2097152UL 3145728UL 
+        let logData = VhdxReader_Test1.genLogData 1048576 pos entry logGuid 99UL 2097152UL 3145728UL 
         let r = VhdxReader.ReadLogEntry logData ( uint32 pos ) logGuid
         Assert.True( r.IsSome )
         Assert.StrictEqual( 4, r.Value.Descriptors.Length )
@@ -862,7 +861,7 @@ type VhdxReader_Test1 () =
             };
         |]
         let logGuid = Guid.NewGuid()
-        let logData = genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
+        let logData = VhdxReader_Test1.genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
         let r = VhdxReader.ReadLogEntry logData 0u logGuid
         Assert.True( r.IsSome )
         Assert.StrictEqual( zcount + dcount, r.Value.Descriptors.Length )
@@ -891,7 +890,7 @@ type VhdxReader_Test1 () =
             };
         |]
         let logGuid = Guid.NewGuid()
-        let logData = genLogData 1048576 pos entry logGuid 99UL 2097152UL 3145728UL 
+        let logData = VhdxReader_Test1.genLogData 1048576 pos entry logGuid 99UL 2097152UL 3145728UL 
         let r = VhdxReader.ReadActiveLogSequense logData logGuid
         Assert.StrictEqual( 3, r.Length )
         Assert.StrictEqual( 4u, r.[0].DescriptorCount )
@@ -932,8 +931,8 @@ type VhdxReader_Test1 () =
         |]
 
         let logGuid = Guid.NewGuid()
-        let logData1 = genLogData 1048576 0 entry1 logGuid seq1 2097152UL 3145728UL
-        let logData2 = genLogData 1048576 65536 entry2 logGuid seq2 2097152UL 3145728UL
+        let logData1 = VhdxReader_Test1.genLogData 1048576 0 entry1 logGuid seq1 2097152UL 3145728UL
+        let logData2 = VhdxReader_Test1.genLogData 1048576 65536 entry2 logGuid seq2 2097152UL 3145728UL
         Array.blit logData2 65536 logData1 65536 8192
 
         let r = VhdxReader.ReadActiveLogSequense logData1 logGuid
@@ -976,8 +975,8 @@ type VhdxReader_Test1 () =
         |]
 
         let logGuid = Guid.NewGuid()
-        let logData1 = genLogData 1048576 0 entry1 logGuid 1UL 2097152UL 3145728UL
-        let logData2 = genLogData 1048576 28672 entry2 logGuid 3UL 2097152UL 3145728UL
+        let logData1 = VhdxReader_Test1.genLogData 1048576 0 entry1 logGuid 1UL 2097152UL 3145728UL
+        let logData2 = VhdxReader_Test1.genLogData 1048576 28672 entry2 logGuid 3UL 2097152UL 3145728UL
         Array.blit logData2 28672 logData1 28672 8192
 
         let r = VhdxReader.ReadActiveLogSequense logData1 logGuid
@@ -995,7 +994,7 @@ type VhdxReader_Test1 () =
             };
         |]
         let logGuid = Guid.NewGuid()
-        let logData1 = genLogData 1048576 0 entry logGuid 0UL 2097152UL 3145728UL
+        let logData1 = VhdxReader_Test1.genLogData 1048576 0 entry logGuid 0UL 2097152UL 3145728UL
         let r = VhdxReader.ReadActiveLogSequense logData1 logGuid
         Assert.StrictEqual( 1, r.Length )
         Assert.StrictEqual( 1u, r.[0].DescriptorCount )
@@ -1019,8 +1018,8 @@ type VhdxReader_Test1 () =
         |]
 
         let logGuid = Guid.NewGuid()
-        let logData1 = genLogData 1048576 8192 entry1 logGuid 50UL 2097152UL 3145728UL
-        let logData2 = genLogData 1048576 65536 entry2 logGuid 100UL 2097152UL 3145728UL
+        let logData1 = VhdxReader_Test1.genLogData 1048576 8192 entry1 logGuid 50UL 2097152UL 3145728UL
+        let logData2 = VhdxReader_Test1.genLogData 1048576 65536 entry2 logGuid 100UL 2097152UL 3145728UL
         Array.blit logData2 65536 logData1 32768 8192
 
         let r = VhdxReader.ReadActiveLogSequense logData1 logGuid
@@ -1156,8 +1155,8 @@ type VhdxReader_Test1 () =
             Random.Shared.NextBytes data0
             Random.Shared.NextBytes data1
             let entry = [
-                genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
-                genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+                VhdxReader_Test1.genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
+                VhdxReader_Test1.genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
             ]
 
             try
@@ -1184,8 +1183,8 @@ type VhdxReader_Test1 () =
             Random.Shared.NextBytes data0
             Random.Shared.NextBytes data1
             let entry = [
-                genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
-                genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+                VhdxReader_Test1.genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
+                VhdxReader_Test1.genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
             ]
 
             try
@@ -1213,8 +1212,8 @@ type VhdxReader_Test1 () =
             Random.Shared.NextBytes data0
             Random.Shared.NextBytes data1
             let entry = [
-                genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
-                genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+                VhdxReader_Test1.genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
+                VhdxReader_Test1.genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
             ]
 
             try
@@ -1243,8 +1242,8 @@ type VhdxReader_Test1 () =
             Random.Shared.NextBytes data0
             Random.Shared.NextBytes data1
             let entry = [
-                genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
-                genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+                VhdxReader_Test1.genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
+                VhdxReader_Test1.genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
             ]
 
             try
@@ -1272,8 +1271,8 @@ type VhdxReader_Test1 () =
             Random.Shared.NextBytes data0
             Random.Shared.NextBytes data1
             let entry = [
-                genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
-                genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+                VhdxReader_Test1.genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
+                VhdxReader_Test1.genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
             ]
 
             try
