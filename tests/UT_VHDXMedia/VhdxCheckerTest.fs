@@ -33,21 +33,6 @@ open Haruka.Test
 
 type VhdxChecker_Test () =
 
-    static member genHeaderBytes ( imhd : VhdxHeader ) ( mhd : VhdxMutableHeader ) : byte[] =
-        let v = Array.zeroCreate<byte> 4096
-        Array.blit ( "head" |> Encoding.UTF8.GetBytes ) 0 v 0 4
-        ByteFunc.WriteU64LE v 8u mhd.SequenceNumber
-        ByteFunc.WriteGuid v 16u mhd.FileWriteGuid
-        ByteFunc.WriteGuid v 32u mhd.DataWriteGuid
-        ByteFunc.WriteGuid v 48u mhd.LogGuid
-        ByteFunc.WriteU16LE v 64u imhd.LogVersion
-        ByteFunc.WriteU16LE v 66u imhd.Version
-        ByteFunc.WriteU32LE v 68u imhd.LogLength
-        ByteFunc.WriteU64LE v 72u imhd.LogOffset
-        Crc32C.Compute v
-        |> ByteFunc.WriteU32LE v 4u
-        v
-
     [<Fact>]
     member _.Check_Fail_001() =
         task {
@@ -119,7 +104,7 @@ type VhdxChecker_Test () =
             let lastFileSize = fa.FileSize
             let lastFileOffset = ( fa.FileSize + 0x100000UL )
             let logData = VhdxReader_Test1.genLogData logLength 0 logEntry logGuid 1UL lastFileSize lastFileOffset
-            let hdBytes = VhdxChecker_Test.genHeaderBytes str1.ImmHeader { str1.LoadedVarHeader with LogGuid = logGuid }
+            let hdBytes = VhdxReader_Test3.genHeaderBytes str1.ImmHeader { str1.LoadedVarHeader with LogGuid = logGuid }
 
             do! fa.Write str1.ImmHeader.LogOffset ( ArraySegment logData )
             do! fa.Write 65536UL ( hdBytes |> ArraySegment )
@@ -134,4 +119,82 @@ type VhdxChecker_Test () =
             Assert.Empty( str3.Log )
 
             Assert.StrictEqual( lastFileOffset, fa.FileSize )
+        } )
+
+    [<Fact>]
+    member _.Replay_003() =
+        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+            let! str1 = VhdxReader.ReadVhdx fa
+            let logLength = ( int32 str1.ImmHeader.LogLength )
+            let rndData = 
+                let v = Array.zeroCreate<byte> 4096
+                Random.Shared.NextBytes v
+                v
+            let rndDataPos = fa.FileSize
+            let logEntry = [| {
+                PatchPosition = 0;
+                PatchData = [||];
+                Descriptor = [|
+                    TestLogDesc.Data( rndData, rndDataPos )
+                |];
+            } |]
+            let logGuid = Guid.NewGuid()
+            let lastFileSize = fa.FileSize
+            let lastFileOffset = ( fa.FileSize + 0x100000UL )
+            let logData = VhdxReader_Test1.genLogData logLength 0 logEntry logGuid 1UL lastFileSize lastFileOffset
+            let hdBytes = VhdxReader_Test3.genHeaderBytes str1.ImmHeader { str1.LoadedVarHeader with LogGuid = logGuid }
+
+            do! fa.Write str1.ImmHeader.LogOffset ( ArraySegment logData )
+            do! fa.Write 65536UL ( hdBytes |> ArraySegment )
+            do! fa.Write 131072UL ( [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy |] |> ArraySegment )
+
+            let! verHeade = VhdxChecker.Check fa
+            let! str3 = VhdxReader.ReadVhdx fa
+            Assert.Empty( str3.Log )
+
+            let rndData2 = Array.zeroCreate<byte> 4096
+            do! fa.Read rndDataPos ( ArraySegment rndData2 )
+            Assert.True(( rndData = rndData2 ))
+        } )
+
+    [<Fact>]
+    member _.Replay_004() =
+        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+            let! str1 = VhdxReader.ReadVhdx fa
+
+            let rndData = 
+                let v = Array.zeroCreate<byte> 8192
+                Random.Shared.NextBytes v
+                v
+            let rndDataPos = fa.FileSize
+
+            do! fa.SetFileSize ( fa.FileSize + 0x100000UL )
+            do! fa.Write rndDataPos ( ArraySegment rndData )
+
+            let logLength = ( int32 str1.ImmHeader.LogLength )
+            let logEntry = [| {
+                PatchPosition = 0;
+                PatchData = [||];
+                Descriptor = [|
+                    TestLogDesc.Zero( 8192UL, rndDataPos )
+                |];
+            } |]
+            let logGuid = Guid.NewGuid()
+            let lastFileSize = fa.FileSize
+            let lastFileOffset = fa.FileSize
+            let logData = VhdxReader_Test1.genLogData logLength 0 logEntry logGuid 1UL lastFileSize lastFileOffset
+            let hdBytes = VhdxReader_Test3.genHeaderBytes str1.ImmHeader { str1.LoadedVarHeader with LogGuid = logGuid }
+
+            do! fa.Write str1.ImmHeader.LogOffset ( ArraySegment logData )
+            do! fa.Write 65536UL ( hdBytes |> ArraySegment )
+            do! fa.Write 131072UL ( [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy |] |> ArraySegment )
+
+            let! verHead = VhdxChecker.Check fa
+            let! str3 = VhdxReader.ReadVhdx fa
+            Assert.Empty( str3.Log )
+
+            let rndData2 = Array.zeroCreate<byte> 8192
+            do! fa.Read rndDataPos ( ArraySegment rndData2 )
+            for i in rndData2 do
+                Assert.StrictEqual( 0uy, i )
         } )

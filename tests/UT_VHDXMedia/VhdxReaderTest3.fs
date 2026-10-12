@@ -116,6 +116,20 @@ type VhdxReader_Test3 () =
                 GlbFunc.DeleteFile cfname
         }
 
+    static member genHeaderBytes ( imhd : VhdxHeader ) ( mhd : VhdxMutableHeader ) : byte[] =
+        let v = Array.zeroCreate<byte> 4096
+        Array.blit ( "head" |> Encoding.UTF8.GetBytes ) 0 v 0 4
+        ByteFunc.WriteU64LE v 8u mhd.SequenceNumber
+        ByteFunc.WriteGuid v 16u mhd.FileWriteGuid
+        ByteFunc.WriteGuid v 32u mhd.DataWriteGuid
+        ByteFunc.WriteGuid v 48u mhd.LogGuid
+        ByteFunc.WriteU16LE v 64u imhd.LogVersion
+        ByteFunc.WriteU16LE v 66u imhd.Version
+        ByteFunc.WriteU32LE v 68u imhd.LogLength
+        ByteFunc.WriteU64LE v 72u imhd.LogOffset
+        Crc32C.Compute v
+        |> ByteFunc.WriteU32LE v 4u
+        v
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -782,4 +796,39 @@ type VhdxReader_Test3 () =
                 GlbFunc.DeleteFile fname
         }
 
+
+    [<Fact>]
+    member _.ReadAllStructures_Fail_002 () =
+        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+            let! pstr = VhdxReader.ReadVhdx pfa
+            // corrupt DataWriteGuid on header 1
+            let v = VhdxReader_Test3.genHeaderBytes pstr.ImmHeader { pstr.LoadedVarHeader with DataWriteGuid = Guid.NewGuid() }
+            do! pfa.Write 65536UL ( ArraySegment v )
+            // corrupt Signature on header 2
+            do! pfa.Write 131072UL ( [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |] |> ArraySegment )
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxReader.ReadAllStructures cfa
+                    ()
+                } )
+            Assert.StartsWith( "Data Write Guid does not match", r.Message )
+        } )
+
+    [<Fact>]
+    member _.ReadAllStructures_Fail_003 () =
+        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+            let! pstr = VhdxReader.ReadVhdx pfa
+            let! cstr = VhdxReader.ReadVhdx cfa
+            // corrupt FileWriteGuid on header 1
+            let v = VhdxReader_Test3.genHeaderBytes pstr.ImmHeader { pstr.LoadedVarHeader with FileWriteGuid = cstr.LoadedVarHeader.FileWriteGuid }
+            do! pfa.Write 65536UL ( ArraySegment v )
+            // corrupt Signature on header 2
+            do! pfa.Write 131072UL ( [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |] |> ArraySegment )
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxReader.ReadAllStructures cfa
+                    ()
+                } )
+            Assert.StartsWith( "The same file is specified as the parent VHDX file", r.Message )
+        } )
 
