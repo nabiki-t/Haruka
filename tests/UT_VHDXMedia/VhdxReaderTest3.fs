@@ -17,6 +17,7 @@ open System.Threading
 open System.Threading.Tasks
 open System.Text
 open System.Net
+open System.Runtime.InteropServices
 
 open Xunit
 
@@ -32,6 +33,27 @@ open Haruka.Test
 // Class implementation
 
 type VhdxReader_Test3 () =
+    [<DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode )>]
+    static extern bool GetVolumeNameForVolumeMountPoint(
+        string lpszVolumeMountPoint, 
+        StringBuilder lpszVolumeName, 
+        uint32 cchBufferLength
+    )
+
+    let getVolumePath ( fullPath: string ) =
+        let driveName, relativePath =
+            let w = Path.GetFullPath fullPath
+            let r = Path.GetPathRoot w
+            ( if r.EndsWith "\\" then r else r + "\\" ), ( w.Substring r.Length )
+    
+        if String.IsNullOrEmpty driveName || not ( driveName.Contains ":" ) then
+            fullPath
+        else
+            let sb = StringBuilder 256
+            if GetVolumeNameForVolumeMountPoint( driveName, sb, uint32 sb.Capacity ) then
+                Path.Combine( sb.ToString(), relativePath )
+            else
+                fullPath
 
     let genBATEntries ( ent : ( byte * uint64 )[] ) : byte[] =
         let v = Array.zeroCreate<byte> ( ent.Length * 8 )
@@ -831,4 +853,120 @@ type VhdxReader_Test3 () =
                 } )
             Assert.StartsWith( "The same file is specified as the parent VHDX file", r.Message )
         } )
+
+    static member m_ReadAllStructures_Fail_004_data : obj[][] = [|
+        [| ( fun vdi -> { vdi with VirtualDiskSize = 0x8000000UL } ); "The virtual disk size of the parent" |];
+        [| ( fun vdi -> { vdi with VirtualDiskId = Guid.NewGuid() } ); "The virtual disk ID of the parent" |];
+        [| ( fun vdi -> { vdi with LogicalSectorSize = Blocksize.BS_4096 } ); "The logical sector size of the parent" |];
+        [| ( fun vdi -> { vdi with PhysicalSectorSize = Blocksize.BS_4096 } ); "The physical sector size of the parent" |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_ReadAllStructures_Fail_004_data" )>]
+    member _.ReadAllStructures_Fail_004 ( vdiud : VirtualDiskInfo -> VirtualDiskInfo ) ( expmsg : string ) =
+        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+            let! pstr = VhdxReader.ReadVhdx pfa
+            let! cstr = VhdxReader.ReadVhdx cfa
+
+            // Update metadata of child disk.
+            let metadataBytes = VhdxReader_Test2.defMetadataTable ( vdiud cstr.VDI )
+            let metadataRegion =
+                cstr.Region.Entries
+                |> List.find ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_METADATA )
+            do! cfa.Write metadataRegion.FileOffset ( ArraySegment metadataBytes )
+
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxReader.ReadAllStructures cfa
+                    ()
+                } )
+            Assert.StartsWith( expmsg, r.Message )
+        } )
+
+    static member m_ReadAllStructures_Fail_005_data : obj[][] = [|
+        [| "relative_path"; ( fun ( fa : FileAccessor ) -> Path.GetFileName fa.FileName )  |];
+        [| "absolute_win32_path"; ( fun ( fa : FileAccessor ) -> fa.FileName )  |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_ReadAllStructures_Fail_005_data" )>]
+    member _.ReadAllStructures_001 ( keyname : string ) ( genpname : FileAccessor -> string ) =
+        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+            let! pstr = VhdxReader.ReadVhdx pfa
+            let! cstr = VhdxReader.ReadVhdx cfa
+
+            // Update metadata of child disk.
+            let wparentLocator =
+                [|
+                    ( "parent_linkage", cstr.VDI.ParentLocator.[ "parent_linkage" ] );
+                    ( keyname, genpname pfa; );
+                |]
+                |> Map
+            let metadataBytes = VhdxReader_Test2.defMetadataTable { cstr.VDI with ParentLocator = wparentLocator }
+            let metadataRegion =
+                cstr.Region.Entries
+                |> List.find ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_METADATA )
+            do! cfa.Write metadataRegion.FileOffset ( ArraySegment metadataBytes )
+
+            let! r = VhdxReader.ReadAllStructures cfa
+            Assert.StrictEqual( 2, r.Length )
+            Assert.StrictEqual( cfa.FileName, ( fst r.[1] ).FileName )
+            Assert.StrictEqual( pfa.FileName, ( fst r.[0] ).FileName )
+        } )
+
+    [<Fact>]
+    member _.ReadAllStructures_002 () =
+        if RuntimeInformation.IsOSPlatform OSPlatform.Windows then
+            VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+                let! pstr = VhdxReader.ReadVhdx pfa
+                let! cstr = VhdxReader.ReadVhdx cfa
+
+                // Get relative path name of parent disk
+                let wpfname = getVolumePath pfa.FileName
+
+                // Update metadata of child disk.
+                let wparentLocator =
+                    [|
+                        ( "parent_linkage", cstr.VDI.ParentLocator.[ "parent_linkage" ] );
+                        ( "volume_path", wpfname; );
+                    |]
+                    |> Map
+                let metadataBytes = VhdxReader_Test2.defMetadataTable { cstr.VDI with ParentLocator = wparentLocator }
+                let metadataRegion =
+                    cstr.Region.Entries
+                    |> List.find ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_METADATA )
+                do! cfa.Write metadataRegion.FileOffset ( ArraySegment metadataBytes )
+
+                let! r = VhdxReader.ReadAllStructures cfa
+                Assert.StrictEqual( 2, r.Length )
+                Assert.StrictEqual( cfa.FileName, ( fst r.[1] ).FileName )
+                Assert.StrictEqual( wpfname, ( fst r.[0] ).FileName )
+
+            } )
+        else
+            Task.FromResult()
+
+    [<Fact>]
+    member _.ReadAllStructures_003 () =
+        task {
+            let fnames = Array.init 3 ( fun _ -> Path.GetTempFileName() )
+            let fas = fnames |> Array.map ( fun n -> FileAccessor( n, 1u, false ) )
+            try
+                for i = 0 to fas.Length - 1 do
+                    let pfa = if i = 0 then None else ( Some fas.[ i - 1 ] )
+                    do! VhdxCreator.Create pfa fas.[i] 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
+
+                let! r = VhdxReader.ReadAllStructures fas.[ fas.Length - 1 ]
+                
+                ( fas, r )
+                ||> Array.iter2( fun expfa ( fa, _ ) ->
+                    Assert.StrictEqual( Path.GetFileName expfa.FileName, Path.GetFileName fa.FileName )
+                )
+
+            finally
+                for itr in fas do
+                    itr.Close()
+                for itr in fnames do
+                    GlbFunc.DeleteFile itr
+        }
 
