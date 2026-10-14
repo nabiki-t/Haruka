@@ -19,6 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="VhdxTestFunc.fs" />
     <Compile Include="VhdxCommonsTest.fs" />
     <Compile Include="VhdxReaderTest1.fs" />
     <Compile Include="VhdxReaderTest2.fs" />

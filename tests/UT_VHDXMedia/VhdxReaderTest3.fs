@@ -33,58 +33,6 @@ open Haruka.Test
 // Class implementation
 
 type VhdxReader_Test3 () =
-    [<DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode )>]
-    static extern bool GetVolumeNameForVolumeMountPoint(
-        string lpszVolumeMountPoint, 
-        StringBuilder lpszVolumeName, 
-        uint32 cchBufferLength
-    )
-
-    let getVolumePath ( fullPath: string ) =
-        let driveName, relativePath =
-            let w = Path.GetFullPath fullPath
-            let r = Path.GetPathRoot w
-            ( if r.EndsWith "\\" then r else r + "\\" ), ( w.Substring r.Length )
-    
-        if String.IsNullOrEmpty driveName || not ( driveName.Contains ":" ) then
-            fullPath
-        else
-            let sb = StringBuilder 256
-            if GetVolumeNameForVolumeMountPoint( driveName, sb, uint32 sb.Capacity ) then
-                Path.Combine( sb.ToString(), relativePath )
-            else
-                fullPath
-
-    let genBATEntries ( ent : ( byte * uint64 )[] ) : byte[] =
-        let v = Array.zeroCreate<byte> ( ent.Length * 8 )
-        ent
-        |> Array.iteri ( fun idx ( s, f ) ->
-            let pos = idx * 8
-            ByteFunc.WriteU64LE v ( uint32 pos ) f
-            v.[pos] <- ( s &&& 0x07uy )
-        )
-        v
-
-    let defBatEntries ( pbsize : uint32 ) ( chunkRatio : uint32 ) ( batEntryCount : uint32 ) ( hasParent : bool ) : byte[] =
-        let sectorBitmapCount =
-            if hasParent then
-                ( uint64 batEntryCount ) / ( uint64 chunkRatio + 1UL )
-            else
-                0UL
-        let v = [|
-            for i in 0UL .. uint64 batEntryCount - 1UL do
-                let bitmapIndex = i / ( uint64 chunkRatio + 1UL )
-                if i % ( uint64 chunkRatio + 1UL ) = uint64 chunkRatio then
-                    if hasParent then
-                        ( 6uy, ( bitmapIndex + 1UL ) * 1048576UL )
-                    else
-                        ( 0uy, 0UL )
-                else
-                    let pos = ( sectorBitmapCount + 1UL ) * 1048576UL + ( i - bitmapIndex ) * ( uint64 pbsize )
-                    ( 6uy, pos )
-
-        |]
-        genBATEntries v
 
     // chunkSize : 4GB
     // chunkRatio : 16
@@ -109,49 +57,7 @@ type VhdxReader_Test3 () =
         Required = true;
     }
 
-    static member createDynamicVHDXFileAndTest ( f : ( FileAccessor -> Task ) ) : Task =
-        task {
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, false )
-            try
-                do! VhdxCreator.Create None fa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
-                do! f fa
-            finally
-                fa.Close()
-                GlbFunc.DeleteFile fname
-        }
 
-    static member createDifferencingVHDXFileAndTest ( f : ( FileAccessor -> FileAccessor -> Task ) ) : Task =
-        task {
-            let pfname = Path.GetTempFileName()
-            let pfa = FileAccessor( pfname, 1u, false )
-            let cfname = Path.GetTempFileName()
-            let cfa = FileAccessor( cfname, 1u, false )
-            try
-                do! VhdxCreator.Create None pfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
-                do! VhdxCreator.Create ( Some pfa ) cfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
-                do! f pfa cfa
-            finally
-                pfa.Close()
-                cfa.Close()
-                GlbFunc.DeleteFile pfname
-                GlbFunc.DeleteFile cfname
-        }
-
-    static member genHeaderBytes ( imhd : VhdxHeader ) ( mhd : VhdxMutableHeader ) : byte[] =
-        let v = Array.zeroCreate<byte> 4096
-        Array.blit ( "head" |> Encoding.UTF8.GetBytes ) 0 v 0 4
-        ByteFunc.WriteU64LE v 8u mhd.SequenceNumber
-        ByteFunc.WriteGuid v 16u mhd.FileWriteGuid
-        ByteFunc.WriteGuid v 32u mhd.DataWriteGuid
-        ByteFunc.WriteGuid v 48u mhd.LogGuid
-        ByteFunc.WriteU16LE v 64u imhd.LogVersion
-        ByteFunc.WriteU16LE v 66u imhd.Version
-        ByteFunc.WriteU32LE v 68u imhd.LogLength
-        ByteFunc.WriteU64LE v 72u imhd.LogOffset
-        Crc32C.Compute v
-        |> ByteFunc.WriteU32LE v 4u
-        v
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -183,7 +89,7 @@ type VhdxReader_Test3 () =
                 ( 1uy, 0x000000UL );  // payload 7
                 ( 6uy, 0xA00000UL );  // sector bitmap 1
             |]
-            |> genBATEntries
+            |> VhdxTestFunc.GenBATEntries
         let r = VhdxReader.GetPayloadBlockEntry v 4UL idx
         Assert.StrictEqual( expBatEntryIndex, r.BatEntryIndex )
         Assert.StrictEqual( expState, r.State )
@@ -198,7 +104,7 @@ type VhdxReader_Test3 () =
                 ( 4uy, 0x100000UL );  // payload 0
                 ( 5uy, 0x200000UL );  // payload 1
             |]
-            |> genBATEntries
+            |> VhdxTestFunc.GenBATEntries
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
                 VhdxReader.GetPayloadBlockEntry v 4UL idx |> ignore
@@ -213,7 +119,7 @@ type VhdxReader_Test3 () =
             [|
                 ( s, 0x1FFFFFUL );  // payload 0
             |]
-            |> genBATEntries
+            |> VhdxTestFunc.GenBATEntries
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
                 VhdxReader.GetPayloadBlockEntry v 4UL 0UL |> ignore
@@ -228,7 +134,7 @@ type VhdxReader_Test3 () =
             [|
                 ( s, 0UL );  // payload 0
             |]
-            |> genBATEntries
+            |> VhdxTestFunc.GenBATEntries
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
                 VhdxReader.GetPayloadBlockEntry v 4UL 0UL |> ignore
@@ -257,7 +163,7 @@ type VhdxReader_Test3 () =
                 ( 1uy, 0x900000UL );  // payload 7
                 ( 6uy, 0xA00000UL );  // sector bitmap 1
             |]
-            |> genBATEntries
+            |> VhdxTestFunc.GenBATEntries
         let struct ( entryIndex, state, fileOffset ) = VhdxReader.GetSectorBitmapBlockEntry v 4UL idx
         Assert.StrictEqual( expBatEntryIndex, entryIndex )
         Assert.StrictEqual( expState, state )
@@ -286,7 +192,7 @@ type VhdxReader_Test3 () =
                 for i = 0 to 3 do ( 0uy, 0x100000UL );  // payload 20 - 23
                 ( 7uy, 0x100000UL );                    // sector bitmap 5
             |]
-            |> genBATEntries
+            |> VhdxTestFunc.GenBATEntries
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
                 VhdxReader.GetSectorBitmapBlockEntry v 4UL idx |> ignore
@@ -301,7 +207,7 @@ type VhdxReader_Test3 () =
                     ( 0uy, 0x100000UL );    // payload 0 - 3
                 ( 6uy, 0x1FFFFFUL );        // sector bitmap 0
             |]
-            |> genBATEntries
+            |> VhdxTestFunc.GenBATEntries
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
                 VhdxReader.GetSectorBitmapBlockEntry v 4UL 0UL |> ignore
@@ -316,7 +222,7 @@ type VhdxReader_Test3 () =
                     ( 0uy, 0x100000UL );    // payload 0 - 3
                 ( 6uy, 0UL );               // sector bitmap 0
             |]
-            |> genBATEntries
+            |> VhdxTestFunc.GenBATEntries
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
                 VhdxReader.GetSectorBitmapBlockEntry v 4UL 0UL |> ignore
@@ -361,7 +267,7 @@ type VhdxReader_Test3 () =
                     HasParent = true;
             }
 
-            let batData = defBatEntries vdi.PayloadBlockSize 16u 272u true
+            let batData = VhdxTestFunc.DefaultBatEntries vdi.PayloadBlockSize 16u 272u true
             ByteFunc.WriteU64LE batData patchpos patch
 
             let fname = Path.GetTempFileName()
@@ -398,7 +304,7 @@ type VhdxReader_Test3 () =
                     yield v
             |]
 
-            let batData = defBatEntries vdi.PayloadBlockSize 16u 272u true
+            let batData = VhdxTestFunc.DefaultBatEntries vdi.PayloadBlockSize 16u 272u true
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, 1u, false )
             try
@@ -444,7 +350,7 @@ type VhdxReader_Test3 () =
                 defaultVDI with
                     HasParent = true;
             }
-            let batData = Array.replicate 272 ( 0uy, 0UL ) |> genBATEntries
+            let batData = Array.replicate 272 ( 0uy, 0UL ) |> VhdxTestFunc.GenBATEntries
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, 1u, false )
             try
@@ -472,7 +378,8 @@ type VhdxReader_Test3 () =
     [<Fact>]
     member _.ReadBat_003 () =
         task {
-            let batData = defBatEntries defaultVDI.PayloadBlockSize 16u 272u true  // Set values ​​in the sector bitmap entries.
+            // Set values ​​in the sector bitmap entries.
+            let batData = VhdxTestFunc.DefaultBatEntries defaultVDI.PayloadBlockSize 16u 272u true
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, 1u, false )
             try
@@ -551,7 +458,7 @@ type VhdxReader_Test3 () =
         |];
         [|
             [|
-                let v = VhdxReader_Test2.defReginTable 32 [| 0x00uy; 0x00uy; 0x10uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x10uy; 0x00uy; |]
+                let v = VhdxTestFunc.GetDefaultRegionTable 32 [| 0x00uy; 0x00uy; 0x10uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x10uy; 0x00uy; |]
                 ( 0x30000UL, v );
                 ( 0x40000UL, v );
             |];
@@ -561,7 +468,7 @@ type VhdxReader_Test3 () =
             [|
                 // missing metadata resion entry in region table 1
                 let v =
-                    VhdxReader_Test2.genRegionTable {
+                    VhdxTestFunc.GenRegionTable {
                         Signature = 0x72656769u
                         Checksum = 0u;
                         EntryCount = 0u;
@@ -581,7 +488,7 @@ type VhdxReader_Test3 () =
             [|
                 // missing BAT resion entry in region table 1
                 let v =
-                    VhdxReader_Test2.genRegionTable {
+                    VhdxTestFunc.GenRegionTable {
                         Signature = 0x72656769u
                         Checksum = 0u;
                         EntryCount = 0u;
@@ -614,7 +521,7 @@ type VhdxReader_Test3 () =
     [<Theory>]
     [<MemberData( "m_ReadVhdx_Fail_002_data" )>]
     member _.ReadVhdx_Fail_002 ( patch : ( uint64 * byte[] )[] ) ( expmsg : string ) =
-        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
             for ( patchpos, patchdata ) in patch do
                 do! fa.Write patchpos ( ArraySegment patchdata )
             let! r =
@@ -627,7 +534,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_003 () =
-        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
             let! cstr = VhdxReader.ReadVhdx fa
 
             // The payload overlaps with the log area.
@@ -647,7 +554,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_004 () =
-        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun _ cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun _ cfa -> task {
             let! cstr = VhdxReader.ReadVhdx cfa
 
             // The sector bitmap overlaps with the log area.
@@ -667,7 +574,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_005 () =
-        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
             let! cstr = VhdxReader.ReadVhdx fa
 
             // The payload overlaps with the BAT or metadata area.
@@ -687,7 +594,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_006 () =
-        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun _ cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun _ cfa -> task {
             let! cstr = VhdxReader.ReadVhdx cfa
 
             // The sector bitmap overlaps with the BAT or metadata area.
@@ -707,7 +614,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_007 () =
-        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun _ cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun _ cfa -> task {
             do! cfa.SetFileSize 0xF00000UL
             let! cstr = VhdxReader.ReadVhdx cfa
 
@@ -729,7 +636,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_008 () =
-        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
             do! fa.SetFileSize 0xF00000UL
             let! cstr = VhdxReader.ReadVhdx fa
 
@@ -747,7 +654,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_001 () =
-        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
             let! cstr = VhdxReader.ReadVhdx fa
             Assert.StrictEqual( 0x100000u, cstr.ImmHeader.LogLength )
             Assert.False( cstr.VDI.HasParent )
@@ -760,7 +667,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_002 () =
-        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun _ fa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun _ fa -> task {
             let! cstr = VhdxReader.ReadVhdx fa
             Assert.StrictEqual( 0x100000u, cstr.ImmHeader.LogLength )
             Assert.True( cstr.VDI.HasParent )
@@ -773,7 +680,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_003 () =
-        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
             let initialFileSize = fa.FileSize
             let! cstr = VhdxReader.ReadVhdx fa
             let idx = [
@@ -821,10 +728,10 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadAllStructures_Fail_002 () =
-        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
             let! pstr = VhdxReader.ReadVhdx pfa
             // corrupt DataWriteGuid on header 1
-            let v = VhdxReader_Test3.genHeaderBytes pstr.ImmHeader { pstr.LoadedVarHeader with DataWriteGuid = Guid.NewGuid() }
+            let v = VhdxTestFunc.GenHeaderBytes pstr.ImmHeader { pstr.LoadedVarHeader with DataWriteGuid = Guid.NewGuid() }
             do! pfa.Write 65536UL ( ArraySegment v )
             // corrupt Signature on header 2
             do! pfa.Write 131072UL ( [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |] |> ArraySegment )
@@ -838,11 +745,11 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadAllStructures_Fail_003 () =
-        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
             let! pstr = VhdxReader.ReadVhdx pfa
             let! cstr = VhdxReader.ReadVhdx cfa
             // corrupt FileWriteGuid on header 1
-            let v = VhdxReader_Test3.genHeaderBytes pstr.ImmHeader { pstr.LoadedVarHeader with FileWriteGuid = cstr.LoadedVarHeader.FileWriteGuid }
+            let v = VhdxTestFunc.GenHeaderBytes pstr.ImmHeader { pstr.LoadedVarHeader with FileWriteGuid = cstr.LoadedVarHeader.FileWriteGuid }
             do! pfa.Write 65536UL ( ArraySegment v )
             // corrupt Signature on header 2
             do! pfa.Write 131072UL ( [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |] |> ArraySegment )
@@ -864,12 +771,12 @@ type VhdxReader_Test3 () =
     [<Theory>]
     [<MemberData( "m_ReadAllStructures_Fail_004_data" )>]
     member _.ReadAllStructures_Fail_004 ( vdiud : VirtualDiskInfo -> VirtualDiskInfo ) ( expmsg : string ) =
-        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
             let! pstr = VhdxReader.ReadVhdx pfa
             let! cstr = VhdxReader.ReadVhdx cfa
 
             // Update metadata of child disk.
-            let metadataBytes = VhdxReader_Test2.defMetadataTable ( vdiud cstr.VDI )
+            let metadataBytes = VhdxTestFunc.VDItoMetadataTable ( vdiud cstr.VDI )
             let metadataRegion =
                 cstr.Region.Entries
                 |> List.find ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_METADATA )
@@ -891,7 +798,7 @@ type VhdxReader_Test3 () =
     [<Theory>]
     [<MemberData( "m_ReadAllStructures_Fail_005_data" )>]
     member _.ReadAllStructures_001 ( keyname : string ) ( genpname : FileAccessor -> string ) =
-        VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
             let! pstr = VhdxReader.ReadVhdx pfa
             let! cstr = VhdxReader.ReadVhdx cfa
 
@@ -902,7 +809,7 @@ type VhdxReader_Test3 () =
                     ( keyname, genpname pfa; );
                 |]
                 |> Map
-            let metadataBytes = VhdxReader_Test2.defMetadataTable { cstr.VDI with ParentLocator = wparentLocator }
+            let metadataBytes = VhdxTestFunc.VDItoMetadataTable { cstr.VDI with ParentLocator = wparentLocator }
             let metadataRegion =
                 cstr.Region.Entries
                 |> List.find ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_METADATA )
@@ -917,12 +824,12 @@ type VhdxReader_Test3 () =
     [<Fact>]
     member _.ReadAllStructures_002 () =
         if RuntimeInformation.IsOSPlatform OSPlatform.Windows then
-            VhdxReader_Test3.createDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+            VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
                 let! pstr = VhdxReader.ReadVhdx pfa
                 let! cstr = VhdxReader.ReadVhdx cfa
 
                 // Get relative path name of parent disk
-                let wpfname = getVolumePath pfa.FileName
+                let wpfname = VhdxTestFunc.GetVolumePath pfa.FileName
 
                 // Update metadata of child disk.
                 let wparentLocator =
@@ -931,7 +838,7 @@ type VhdxReader_Test3 () =
                         ( "volume_path", wpfname; );
                     |]
                     |> Map
-                let metadataBytes = VhdxReader_Test2.defMetadataTable { cstr.VDI with ParentLocator = wparentLocator }
+                let metadataBytes = VhdxTestFunc.VDItoMetadataTable { cstr.VDI with ParentLocator = wparentLocator }
                 let metadataRegion =
                     cstr.Region.Entries
                     |> List.find ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_METADATA )

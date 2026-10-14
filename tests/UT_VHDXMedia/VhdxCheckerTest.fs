@@ -52,7 +52,7 @@ type VhdxChecker_Test () =
 
     [<Fact>]
     member _.Check_001() =
-        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
             let! str1 = VhdxReader.ReadVhdx fa
 
             let idx = [
@@ -81,7 +81,7 @@ type VhdxChecker_Test () =
 
     [<Fact>]
     member _.Replay_001() =
-        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
             let! str1 = VhdxReader.ReadVhdx fa
             Assert.Empty( str1.Log )
             let! verHeade = VhdxChecker.Check fa
@@ -91,7 +91,7 @@ type VhdxChecker_Test () =
 
     [<Fact>]
     member _.Replay_002() =
-        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
             let! str1 = VhdxReader.ReadVhdx fa
 
             let logLength = ( int32 str1.ImmHeader.LogLength )
@@ -103,8 +103,8 @@ type VhdxChecker_Test () =
             let logGuid = Guid.NewGuid()
             let lastFileSize = fa.FileSize
             let lastFileOffset = ( fa.FileSize + 0x100000UL )
-            let logData = VhdxReader_Test1.genLogData logLength 0 logEntry logGuid 1UL lastFileSize lastFileOffset
-            let hdBytes = VhdxReader_Test3.genHeaderBytes str1.ImmHeader { str1.LoadedVarHeader with LogGuid = logGuid }
+            let logData = VhdxTestFunc.GenLogData logLength 0 logEntry logGuid 1UL lastFileSize lastFileOffset
+            let hdBytes = VhdxTestFunc.GenHeaderBytes str1.ImmHeader { str1.LoadedVarHeader with LogGuid = logGuid }
 
             do! fa.Write str1.ImmHeader.LogOffset ( ArraySegment logData )
             do! fa.Write 65536UL ( hdBytes |> ArraySegment )
@@ -123,7 +123,7 @@ type VhdxChecker_Test () =
 
     [<Fact>]
     member _.Replay_003() =
-        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
             let! str1 = VhdxReader.ReadVhdx fa
             let logLength = ( int32 str1.ImmHeader.LogLength )
             let rndData = 
@@ -141,8 +141,8 @@ type VhdxChecker_Test () =
             let logGuid = Guid.NewGuid()
             let lastFileSize = fa.FileSize
             let lastFileOffset = ( fa.FileSize + 0x100000UL )
-            let logData = VhdxReader_Test1.genLogData logLength 0 logEntry logGuid 1UL lastFileSize lastFileOffset
-            let hdBytes = VhdxReader_Test3.genHeaderBytes str1.ImmHeader { str1.LoadedVarHeader with LogGuid = logGuid }
+            let logData = VhdxTestFunc.GenLogData logLength 0 logEntry logGuid 1UL lastFileSize lastFileOffset
+            let hdBytes = VhdxTestFunc.GenHeaderBytes str1.ImmHeader { str1.LoadedVarHeader with LogGuid = logGuid }
 
             do! fa.Write str1.ImmHeader.LogOffset ( ArraySegment logData )
             do! fa.Write 65536UL ( hdBytes |> ArraySegment )
@@ -159,7 +159,7 @@ type VhdxChecker_Test () =
 
     [<Fact>]
     member _.Replay_004() =
-        VhdxReader_Test3.createDynamicVHDXFileAndTest ( fun fa -> task {
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
             let! str1 = VhdxReader.ReadVhdx fa
 
             let rndData = 
@@ -182,8 +182,8 @@ type VhdxChecker_Test () =
             let logGuid = Guid.NewGuid()
             let lastFileSize = fa.FileSize
             let lastFileOffset = fa.FileSize
-            let logData = VhdxReader_Test1.genLogData logLength 0 logEntry logGuid 1UL lastFileSize lastFileOffset
-            let hdBytes = VhdxReader_Test3.genHeaderBytes str1.ImmHeader { str1.LoadedVarHeader with LogGuid = logGuid }
+            let logData = VhdxTestFunc.GenLogData logLength 0 logEntry logGuid 1UL lastFileSize lastFileOffset
+            let hdBytes = VhdxTestFunc.GenHeaderBytes str1.ImmHeader { str1.LoadedVarHeader with LogGuid = logGuid }
 
             do! fa.Write str1.ImmHeader.LogOffset ( ArraySegment logData )
             do! fa.Write 65536UL ( hdBytes |> ArraySegment )

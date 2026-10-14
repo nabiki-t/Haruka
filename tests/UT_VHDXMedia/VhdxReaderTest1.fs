@@ -27,175 +27,9 @@ open Haruka.Test
 
 
 //=============================================================================
-// Type definitions
-
-type TestLogDesc =
-    | Zero of ( uint64 * uint64 )   // ZeroLength and FileOffset
-    | Data of byte[] * uint64       // byte data and FileOffset. The byte data must be 4KB length.
-
-type TestLogEntry = {
-    PatchPosition : int;
-    PatchData : byte[];
-    Descriptor : TestLogDesc[];
-}
-
-//=============================================================================
 // Class implementation
 
 type VhdxReader_Test1 () =
-
-    static member logEntryHeader
-        ( entryLength : uint32 )
-        ( tail : uint32 )
-        ( sequenceNumber : uint64 )
-        ( descriptorCount : uint32 )
-        ( logGuid : Guid )
-        ( flushedFileOffset : uint64 )
-        ( lastFileOffset : uint64 ) =
-        [|
-            yield! ( "loge" |> Encoding.UTF8.GetBytes )     // ZeroSignature
-            0x00uy; 0x00uy; 0x00uy; 0x00uy;                 // checksum
-            yield! BitConverter.GetBytes entryLength        // EntryLength
-            yield! BitConverter.GetBytes tail               // tail
-            yield! BitConverter.GetBytes sequenceNumber     // SequenceNumber
-            yield! BitConverter.GetBytes descriptorCount    // DescriptorCount
-            0x00uy; 0x00uy; 0x00uy; 0x00uy;                 // Reserved
-            yield! logGuid.ToByteArray()                    // LogGuid
-            yield! BitConverter.GetBytes flushedFileOffset  // FlushedFileOffset
-            yield! BitConverter.GetBytes lastFileOffset     // lastFileOffset
-        |]
-
-    static member zeroDiscriptor
-        ( zeroLength : uint64 )
-        ( fileOffset : uint64 )
-        ( sequenceNumber : uint64 ) =
-        [|
-            yield! ( "zero" |> Encoding.UTF8.GetBytes )     // Signature
-            0x00uy; 0x00uy; 0x00uy; 0x00uy;                 // Reserved
-            yield! BitConverter.GetBytes zeroLength         // ZeroLength
-            yield! BitConverter.GetBytes fileOffset         // FileOffset
-            yield! BitConverter.GetBytes sequenceNumber     // SequenceNumber
-        |]
-
-    static member dataDiscriptor
-        ( trailingBytes : byte[] )
-        ( leadingBytes : byte[] )
-        ( fileOffset : uint64 )
-        ( sequenceNumber : uint64 ) =
-        [|
-            yield! ( "desc" |> Encoding.UTF8.GetBytes )     // DataSignature
-            yield! trailingBytes                            // TrailingBytes
-            yield! leadingBytes                             // LeadingBytes
-            yield! BitConverter.GetBytes fileOffset         // FileOffset
-            yield! BitConverter.GetBytes sequenceNumber     // SequenceNumber
-        |]
-
-    static member genLogData
-        ( logLength : int32 )
-        ( startPos : int32 )    // 4KB unit
-        ( logEntries : TestLogEntry[] )
-        ( logGuid : Guid )
-        ( sequenceNumber : uint64 )
-        ( flushedFileOffset : uint64 )
-        ( lastFileOffset : uint64 ) =
-
-        let v = [|
-            for i = 0 to logEntries.Length - 1 do
-                let logents = logEntries.[i].Descriptor
-                let entryBytes = [|
-                    let dataCount = Array.fold ( fun cnt j -> cnt + ( match j with | Data _ -> 1 | _ -> 0 ) ) 0 logents
-                    let headerlength = Functions.AddPaddingLengthInt32 ( 64 + logents.Length * 32 ) 4096
-                    let entryLength = headerlength + dataCount * 4096
-                    let effSN = ( sequenceNumber + uint64 i )
-                    // log entry header
-                    yield! VhdxReader_Test1.logEntryHeader ( uint32 entryLength ) ( uint32 startPos ) effSN ( uint32 logents.Length ) logGuid flushedFileOffset lastFileOffset
-                    // descriptor
-                    for itr2 in logents do
-                        match itr2 with
-                        | Zero( x, y ) ->
-                            yield! VhdxReader_Test1.zeroDiscriptor x y effSN
-                        | Data( x, y ) ->
-                            let trailingBytes = if x.Length > 0 then x.[ 4092 .. 4095 ] else Array.zeroCreate<byte> 4
-                            let leadingBytes = if x.Length > 0 then x.[ 0 .. 7 ] else Array.zeroCreate<byte> 8
-                            yield! VhdxReader_Test1.dataDiscriptor trailingBytes leadingBytes y effSN
-                    // padding
-                    let padlength = headerlength - ( 64 + logents.Length * 32 )
-                    yield! Array.zeroCreate<byte> padlength
-                    // data sector
-                    for itr2 in logents do
-                        match itr2 with
-                        | Data( x, y ) ->
-                            yield! ( "data" |> Encoding.UTF8.GetBytes )     // DataSignature
-                            yield! BitConverter.GetBytes ( uint32 ( effSN >>> 32 ) )   // SequenceHigh
-                            yield! if x.Length > 0 then x.[ 8 .. 4091 ] else Array.zeroCreate<byte> 4084
-                            yield! BitConverter.GetBytes ( uint32 effSN )   // SequenceLow
-                        | _ ->
-                            ()
-                |]
-                Array.blit logEntries.[i].PatchData 0 entryBytes logEntries.[i].PatchPosition logEntries.[i].PatchData.Length
-                let crc = Crc32C.Compute entryBytes
-                ByteFunc.WriteU32LE entryBytes 4u crc
-                yield! entryBytes
-        |]
-        let logBuffer = Array.zeroCreate<byte> logLength
-        let bufferOffset = startPos % logLength
-        if bufferOffset + v.Length <= logLength then
-            Array.blit v 0 logBuffer bufferOffset v.Length
-        else
-            let firstChunkSize = logLength - bufferOffset
-            let secondChunkSize = v.Length - firstChunkSize
-            Array.blit v 0 logBuffer bufferOffset firstChunkSize
-            Array.blit v firstChunkSize logBuffer 0 secondChunkSize
-        logBuffer
-
-    static member genLogEntry ( descriptor : TestLogDesc[] ) =
-        let ddindex =
-            descriptor
-            |> Array.mapFold ( fun s itr ->
-                if itr.IsData then
-                    ( s, s + 1u )
-                else
-                    ( 0u, s )
-            ) 0u
-            |> fst
-        {
-            Signature = 0u;
-            Checksum = 0u;
-            EntryLength = 0u;
-            Tail = 0u;
-            SequenceNumber = 0UL;
-            DescriptorCount = 1u;
-            LogGuid = Guid();
-            FlushedFileOffset = 0UL;
-            LastFileOffset = 0UL;
-            Descriptors = [
-                for i = 0 to descriptor.Length - 1 do
-                    match descriptor.[i] with
-                    | Zero( x, y ) ->
-                        LogDescriptor.Zero({
-                            ZeroSignature = 0u;
-                            ZeroLength = x;
-                            FileOffset = y;
-                            SequenceNumber = 0UL;
-                        });
-                    | Data( x, y ) ->
-                        LogDescriptor.Data({
-                            DataSignature = 0u;
-                            TrailingBytes = x.[ 4092 .. 4095 ];
-                            LeadingBytes = x.[ 0 .. 7 ]
-                            FileOffset = y;
-                            SequenceNumber = 0UL;
-                            ddIndex = ddindex.[i];
-                        });
-            ]
-            DataSectors = [
-                for i = 0 to descriptor.Length - 1 do
-                    match descriptor.[i] with
-                    | Data( x, _ ) ->
-                        yield x.[ 8 .. 4091 ];
-                    | _ -> ()
-            ];
-        };
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -755,11 +589,14 @@ type VhdxReader_Test1 () =
             {
                 PatchPosition = patch1Pos;
                 PatchData = patch1Data;
-                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 0UL );
+                    TestLogDesc.Data( [||], 4096UL );
+                |];
             };
         |]
         let logGuid = Guid()
-        let logData = VhdxReader_Test1.genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL
+        let logData = VhdxTestFunc.GenLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL
         Array.blit patch2Data 0 logData patch2Pos patch2Data.Length
         let r = VhdxReader.ReadLogEntry logData 0u logGuid
         Assert.True( r.IsNone )
@@ -770,21 +607,31 @@ type VhdxReader_Test1 () =
             {
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 0UL );
+                    TestLogDesc.Data( [||], 4096UL );
+                    TestLogDesc.Data( [||], 8192UL );
+                    TestLogDesc.Zero( 4096UL, 12288UL );
+                |];
             };
             {
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 12288UL ); Data( [||], 16384UL ); |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 12288UL );
+                    TestLogDesc.Data( [||], 16384UL );
+                |];
             };
             {
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 20480UL ); |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 20480UL );
+                |];
             };
         |]
         let logGuid = Guid.NewGuid()
-        let logData = VhdxReader_Test1.genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
+        let logData = VhdxTestFunc.GenLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
         let r = VhdxReader.ReadLogEntry logData 0u logGuid
         Assert.True( r.IsSome )
         let signature = r.Value.Signature |> int32 |> IPAddress.NetworkToHostOrder |> BitConverter.GetBytes |> Encoding.UTF8.GetString
@@ -831,11 +678,16 @@ type VhdxReader_Test1 () =
             {
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 0UL );
+                    TestLogDesc.Data( [||], 4096UL );
+                    TestLogDesc.Data( [||], 8192UL );
+                    TestLogDesc.Zero( 4096UL, 12288UL );
+                |];
             };
         |]
         let logGuid = Guid.NewGuid()
-        let logData = VhdxReader_Test1.genLogData 1048576 pos entry logGuid 99UL 2097152UL 3145728UL 
+        let logData = VhdxTestFunc.GenLogData 1048576 pos entry logGuid 99UL 2097152UL 3145728UL 
         let r = VhdxReader.ReadLogEntry logData ( uint32 pos ) logGuid
         Assert.True( r.IsSome )
         Assert.StrictEqual( 4, r.Value.Descriptors.Length )
@@ -854,14 +706,14 @@ type VhdxReader_Test1 () =
                 PatchData = Array.Empty();
                 Descriptor = [|
                     for i = 1 to zcount do
-                        yield Zero( 4096UL, 12288UL )
+                        yield TestLogDesc.Zero( 4096UL, 12288UL )
                     for i = 1 to dcount do
-                        yield Data( [||], 0UL );
+                        yield TestLogDesc.Data( [||], 0UL );
                 |];
             };
         |]
         let logGuid = Guid.NewGuid()
-        let logData = VhdxReader_Test1.genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
+        let logData = VhdxTestFunc.GenLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
         let r = VhdxReader.ReadLogEntry logData 0u logGuid
         Assert.True( r.IsSome )
         Assert.StrictEqual( zcount + dcount, r.Value.Descriptors.Length )
@@ -876,21 +728,31 @@ type VhdxReader_Test1 () =
             {   // Entry length = 16384
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 0UL );
+                    TestLogDesc.Data( [||], 4096UL );
+                    TestLogDesc.Data( [||], 8192UL );
+                    TestLogDesc.Zero( 4096UL, 12288UL );
+                |];
             };
             {   // Entry length = 12288
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 12288UL ); Data( [||], 16384UL ); |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 12288UL );
+                    TestLogDesc.Data( [||], 16384UL );
+                |];
             };
             {   // Entry length = 8192
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 20480UL ); |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 20480UL );
+                |];
             };
         |]
         let logGuid = Guid.NewGuid()
-        let logData = VhdxReader_Test1.genLogData 1048576 pos entry logGuid 99UL 2097152UL 3145728UL 
+        let logData = VhdxTestFunc.GenLogData 1048576 pos entry logGuid 99UL 2097152UL 3145728UL 
         let r = VhdxReader.ReadActiveLogSequense logData logGuid
         Assert.StrictEqual( 3, r.Length )
         Assert.StrictEqual( 4u, r.[0].DescriptorCount )
@@ -914,25 +776,35 @@ type VhdxReader_Test1 () =
             {   // Entry length = 16384
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 0UL );
+                    TestLogDesc.Data( [||], 4096UL );
+                    TestLogDesc.Data( [||], 8192UL );
+                    TestLogDesc.Zero( 4096UL, 12288UL );
+                |];
             };
             {   // Entry length = 12288
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 12288UL ); Data( [||], 16384UL ); |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 12288UL );
+                    TestLogDesc.Data( [||], 16384UL );
+                |];
             };
         |]
         let entry2 = [|
             {   // Entry length = 8192
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 20480UL ); |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 20480UL );
+                |];
             };
         |]
 
         let logGuid = Guid.NewGuid()
-        let logData1 = VhdxReader_Test1.genLogData 1048576 0 entry1 logGuid seq1 2097152UL 3145728UL
-        let logData2 = VhdxReader_Test1.genLogData 1048576 65536 entry2 logGuid seq2 2097152UL 3145728UL
+        let logData1 = VhdxTestFunc.GenLogData 1048576 0 entry1 logGuid seq1 2097152UL 3145728UL
+        let logData2 = VhdxTestFunc.GenLogData 1048576 65536 entry2 logGuid seq2 2097152UL 3145728UL
         Array.blit logData2 65536 logData1 65536 8192
 
         let r = VhdxReader.ReadActiveLogSequense logData1 logGuid
@@ -958,25 +830,35 @@ type VhdxReader_Test1 () =
             {   // Entry length = 16384
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 0UL );
+                    TestLogDesc.Data( [||], 4096UL );
+                    TestLogDesc.Data( [||], 8192UL );
+                    TestLogDesc.Zero( 4096UL, 12288UL );
+                |];
             };
             {   // Entry length = 12288
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 12288UL ); Data( [||], 16384UL ); |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 12288UL );
+                    TestLogDesc.Data( [||], 16384UL );
+                |];
             };
         |]
         let entry2 = [|
             {   // Entry length = 8192
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 20480UL ); |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 20480UL );
+                |];
             };
         |]
 
         let logGuid = Guid.NewGuid()
-        let logData1 = VhdxReader_Test1.genLogData 1048576 0 entry1 logGuid 1UL 2097152UL 3145728UL
-        let logData2 = VhdxReader_Test1.genLogData 1048576 28672 entry2 logGuid 3UL 2097152UL 3145728UL
+        let logData1 = VhdxTestFunc.GenLogData 1048576 0 entry1 logGuid 1UL 2097152UL 3145728UL
+        let logData2 = VhdxTestFunc.GenLogData 1048576 28672 entry2 logGuid 3UL 2097152UL 3145728UL
         Array.blit logData2 28672 logData1 28672 8192
 
         let r = VhdxReader.ReadActiveLogSequense logData1 logGuid
@@ -990,11 +872,11 @@ type VhdxReader_Test1 () =
             {
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 20480UL ); |];
+                Descriptor = [| TestLogDesc.Data( [||], 20480UL ); |];
             };
         |]
         let logGuid = Guid.NewGuid()
-        let logData1 = VhdxReader_Test1.genLogData 1048576 0 entry logGuid 0UL 2097152UL 3145728UL
+        let logData1 = VhdxTestFunc.GenLogData 1048576 0 entry logGuid 0UL 2097152UL 3145728UL
         let r = VhdxReader.ReadActiveLogSequense logData1 logGuid
         Assert.StrictEqual( 1, r.Length )
         Assert.StrictEqual( 1u, r.[0].DescriptorCount )
@@ -1006,20 +888,25 @@ type VhdxReader_Test1 () =
             {   // Entry length = 16384
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |];
+                Descriptor = [|
+                    TestLogDesc.Data( [||], 0UL );
+                    TestLogDesc.Data( [||], 4096UL );
+                    TestLogDesc.Data( [||], 8192UL );
+                    TestLogDesc.Zero( 4096UL, 12288UL )
+                |];
             };
         |]
         let entry2 = [|
             {   // Entry length = 8192
                 PatchPosition = 0;
                 PatchData = Array.Empty();
-                Descriptor = [| Data( [||], 20480UL ); |];
+                Descriptor = [| TestLogDesc.Data( [||], 20480UL ); |];
             };
         |]
 
         let logGuid = Guid.NewGuid()
-        let logData1 = VhdxReader_Test1.genLogData 1048576 8192 entry1 logGuid 50UL 2097152UL 3145728UL
-        let logData2 = VhdxReader_Test1.genLogData 1048576 65536 entry2 logGuid 100UL 2097152UL 3145728UL
+        let logData1 = VhdxTestFunc.GenLogData 1048576 8192 entry1 logGuid 50UL 2097152UL 3145728UL
+        let logData2 = VhdxTestFunc.GenLogData 1048576 65536 entry2 logGuid 100UL 2097152UL 3145728UL
         Array.blit logData2 65536 logData1 32768 8192
 
         let r = VhdxReader.ReadActiveLogSequense logData1 logGuid
@@ -1155,8 +1042,8 @@ type VhdxReader_Test1 () =
             Random.Shared.NextBytes data0
             Random.Shared.NextBytes data1
             let entry = [
-                VhdxReader_Test1.genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
-                VhdxReader_Test1.genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+                VhdxTestFunc.GenLogEntry( [| TestLogDesc.Zero( 4096UL, 4096UL ); |] );
+                VhdxTestFunc.GenLogEntry( [| TestLogDesc.Data( data0, 8192UL ); TestLogDesc.Data( data1, 20480UL ); |] );
             ]
 
             try
@@ -1183,8 +1070,8 @@ type VhdxReader_Test1 () =
             Random.Shared.NextBytes data0
             Random.Shared.NextBytes data1
             let entry = [
-                VhdxReader_Test1.genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
-                VhdxReader_Test1.genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+                VhdxTestFunc.GenLogEntry( [| TestLogDesc.Zero( 4096UL, 4096UL ); |] );
+                VhdxTestFunc.GenLogEntry( [| TestLogDesc.Data( data0, 8192UL ); TestLogDesc.Data( data1, 20480UL ); |] );
             ]
 
             try
@@ -1212,8 +1099,8 @@ type VhdxReader_Test1 () =
             Random.Shared.NextBytes data0
             Random.Shared.NextBytes data1
             let entry = [
-                VhdxReader_Test1.genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
-                VhdxReader_Test1.genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+                VhdxTestFunc.GenLogEntry( [| TestLogDesc.Zero( 4096UL, 4096UL ); |] );
+                VhdxTestFunc.GenLogEntry( [| TestLogDesc.Data( data0, 8192UL ); TestLogDesc.Data( data1, 20480UL ); |] );
             ]
 
             try
@@ -1242,8 +1129,8 @@ type VhdxReader_Test1 () =
             Random.Shared.NextBytes data0
             Random.Shared.NextBytes data1
             let entry = [
-                VhdxReader_Test1.genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
-                VhdxReader_Test1.genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+                VhdxTestFunc.GenLogEntry( [| TestLogDesc.Zero( 4096UL, 4096UL ); |] );
+                VhdxTestFunc.GenLogEntry( [| TestLogDesc.Data( data0, 8192UL ); TestLogDesc.Data( data1, 20480UL ); |] );
             ]
 
             try
@@ -1271,8 +1158,8 @@ type VhdxReader_Test1 () =
             Random.Shared.NextBytes data0
             Random.Shared.NextBytes data1
             let entry = [
-                VhdxReader_Test1.genLogEntry( [| Zero( 4096UL, 4096UL ); |] );
-                VhdxReader_Test1.genLogEntry( [| Data( data0, 8192UL ); Data( data1, 20480UL ); |] );
+                VhdxTestFunc.GenLogEntry( [| TestLogDesc.Zero( 4096UL, 4096UL ); |] );
+                VhdxTestFunc.GenLogEntry( [| TestLogDesc.Data( data0, 8192UL ); TestLogDesc.Data( data1, 20480UL ); |] );
             ]
 
             try

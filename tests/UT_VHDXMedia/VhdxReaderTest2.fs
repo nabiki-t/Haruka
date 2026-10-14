@@ -34,220 +34,6 @@ open Haruka.Test
 
 type VhdxReader_Test2 () =
 
-    static member genRegionTable ( t : RegionTable ) ( pos : int ) ( patch : byte[] ) : byte[] =
-        let v = Array.zeroCreate<byte> 65536
-        ByteFunc.WriteU32BE v 0u t.Signature
-        ByteFunc.WriteS32LE v 8u t.Entries.Length
-        t.Entries
-        |> List.iteri ( fun idx itr ->
-            let pos = uint32 ( 16 + idx * 32 )
-            if pos <= 65504u then
-                ByteFunc.WriteGuid v ( pos + 0u ) itr.Guid
-                ByteFunc.WriteU64LE v ( pos + 16u ) itr.FileOffset
-                ByteFunc.WriteU32LE v ( pos + 24u ) itr.Length
-                ByteFunc.WriteU32LE v ( pos + 28u ) ( if itr.Required then 1u else 0u )
-        )
-        Array.blit patch 0 v pos patch.Length
-        let crc = Crc32C.Compute v
-        ByteFunc.WriteU32LE v 4u crc
-        v
-
-    static member defReginTable ( pos : int ) ( patch : byte[] ) : byte[] =
-        VhdxReader_Test2.genRegionTable {
-            Signature = 0x72656769u
-            Checksum = 0u;
-            EntryCount = 0u;
-            Entries = [
-                {
-                    Guid = VhdxCommons.REGENT_TYPE_BAT;
-                    FileOffset = 1048576UL;
-                    Length = 1048576u;
-                    Required = true;
-                };
-                {
-                    Guid = VhdxCommons.REGENT_TYPE_METADATA;
-                    FileOffset = 2097152UL;
-                    Length = 1048576u;
-                    Required = true;
-                };
-            ];
-        } pos patch
-
-    static member updateMTEOffset ( mdi : MetadataTableEntry[] ) : MetadataTableEntry[] =
-        mdi
-        |> Array.mapFold
-            ( fun pos itr ->
-                let ne = if itr.Length > 0u then { itr with Offset = pos } else itr
-                let npos = pos + itr.Length
-                ( ne, npos )
-            ) 65536u
-        |> fst
-
-    static member genMetadataTable ( len : int ) ( mdi : MetadataTableEntry[] ) : byte[] =
-        let v = Array.zeroCreate<byte> len
-        ByteFunc.WriteU64BE v 0u 0x6D65746164617461UL
-        ByteFunc.WriteU16LE v 10u ( uint16 mdi.Length )
-        mdi
-        |> Array.iteri( fun idx itr ->
-            let pos = 32 + idx * 32
-            ByteFunc.WriteGuid v ( uint32 pos ) itr.ItemId
-            ByteFunc.WriteU32LE v ( uint32 pos + 16u ) itr.Offset
-            ByteFunc.WriteU32LE v ( uint32 pos + 20u ) itr.Length
-            let f =  ( if itr.IsUser then 1uy else 0uy ) ||| ( if itr.IsVirtualDisk then 2uy else 0uy ) ||| ( if itr.IsRequired then 4uy else 0uy )
-            v.[ pos + 24 ] <- f
-            Array.blit itr.Data 0 v ( int32 itr.Offset ) itr.Data.Length
-        )
-        v
-
-    static member genFileParameter ( blockSize : uint32 ) ( leaveBlockAllocated : bool ) ( hasParent : bool ) : byte[] =
-        let v = Array.zeroCreate<byte> 8
-        ByteFunc.WriteU32LE v 0u blockSize
-        v.[4] <- ( if leaveBlockAllocated then 1uy else 0uy ) ||| ( if hasParent then 2uy else 0uy )
-        v
-
-    static member genVirtualDiskSize ( virtualDiskSize : uint64 ) : byte[] =
-        let v = Array.zeroCreate<byte> 8
-        ByteFunc.WriteU64LE v 0u virtualDiskSize
-        v
-
-    static member genVirtualDiskId ( virtualDiskId : Guid ) : byte[] =
-        let v = Array.zeroCreate<byte> 16
-        ByteFunc.WriteGuid v 0u virtualDiskId
-        v
-
-    static member genLogicalSectorSize ( logicalSectorSize : uint32 ) : byte[] =
-        let v = Array.zeroCreate<byte> 4
-        ByteFunc.WriteU32LE v 0u logicalSectorSize
-        v
-
-    static member genPhysicalSectorSize ( physicalSectorSize : uint32 ) : byte[] =
-        let v = Array.zeroCreate<byte> 4
-        ByteFunc.WriteU32LE v 0u physicalSectorSize
-        v
-
-    static member genParentLocator ( parentLocator : ( string * string ) [] ) : byte[] =
-        let parentLocator_u16 =
-            parentLocator
-            |> Array.map ( fun ( e, v ) -> ( Encoding.Unicode.GetBytes e, Encoding.Unicode.GetBytes v ) )
-        let offset, valueLen =
-            parentLocator_u16
-            |> Array.mapFold
-                ( fun pos ( e, v ) ->
-                    ( uint32 pos, uint32( pos + e.Length ) ), pos + e.Length + v.Length
-                ) 0
-        let buflen = 20 + 12 * parentLocator.Length + valueLen
-        let v = Array.zeroCreate<byte> buflen
-
-        // parent locator header
-        ByteFunc.WriteGuid v 0u ( Guid "B04AEFB7-D19E-4A81-B789-25B8E9445913" )
-        ByteFunc.WriteU16LE v 18u ( uint16 parentLocator.Length )
-
-        // parent locator entry, entry and value
-        offset
-        |> Array.iteri ( fun idx ( eo, vo ) ->
-            // parent locator entry
-            let pos = 20 + 12 * idx |> uint32
-            let headerlen = 20 + 12 * parentLocator.Length |> uint32
-            let eoh = eo + headerlen
-            let voh = vo + headerlen
-            ByteFunc.WriteU32LE v ( pos + 0u ) eoh
-            ByteFunc.WriteU32LE v ( pos + 4u ) voh
-            let e16, v16 = parentLocator_u16.[idx]
-            ByteFunc.WriteU16LE v ( pos + 8u ) ( uint16 e16.Length )
-            ByteFunc.WriteU16LE v ( pos + 10u ) ( uint16 v16.Length )
-            // entry
-            Array.blit e16 0 v ( int eoh ) e16.Length
-            // value
-            Array.blit v16 0 v ( int voh ) v16.Length
-        )
-        v
-
-    static member defFileParameterMTE ( data : byte[] ) =
-        {
-            ItemId = Guid( "CAA16737-FA36-4D43-B3B6-33F0AA44E76B" );
-            Offset = 0u;
-            Length = uint32 data.Length;
-            IsUser = false;
-            IsVirtualDisk = false;
-            IsRequired = true;
-            Data = data;
-        };
-
-    static member defVirtualDiskSizeMTE ( data : byte[] ) =
-        {
-            ItemId = Guid( "2FA54224-CD1B-4876-B211-5DBED83BF4B8" );
-            Offset = 0u;
-            Length = uint32 data.Length;
-            IsUser = false;
-            IsVirtualDisk = true;
-            IsRequired = true;
-            Data = data;
-        };
-
-    static member defVirtualDiskIdMTE ( data : byte[] ) =
-        {
-            ItemId = Guid( "BECA12AB-B2E6-4523-93EF-C309E000C746" );
-            Offset = 0u;
-            Length = uint32 data.Length;
-            IsUser = false;
-            IsVirtualDisk = true;
-            IsRequired = true;
-            Data = data;
-        };
-
-    static member defLogicalSectorSizeMTE ( data : byte[] ) =
-        {
-            ItemId = Guid( "8141BF1D-A96F-4709-BA47-F233A8FAAB5F" );
-            Offset = 0u;
-            Length = uint32 data.Length;
-            IsUser = false;
-            IsVirtualDisk = true;
-            IsRequired = true;
-            Data = data;
-        };
-
-    static member defPhysicalSectorSizeMTE ( data : byte[] ) =
-        {
-            ItemId = Guid( "CDA348C7-445D-4471-9CC9-E9885251C556" );
-            Offset = 0u;
-            Length = uint32 data.Length;
-            IsUser = false;
-            IsVirtualDisk = true;
-            IsRequired = true;
-            Data = data;
-        };
-
-    static member defParentLocatorMTE ( data : byte[] ) =
-        {
-            ItemId = Guid( "A8D35F2D-B30B-454D-ABF7-D3D84834AB0C" );
-            Offset = 0u;
-            Length = uint32 data.Length;
-            IsUser = false;
-            IsVirtualDisk = false;
-            IsRequired = true;
-            Data = data;
-        };
-
-    static member defMetadataTable ( vdi : VirtualDiskInfo ) : byte[] =
-        [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter vdi.PayloadBlockSize vdi.LeaveBlockAllocated vdi.HasParent );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize vdi.VirtualDiskSize );
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId vdi.VirtualDiskId );
-            VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize ( Blocksize.toUInt32 vdi.LogicalSectorSize ) );
-            VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize ( Blocksize.toUInt32 vdi.PhysicalSectorSize ) );
-            VhdxReader_Test2.defParentLocatorMTE( VhdxReader_Test2.genParentLocator ( vdi.ParentLocator |> Seq.map ( fun kv -> kv.Key, kv.Value ) |> Seq.toArray ) );
-        |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-
-    static member checkReadMetadataFailResult ( expmsg : string ) ( v : byte[] ) =
-        let r =
-            Assert.Throws<VhdxMediaException>( fun () ->
-                VhdxReader.ReadMetadata v |> ignore
-            )
-        Assert.StartsWith( expmsg, r.Message )
-
-
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -335,7 +121,7 @@ type VhdxReader_Test2 () =
     [<Theory>]
     [<MemberData( "m_ReadRegionTable_Fail_002" )>]
     member _.ReadRegionTable_Fail_002 ( pos1 : int ) ( patch1 : byte[] ) ( pos2 : int ) ( patch2 : byte[] ) ( filelen : uint64 ) =
-        let d = VhdxReader_Test2.defReginTable pos1 patch1
+        let d = VhdxTestFunc.GetDefaultRegionTable pos1 patch1
         Array.blit patch2 0 d pos2 patch2.Length
         let r = VhdxReader.ReadRegionTable d filelen
         Assert.StrictEqual( None, r )
@@ -354,7 +140,7 @@ type VhdxReader_Test2 () =
     [<InlineData( 0x300000UL, 0x100000u, 0x400000UL, 0x100000u, 0x100000UL, 0x100000u, true )>]
     member _.ReadRegionTable_001 ( a : uint64 ) ( b : uint32 ) ( c : uint64 ) ( d : uint32 ) ( e : uint64 ) ( f : uint32 ) ( exp : bool ) =
         let v =
-            VhdxReader_Test2.genRegionTable {
+            VhdxTestFunc.GenRegionTable {
                 Signature = 0x72656769u
                 Checksum = 0u;
                 EntryCount = 0u;
@@ -391,7 +177,7 @@ type VhdxReader_Test2 () =
     [<InlineData( "00000000000000000000000000000000", "00000000000000000000000000000001", "00000000000000000000000000000002", true )>]
     member _.ReadRegionTable_002 ( g1 : string ) ( g2 : string ) ( g3 : string ) ( exp : bool ) =
         let v =
-            VhdxReader_Test2.genRegionTable {
+            VhdxTestFunc.GenRegionTable {
                 Signature = 0x72656769u
                 Checksum = 0u;
                 EntryCount = 0u;
@@ -439,7 +225,7 @@ type VhdxReader_Test2 () =
             |]
             |> Array.randomShuffle
         let v =
-            VhdxReader_Test2.genRegionTable {
+            VhdxTestFunc.GenRegionTable {
                 Signature = 0x72656769u
                 Checksum = 0u;
                 EntryCount = 0u;
@@ -472,7 +258,7 @@ type VhdxReader_Test2 () =
     [<InlineData( 1048575, "The metadata region must be at least 1 MB" )>]
     [<InlineData( 1048577, "The metadata region must be a multiple of 1 MB" )>]
     member _.ReadMetadata_Fail_001( len : int ) ( expmsg : string ) =
-        VhdxReader_Test2.checkReadMetadataFailResult expmsg ( Array.zeroCreate<byte> len )
+        VhdxTestFunc.CheckReadMetadataFailResult expmsg ( Array.zeroCreate<byte> len )
 
     static member m_ReadMetadata_Header_Fail_001_data : obj[][] = [|
         [|  // Signature
@@ -534,9 +320,9 @@ type VhdxReader_Test2 () =
             PhysicalSectorSize = Blocksize.BS_512;
             ParentLocator = [||] |> Map<string,string>;
         }
-        let v = VhdxReader_Test2.defMetadataTable vdi
+        let v = VhdxTestFunc.VDItoMetadataTable vdi
         Array.blit patch1 0 v pos1 patch1.Length
-        VhdxReader_Test2.checkReadMetadataFailResult expmsg v
+        VhdxTestFunc.CheckReadMetadataFailResult expmsg v
 
     [<Fact>]
     member _.ReadMetadata_Header_Fail_002 () =
@@ -552,8 +338,8 @@ type VhdxReader_Test2 () =
                     Data = [||];
                 };
         |]
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "The number of user entries is incorrect"
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "The number of user entries is incorrect"
 
     [<Theory>]
     [<InlineData( 0x10000u, 0x10u, 0x10000u, 0x10u, 0x10030u, 0x10u )>]
@@ -594,13 +380,13 @@ type VhdxReader_Test2 () =
                 Data = Array.zeroCreate<byte>( int32 f );
             };
         |]
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "There are metadata items with overlapping ranges"
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "There are metadata items with overlapping ranges"
 
     [<Fact>]
     member _.ReadMetadata_Header_Fail_004 () =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 1048576u true false );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 1048576u true false );
             {
                 ItemId = Guid.NewGuid();
                 Offset = 0u;
@@ -610,11 +396,11 @@ type VhdxReader_Test2 () =
                 IsRequired = true;
                 Data = Array.zeroCreate<byte>( 16 );
             };
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid() ) );
+            VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid() ) );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "There are unknown item for which IsRequired is true"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "There are unknown item for which IsRequired is true"
 
     static member m_ReadMetadata_Header_Fail_005_data : obj[][] = [|
         [|
@@ -646,19 +432,19 @@ type VhdxReader_Test2 () =
                     Data = [||];
                 };
         |]
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult expmsg
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult expmsg
 
     [<Fact>]
     member _.ReadMetadata_Header_001 () =
         let diskid = Guid.NewGuid()
         let v =
             [|
-                VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 1048576u true false );
-                VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-                VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId diskid );
-                VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-                VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize 512u );
+                VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 1048576u true false );
+                VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+                VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId diskid );
+                VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+                VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize 512u );
                 for i = 1 to 1024 do
                     {
                         ItemId = Guid.NewGuid();
@@ -680,8 +466,8 @@ type VhdxReader_Test2 () =
                         Data = [||];
                     };
             |]
-            |> VhdxReader_Test2.updateMTEOffset
-            |> VhdxReader_Test2.genMetadataTable 1048576
+            |> VhdxTestFunc.UpdateMTEOffset
+            |> VhdxTestFunc.GenMetadataTable 1048576
         let r = VhdxReader.ReadMetadata v
         Assert.StrictEqual( 1048576u, r.PayloadBlockSize )
         Assert.True( r.LeaveBlockAllocated )
@@ -696,11 +482,11 @@ type VhdxReader_Test2 () =
         let diskid = Guid.NewGuid()
         let v =
             [|
-                VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 1048576u true false );
-                VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-                VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId diskid );
-                VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-                VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize 512u );
+                VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 1048576u true false );
+                VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+                VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId diskid );
+                VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+                VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize 512u );
                 for i = 1 to 2042 do
                     {
                         ItemId = Guid.NewGuid();
@@ -712,8 +498,8 @@ type VhdxReader_Test2 () =
                         Data = [||];
                     };
             |]
-            |> VhdxReader_Test2.updateMTEOffset
-            |> VhdxReader_Test2.genMetadataTable 1048576
+            |> VhdxTestFunc.UpdateMTEOffset
+            |> VhdxTestFunc.GenMetadataTable 1048576
         let r = VhdxReader.ReadMetadata v
         Assert.StrictEqual( 1048576u, r.PayloadBlockSize )
         Assert.True( r.LeaveBlockAllocated )
@@ -728,11 +514,11 @@ type VhdxReader_Test2 () =
         let diskid = Guid.NewGuid()
         let v =
             [|
-                VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 1048576u true false );    // 8 bytes
-                VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );         // 8 bytes
-                VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId diskid );                 // 16 bytes
-                VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );           // 4 bytes
-                VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize 512u );         // 4 bytes ( total 40 bytes )
+                VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 1048576u true false );    // 8 bytes
+                VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );         // 8 bytes
+                VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId diskid );                 // 16 bytes
+                VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );           // 4 bytes
+                VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize 512u );         // 4 bytes ( total 40 bytes )
                 {
                     ItemId = Guid.NewGuid();
                     Offset = 0u;
@@ -752,8 +538,8 @@ type VhdxReader_Test2 () =
                     Data = Array.zeroCreate<byte> 983000;
                 };
             |]
-            |> VhdxReader_Test2.updateMTEOffset
-            |> VhdxReader_Test2.genMetadataTable 2097152
+            |> VhdxTestFunc.UpdateMTEOffset
+            |> VhdxTestFunc.GenMetadataTable 2097152
         let r = VhdxReader.ReadMetadata v
         Assert.StrictEqual( 1048576u, r.PayloadBlockSize )
         Assert.True( r.LeaveBlockAllocated )
@@ -766,11 +552,11 @@ type VhdxReader_Test2 () =
     [<Fact>]
     member _.ReadMetadata_FileParameter_Fail_001 () =
         [|
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Metadata item(file parameter) missing"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Metadata item(file parameter) missing"
 
     [<Theory>]
     [<InlineData( 0 )>]
@@ -788,8 +574,8 @@ type VhdxReader_Test2 () =
                 Data = Array.zeroCreate<byte>( len );
             };
         |]
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Invalid Length of metadata item(file parameter)"
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Invalid Length of metadata item(file parameter)"
 
     [<Theory>]
     [<InlineData( 0u )>]
@@ -799,10 +585,10 @@ type VhdxReader_Test2 () =
     [<InlineData( 0xFFFFFFFFu )>]
     member _.ReadMetadata_FileParameter_Fail_003 ( len : uint32 ) =
         [|
-            { VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter len true true ) with Offset = 65536u }
+            { VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter len true true ) with Offset = 65536u }
         |]
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Incorrect payload block size"
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Incorrect payload block size"
 
     [<Theory>]
     [<InlineData( 0x00100000u )>]   // 1MB
@@ -817,24 +603,24 @@ type VhdxReader_Test2 () =
     member _.ReadMetadata_FileParameter_001 ( len : uint32 ) =
         let v =
             [|
-                VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter len true false );
-                VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-                VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-                VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-                VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize 512u );
+                VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter len true false );
+                VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+                VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+                VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+                VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize 512u );
             |]
-            |> VhdxReader_Test2.updateMTEOffset
-            |> VhdxReader_Test2.genMetadataTable 1048576
+            |> VhdxTestFunc.UpdateMTEOffset
+            |> VhdxTestFunc.GenMetadataTable 1048576
         let r = VhdxReader.ReadMetadata v
         Assert.StrictEqual( len, r.PayloadBlockSize )
 
     [<Fact>]
     member _.ReadMetadata_VirtualDiskSize_Fail_001 () =
         [|
-            { VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true true ) with Offset = 65536u }
+            { VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true true ) with Offset = 65536u }
         |]
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Metadata item(virtual disk size) missing"
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Metadata item(virtual disk size) missing"
 
     [<Theory>]
     [<InlineData( 0 )>]
@@ -842,12 +628,12 @@ type VhdxReader_Test2 () =
     [<InlineData( 9 )>]
     member _.ReadMetadata_VirtualDiskSize_Fail_002 ( len : int32 ) =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( Array.zeroCreate<byte> len );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( Array.zeroCreate<byte> len );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Length of metadata item(virtual disk size) is invalid"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Length of metadata item(virtual disk size) is invalid"
 
     [<Theory>]
     [<InlineData( 0x0UL )>]
@@ -855,12 +641,12 @@ type VhdxReader_Test2 () =
     [<InlineData( 0xFFFFFFFFFFFFFFFFUL )>]
     member _.ReadMetadata_VirtualDiskSize_Fail_003 ( dsize : uint64 ) =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize dsize );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize dsize );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "The virtual disk size"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "The virtual disk size"
 
     [<Theory>]
     [<InlineData( 0x200UL )>]               // 512 bytes
@@ -869,26 +655,26 @@ type VhdxReader_Test2 () =
     member _.ReadMetadata_VirtualDiskSize_001 ( dsize : uint64 ) =
         let v =
             [|
-                VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-                VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize dsize );
-                VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-                VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-                VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize 512u );
+                VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+                VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize dsize );
+                VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+                VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+                VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize 512u );
             |]
-            |> VhdxReader_Test2.updateMTEOffset
-            |> VhdxReader_Test2.genMetadataTable 1048576
+            |> VhdxTestFunc.UpdateMTEOffset
+            |> VhdxTestFunc.GenMetadataTable 1048576
         let r = VhdxReader.ReadMetadata v
         Assert.StrictEqual( dsize, r.VirtualDiskSize )
 
     [<Fact>]
     member _.ReadMetadata_VirtualDiskID_Fail_001 () =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Metadata item(virtual disk ID) missing"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Metadata item(virtual disk ID) missing"
 
     [<Theory>]
     [<InlineData( 0 )>]
@@ -896,40 +682,40 @@ type VhdxReader_Test2 () =
     [<InlineData( 17 )>]
     member _.ReadMetadata_VirtualDiskID_Fail_002 ( len : int32 ) =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-            VhdxReader_Test2.defVirtualDiskIdMTE( Array.zeroCreate<byte> len );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenVirtualDiskIdMTE( Array.zeroCreate<byte> len );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Length of metadata item(virtual disk ID) is invalid"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Length of metadata item(virtual disk ID) is invalid"
 
     [<Fact>]
     member _.ReadMetadata_VirtualDiskID_001 () =
         let diskid = Guid.NewGuid()
         let v =
             [|
-                VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-                VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-                VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId diskid );
-                VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-                VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize 512u );
+                VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+                VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+                VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId diskid );
+                VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+                VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize 512u );
             |]
-            |> VhdxReader_Test2.updateMTEOffset
-            |> VhdxReader_Test2.genMetadataTable 1048576
+            |> VhdxTestFunc.UpdateMTEOffset
+            |> VhdxTestFunc.GenMetadataTable 1048576
         let r = VhdxReader.ReadMetadata v
         Assert.StrictEqual( diskid, r.VirtualDiskId )
 
     [<Fact>]
     member _.ReadMetadata_LogicalSectorSize_Fail_001 () =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Metadata item(logical sector size) missing"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Metadata item(logical sector size) missing"
 
     [<Theory>]
     [<InlineData( 0 )>]
@@ -937,14 +723,14 @@ type VhdxReader_Test2 () =
     [<InlineData( 5 )>]
     member _.ReadMetadata_LogicalSectorSize_Fail_002 ( len : int32 ) =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-            VhdxReader_Test2.defLogicalSectorSizeMTE( Array.zeroCreate<byte> len );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+            VhdxTestFunc.GenLogicalSectorSizeMTE( Array.zeroCreate<byte> len );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Length of metadata item(logical sector size) is invalid"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Length of metadata item(logical sector size) is invalid"
 
     [<Theory>]
     [<InlineData( 0u )>]
@@ -955,14 +741,14 @@ type VhdxReader_Test2 () =
     [<InlineData( 0xFFFFFFFFu )>]
     member _.ReadMetadata_LogicalSectorSize_Fail_003 ( lss : uint32 ) =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-            VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize lss );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+            VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize lss );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Incorrect logical sector size"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Incorrect logical sector size"
 
     [<Theory>]
     [<InlineData( 512u,  1UL )>]
@@ -981,14 +767,14 @@ type VhdxReader_Test2 () =
     [<InlineData( 4096u, 0x3FFFFFFFFE00UL )>]      // 64TB - 512
     member _.ReadMetadata_LogicalSectorSize_Fail_004 ( lss : uint32 ) ( dsize : uint64 ) =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize dsize );
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-            VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize lss );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize dsize );
+            VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+            VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize lss );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "The virtual disk size is not a multiple of the logical sector size"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "The virtual disk size is not a multiple of the logical sector size"
 
     [<Theory>]
     [<InlineData( 512u,  512UL )>]
@@ -1002,14 +788,14 @@ type VhdxReader_Test2 () =
     member _.ReadMetadata_LogicalSectorSize_001 ( lss : uint32 ) ( dsize : uint64 ) =
         let v =
             [|
-                VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-                VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize dsize );
-                VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-                VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize lss );
-                VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize 512u );
+                VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+                VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize dsize );
+                VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+                VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize lss );
+                VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize 512u );
             |]
-            |> VhdxReader_Test2.updateMTEOffset
-            |> VhdxReader_Test2.genMetadataTable 1048576
+            |> VhdxTestFunc.UpdateMTEOffset
+            |> VhdxTestFunc.GenMetadataTable 1048576
         let r = VhdxReader.ReadMetadata v
         if lss = 512u then
             Assert.StrictEqual( Blocksize.BS_512, r.LogicalSectorSize )
@@ -1019,14 +805,14 @@ type VhdxReader_Test2 () =
     [<Fact>]
     member _.ReadMetadata_PhysicalSectorSize_Fail_001 () =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-            VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+            VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Metadata item(physical sector size) missing"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Metadata item(physical sector size) missing"
 
     [<Theory>]
     [<InlineData( 0 )>]
@@ -1034,15 +820,15 @@ type VhdxReader_Test2 () =
     [<InlineData( 5 )>]
     member _.ReadMetadata_PhysicalSectorSize_Fail_002 ( len : int32 ) =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-            VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-            VhdxReader_Test2.defPhysicalSectorSizeMTE( Array.zeroCreate<byte> len );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+            VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+            VhdxTestFunc.GenPhysicalSectorSizeMTE( Array.zeroCreate<byte> len );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Length of metadata item(physical sector size) is invalid"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Length of metadata item(physical sector size) is invalid"
 
     [<Theory>]
     [<InlineData( 0u )>]
@@ -1053,15 +839,15 @@ type VhdxReader_Test2 () =
     [<InlineData( 0xFFFFFFFFu )>]
     member _.ReadMetadata_PhysicalSectorSize_Fail_003 ( pss : uint32 ) =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-            VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-            VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize pss );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+            VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+            VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize pss );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Incorrect physical sector size"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Incorrect physical sector size"
 
     [<Theory>]
     [<InlineData( 512u )>]
@@ -1069,14 +855,14 @@ type VhdxReader_Test2 () =
     member _.ReadMetadata_PhysicalSectorSize_001 ( pss : uint32 ) =
         let v =
             [|
-                VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true false );
-                VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-                VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-                VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-                VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize pss );
+                VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true false );
+                VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+                VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+                VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+                VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize pss );
             |]
-            |> VhdxReader_Test2.updateMTEOffset
-            |> VhdxReader_Test2.genMetadataTable 1048576
+            |> VhdxTestFunc.UpdateMTEOffset
+            |> VhdxTestFunc.GenMetadataTable 1048576
         let r = VhdxReader.ReadMetadata v
         if pss = 512u then
             Assert.StrictEqual( Blocksize.BS_512, r.PhysicalSectorSize )
@@ -1086,31 +872,31 @@ type VhdxReader_Test2 () =
     [<Fact>]
     member _.ReadMetadata_ParentLocator_Fail_001 () =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true true );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-            VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-            VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize 512u );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true true );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+            VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+            VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize 512u );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Metadata item(parent locator) missing"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Metadata item(parent locator) missing"
 
     [<Theory>]
     [<InlineData( 0 )>]
     [<InlineData( 19 )>]
     member _.ReadMetadata_ParentLocator_Fail_002 ( len : int32 ) =
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true true );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-            VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-            VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize 512u );
-            VhdxReader_Test2.defParentLocatorMTE( Array.zeroCreate<byte> len );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true true );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+            VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+            VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize 512u );
+            VhdxTestFunc.GenParentLocatorMTE( Array.zeroCreate<byte> len );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult "Length of metadata item(parent locator) is invalid"
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult "Length of metadata item(parent locator) is invalid"
 
     static member m_ReadMetadata_ParentLocator_Fail_003_data : obj[][] = [|
         [|  // LocatorType
@@ -1173,19 +959,19 @@ type VhdxReader_Test2 () =
             ( "volume_path", "b.vhdx" );                                    // ( 11 + 6 ) * 2 bytes = 34
             ( "absolute_win32_path", "c.vhdx" );                            // ( 19 + 6 ) * 2 bytes = 50
         |]
-        let v = VhdxReader_Test2.genParentLocator parentLocatorData
+        let v = VhdxTestFunc.GenParentLocator parentLocatorData
         Array.blit patch1 0 v pos1 patch1.Length
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true true );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-            VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-            VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize 512u );
-            VhdxReader_Test2.defParentLocatorMTE( v );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true true );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+            VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+            VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize 512u );
+            VhdxTestFunc.GenParentLocatorMTE( v );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult expmsg
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult expmsg
 
     [<Theory>]
     [<InlineData( "aaa", "bbb", "aaa", "ccc", "parent locator key must be unique" )>]
@@ -1195,18 +981,18 @@ type VhdxReader_Test2 () =
     [<InlineData( "parent_linkage", "{aaaaaaaa-bbbb-cccc-dddd-eeeeeeffffff}", "aaa", "bbb", "parent locator does not contain relative_path, volume_path" )>]
     member _.ReadMetadata_ParentLocator_Fail_004 ( key1 : string ) ( value1 : string ) ( key2 : string ) ( value2 : string ) ( expmsg : string ) =
         let parentLocatorData = [| ( key1, value1 ); ( key2, value2 ); |]
-        let v = VhdxReader_Test2.genParentLocator parentLocatorData
+        let v = VhdxTestFunc.GenParentLocator parentLocatorData
         [|
-            VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true true );
-            VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-            VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-            VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-            VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize 512u );
-            VhdxReader_Test2.defParentLocatorMTE( v );
+            VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true true );
+            VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+            VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+            VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+            VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize 512u );
+            VhdxTestFunc.GenParentLocatorMTE( v );
         |]
-        |> VhdxReader_Test2.updateMTEOffset
-        |> VhdxReader_Test2.genMetadataTable 1048576
-        |> VhdxReader_Test2.checkReadMetadataFailResult expmsg
+        |> VhdxTestFunc.UpdateMTEOffset
+        |> VhdxTestFunc.GenMetadataTable 1048576
+        |> VhdxTestFunc.CheckReadMetadataFailResult expmsg
 
     static member m_ReadMetadata_ParentLocator_001_data : obj[][] = [|
         [| [|
@@ -1243,18 +1029,18 @@ type VhdxReader_Test2 () =
     [<Theory>]
     [<MemberData( "m_ReadMetadata_ParentLocator_001_data" )>]
     member _.ReadMetadata_ParentLocator_001 ( parentLocatorData : ( string * string )[] ) =
-        let v = VhdxReader_Test2.genParentLocator parentLocatorData
+        let v = VhdxTestFunc.GenParentLocator parentLocatorData
         let r =
             [|
-                VhdxReader_Test2.defFileParameterMTE( VhdxReader_Test2.genFileParameter 0x00100000u true true );
-                VhdxReader_Test2.defVirtualDiskSizeMTE( VhdxReader_Test2.genVirtualDiskSize 67108864UL );
-                VhdxReader_Test2.defVirtualDiskIdMTE( VhdxReader_Test2.genVirtualDiskId ( Guid.NewGuid() ) );
-                VhdxReader_Test2.defLogicalSectorSizeMTE( VhdxReader_Test2.genLogicalSectorSize 512u );
-                VhdxReader_Test2.defPhysicalSectorSizeMTE( VhdxReader_Test2.genPhysicalSectorSize 512u );
-                VhdxReader_Test2.defParentLocatorMTE( v );
+                VhdxTestFunc.GenFileParameterMTE( VhdxTestFunc.GenFileParameter 0x00100000u true true );
+                VhdxTestFunc.GenVirtualDiskSizeMTE( VhdxTestFunc.GenVirtualDiskSize 67108864UL );
+                VhdxTestFunc.GenVirtualDiskIdMTE( VhdxTestFunc.GenVirtualDiskId ( Guid.NewGuid() ) );
+                VhdxTestFunc.GenLogicalSectorSizeMTE( VhdxTestFunc.GenLogicalSectorSize 512u );
+                VhdxTestFunc.GenPhysicalSectorSizeMTE( VhdxTestFunc.GenPhysicalSectorSize 512u );
+                VhdxTestFunc.GenParentLocatorMTE( v );
             |]
-            |> VhdxReader_Test2.updateMTEOffset
-            |> VhdxReader_Test2.genMetadataTable 1048576
+            |> VhdxTestFunc.UpdateMTEOffset
+            |> VhdxTestFunc.GenMetadataTable 1048576
             |> VhdxReader.ReadMetadata
         Assert.StrictEqual( parentLocatorData.Length, r.ParentLocator.Count )
         for ( k, v ) in parentLocatorData do
