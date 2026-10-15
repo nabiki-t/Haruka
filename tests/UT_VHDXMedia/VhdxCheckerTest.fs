@@ -96,8 +96,8 @@ type VhdxChecker_Test () =
 
             let logLength = ( int32 str1.ImmHeader.LogLength )
             let logEntry = [| {
-                PatchPosition = 0;
-                PatchData = [||];
+                PatchPosition = 0;  // unused
+                PatchData = [||];   // unused
                 Descriptor = [||];
             } |]
             let logGuid = Guid.NewGuid()
@@ -132,8 +132,8 @@ type VhdxChecker_Test () =
                 v
             let rndDataPos = fa.FileSize
             let logEntry = [| {
-                PatchPosition = 0;
-                PatchData = [||];
+                PatchPosition = 0;  // unused
+                PatchData = [||];   // unused
                 Descriptor = [|
                     TestLogDesc.Data( rndData, rndDataPos )
                 |];
@@ -173,8 +173,8 @@ type VhdxChecker_Test () =
 
             let logLength = ( int32 str1.ImmHeader.LogLength )
             let logEntry = [| {
-                PatchPosition = 0;
-                PatchData = [||];
+                PatchPosition = 0;  // unused
+                PatchData = [||];   // unused
                 Descriptor = [|
                     TestLogDesc.Zero( 8192UL, rndDataPos )
                 |];
@@ -197,4 +197,120 @@ type VhdxChecker_Test () =
             do! fa.Read rndDataPos ( ArraySegment rndData2 )
             for i in rndData2 do
                 Assert.StrictEqual( 0uy, i )
+        } )
+
+    [<Fact>]
+    member _.Replay_005() =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
+            let! str1 = VhdxReader.ReadVhdx fa
+
+            let rndData =
+                let v = Array.zeroCreate<byte> 8192
+                Random.Shared.NextBytes v
+                v
+            let rndDataPos = fa.FileSize
+
+            let patchData = 
+                let v = Array.zeroCreate<byte> 4096
+                Random.Shared.NextBytes v
+                v
+
+            do! fa.SetFileSize ( fa.FileSize + 0x100000UL )
+            do! fa.Write rndDataPos ( ArraySegment rndData )
+
+            let logLength = ( int32 str1.ImmHeader.LogLength )
+            let logEntry = [| {
+                PatchPosition = 0;  // unused
+                PatchData = [||];   // unused
+                Descriptor = [|
+                    TestLogDesc.Zero( 4096UL, rndDataPos )
+                    TestLogDesc.Data( patchData, rndDataPos + 4096UL )
+                |];
+            } |]
+            let logGuid = Guid.NewGuid()
+            let lastFileSize = fa.FileSize
+            let lastFileOffset = fa.FileSize
+            let logData = VhdxTestFunc.GenLogData logLength 0 logEntry logGuid 1UL lastFileSize lastFileOffset
+            let hdBytes = VhdxTestFunc.GenHeaderBytes str1.ImmHeader { str1.LoadedVarHeader with LogGuid = logGuid }
+
+            do! fa.Write str1.ImmHeader.LogOffset ( ArraySegment logData )
+            do! fa.Write 65536UL ( hdBytes |> ArraySegment )
+            do! fa.Write 131072UL ( [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy |] |> ArraySegment )
+
+            let! verHead = VhdxChecker.Check fa
+            let! str3 = VhdxReader.ReadVhdx fa
+            Assert.Empty( str3.Log )
+
+            let resultData = Array.zeroCreate<byte> 8192
+            do! fa.Read rndDataPos ( ArraySegment resultData )
+            for i = 0 to 4095 do
+                Assert.StrictEqual( 0uy, resultData.[i] )
+            for i = 0 to 4095 do
+                Assert.StrictEqual( patchData.[i], resultData.[ i + 4096 ] )
+        } )
+
+    [<Fact>]
+    member _.Replay_006() =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
+            let! str1 = VhdxReader.ReadVhdx fa
+
+            let rndData =
+                let v = Array.zeroCreate<byte> 16384
+                Random.Shared.NextBytes v
+                v
+            let rndDataPos = fa.FileSize
+
+            let patchData = 
+                Array.init 3 ( fun _ ->
+                    let v = Array.zeroCreate<byte> 4096
+                    Random.Shared.NextBytes v
+                    v
+                )
+
+            do! fa.SetFileSize ( fa.FileSize + 0x100000UL )
+            do! fa.Write rndDataPos ( ArraySegment rndData )
+
+            let logLength = ( int32 str1.ImmHeader.LogLength )
+            let logEntry = [|
+                {
+                    PatchPosition = 0;  // unused
+                    PatchData = [||];   // unused
+                    Descriptor = [|
+                        TestLogDesc.Data( patchData.[0], rndDataPos + 4096UL )
+                        TestLogDesc.Zero( 4096UL, rndDataPos + 12288UL )
+                    |];
+                };
+                {
+                    PatchPosition = 0;  // unused
+                    PatchData = [||];   // unused
+                    Descriptor = [|
+                        TestLogDesc.Data( patchData.[1], rndDataPos )
+                        TestLogDesc.Data( patchData.[2], rndDataPos + 8192UL )
+                    |];
+                };
+            |]
+            let logGuid = Guid.NewGuid()
+            let lastFileSize = fa.FileSize
+            let lastFileOffset = fa.FileSize
+            let logData = VhdxTestFunc.GenLogData logLength 0 logEntry logGuid 1UL lastFileSize lastFileOffset
+            let hdBytes = VhdxTestFunc.GenHeaderBytes str1.ImmHeader { str1.LoadedVarHeader with LogGuid = logGuid }
+
+            do! fa.Write str1.ImmHeader.LogOffset ( ArraySegment logData )
+            do! fa.Write 65536UL ( hdBytes |> ArraySegment )
+            do! fa.Write 131072UL ( [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy |] |> ArraySegment )
+
+            let! verHead = VhdxChecker.Check fa
+            let! str3 = VhdxReader.ReadVhdx fa
+            Assert.Empty( str3.Log )
+
+            let resultData = Array.zeroCreate<byte> 16384
+            do! fa.Read rndDataPos ( ArraySegment resultData )
+            for i = 0 to 4095 do
+                Assert.StrictEqual( patchData.[1].[i], resultData.[i] )
+            for i = 0 to 4095 do
+                Assert.StrictEqual( patchData.[0].[i], resultData.[ i + 4096 ] )
+            for i = 0 to 4095 do
+                Assert.StrictEqual( patchData.[2].[i], resultData.[ i + 8192 ] )
+            for i = 0 to 4095 do
+                Assert.StrictEqual( 0uy, resultData.[ i + 12288 ] )
         } )
