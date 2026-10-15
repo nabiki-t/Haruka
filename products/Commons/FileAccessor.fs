@@ -137,6 +137,18 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
         }
 
     /// <summary>
+    ///  Read data from the file.
+    /// </summary>
+    /// <param name="startPos">
+    ///  Position in bytes where data is read.
+    /// </param>
+    /// <param name="buffer">
+    ///  The buffer to store the read data.
+    /// </param>
+    member this.ReadArray ( startPos : uint64 ) ( buffer : byte[] ) : Task<unit> =
+        this.Read startPos ( ArraySegment buffer )
+
+    /// <summary>
     ///  Read data with pseudo size limit.
     /// </summary>
     /// <param name="pseudoSize">
@@ -191,6 +203,24 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
         }
 
     /// <summary>
+    ///  Read data with pseudo size limit.
+    /// </summary>
+    /// <param name="pseudoSize">
+    ///  pseudo size limit.
+    /// </param>
+    /// <param name="startPos">
+    ///  Position in bytes where data is read.
+    /// </param>
+    /// <param name="buffer">
+    ///  The buffer to store the read data.
+    /// </param>
+    /// <remarks>
+    ///  If data is read from an area beyond the actual file size, 0 is returned.
+    /// </remarks>
+    member this.ReadArrayWithPseudoLimit ( pseudoSize : uint64 ) ( startPos : uint64 ) ( buffer : byte[] ) : Task<unit> =
+        this.ReadWithPseudoLimit pseudoSize startPos ( ArraySegment buffer )
+
+    /// <summary>
     ///  Write data to the file.
     /// </summary>
     /// <param name="startPos">
@@ -226,6 +256,18 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
             finally
                 streamQueue.Enqueue fs
         }
+
+    /// <summary>
+    ///  Write data to the file.
+    /// </summary>
+    /// <param name="startPos">
+    ///  Position in bytes where data is written.
+    /// </param>
+    /// <param name="buffer">
+    ///  The data to be written.
+    /// </param>
+    member this.WriteArray ( startPos : uint64 ) ( buffer : byte[] ) : Task<unit> =
+        this.Write startPos ( ArraySegment buffer )
 
     /// <summary>
     ///  Set the file size in bytes.

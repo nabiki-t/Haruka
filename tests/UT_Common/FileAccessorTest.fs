@@ -438,6 +438,25 @@ type FileAccessorTest() =
             File.Delete fname
         }
 
+    [<Fact>]
+    member _.ReadArray_WriteArray_001() =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            let v1 = Array.zeroCreate<byte> 4096
+            let v2 = Array.zeroCreate<byte> 4096
+
+            Random.Shared.NextBytes v1
+            do! fa.SetFileSize 4096UL
+            do! fa.WriteArray 0UL v1
+
+            do! fa.ReadArray 0UL v2
+            Assert.True(( v1 = v2 ))
+
+            fa.Close()
+            File.Delete fname
+        }
+
     [<Theory>]
     [<InlineData( 0x8000000000000000UL, 0UL, 0 )>]
     [<InlineData( 0x7FFFFFFFFFFFFFFFUL, 0x8000000000000000UL, 0 )>]
@@ -545,6 +564,19 @@ type FileAccessorTest() =
             for i = 0 to 31 do
                 Assert.StrictEqual( 0uy, wbuf2.[i] )
 
+            fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.ReadArrayWithPseudoLimit_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let wbuf = Array.zeroCreate<byte>( 4096 )
+            let fa = FileAccessor( fname, 1u, true )
+            do! fa.ReadArrayWithPseudoLimit 65536UL 4096UL wbuf
+            for i in wbuf do
+                Assert.StrictEqual( 0uy, i )
             fa.Close()
             File.Delete fname
         }
