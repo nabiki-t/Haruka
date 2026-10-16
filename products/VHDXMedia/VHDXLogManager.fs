@@ -272,7 +272,7 @@ type VhdxLogManager (
             let logEntry =
                 VhdxCorrupter.CreateLogEntry updates 0u nextLogSequenceNumber m_VarHeader.LogGuid fileSizeBeforeCommit fileSizeAfterCommit
 
-            do! VhdxCorrupter.WriteLogEntry m_FA structures nextLogWriteOffset [] logEntry
+            do! VhdxCorrupter.WriteLogEntry m_FA structures.ImmHeader nextLogWriteOffset List.empty logEntry
 
             let pendingEntry = {
                 Updates = updates

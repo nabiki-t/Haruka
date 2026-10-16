@@ -25,6 +25,7 @@
     <Compile Include="VhdxReaderTest2.fs" />
     <Compile Include="VhdxReaderTest3.fs" />
     <Compile Include="VhdxCheckerTest.fs" />
+    <Compile Include="VhdxCorrupterTest.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 

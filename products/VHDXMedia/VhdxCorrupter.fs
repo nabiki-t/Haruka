@@ -43,13 +43,14 @@ type VhdxCorrupter() =
     ///  Bytes array of the data sector.
     /// </returns>
     static member CreateLogEntry_DataSector ( offset : SEC4K_T ) ( data : byte[] ) ( sequenceNumber : uint64 ) : byte[] =
-        let v = Array.zeroCreate<byte> 32
-        let TrailingBytes = data.[ data.Length - 4 .. ]
-        let LeadingBytes = data.[ 0 .. 7 ]
 
+        if data.Length <> 4096 then
+            raise <| ArgumentException( "data must be 4096 bytes." )
+
+        let v = Array.zeroCreate<byte> 32
         Array.blit ( Encoding.UTF8.GetBytes "desc" ) 0 v 0 4
-        Array.blit TrailingBytes 0 v 4 4
-        Array.blit LeadingBytes 0 v 8 8
+        Array.blit data ( data.Length - 4 ) v 4 4
+        Array.blit data 0 v 8 8
         ByteFunc.WriteU64LE v 16u ( uint64 offset * 4096UL )
         ByteFunc.WriteU64LE v 24u sequenceNumber
         v
@@ -86,11 +87,11 @@ type VhdxCorrupter() =
             ( argFFO : uint64 )
             ( argLFO : uint64 ) : byte[] =
 
-        let descNum = Seq.length data |> uint32    // Number of descriptor
-        let descSecLen =                    // Bytes length of the descriptor sector.
+        let descNum = Seq.length data |> uint32             // Number of descriptor
+        let descSecLen =                                    // Bytes length of the descriptor sector.
             let a = descNum * 32u + 64u
             ( ( a + 4095u ) / 4096u ) * 4096u
-        let entryLength = descSecLen + ( descNum * 4096u )   // Bytes length of the log entry.
+        let entryLength = descSecLen + ( descNum * 4096u )  // Bytes length of the log entry.
         let logEntry = Array.zeroCreate<byte> ( int32 entryLength )
 
         // Entry header
@@ -101,7 +102,7 @@ type VhdxCorrupter() =
         ByteFunc.WriteU64LE logEntry 16u secnum       // Sequence number
         ByteFunc.WriteU32LE logEntry 24u descNum      // Number of descriptors
         ByteFunc.WriteU32LE logEntry 28u 0u           // Reserved
-        ByteFunc.WriteGuid logEntry 32u logGuid          // Log GUID
+        ByteFunc.WriteGuid logEntry 32u logGuid       // Log GUID
         ByteFunc.WriteU64LE logEntry 48u argFFO       // Flashed file offset
         ByteFunc.WriteU64LE logEntry 56u argLFO       // ast file offset
 
@@ -144,7 +145,7 @@ type VhdxCorrupter() =
     /// <param name="rightLogEntry">
     ///  Log entries that write correct data.
     /// </param>
-    static member WriteLogEntry ( fa : FileAccessor ) ( structures : VhdxStructures ) ( offset : uint32 ) ( dummyLogEntry : byte[] list ) ( rightLogEntry: byte[] ) : Task =
+    static member WriteLogEntry ( fa : FileAccessor ) ( header : VhdxHeader ) ( offset : uint32 ) ( dummyLogEntry : byte[] list ) ( rightLogEntry: byte[] ) : Task =
         let rec loop ( idx : int32 ) ( pos : int32 ) ( v : byte[] ) : int32 =
             if idx < dummyLogEntry.Length then
                 Array.blit dummyLogEntry.[idx] 0 v pos dummyLogEntry.[idx].Length
@@ -155,21 +156,29 @@ type VhdxCorrupter() =
         task {
             // Combine the output data into a single array.
             let totalLen =
-                ( dummyLogEntry |> List.sumBy ( fun itr -> itr.Length ) ) + rightLogEntry.Length
-            let v = Array.zeroCreate<byte> totalLen
-            Array.blit rightLogEntry 0 v ( loop 0 0 v ) rightLogEntry.Length
+                dummyLogEntry
+                |> List.sumBy ( fun itr -> itr.Length )
+                |> (+) rightLogEntry.Length
 
-            if offset + ( uint32 totalLen ) <= structures.ImmHeader.LogLength then
-                do! fa.Write ( structures.ImmHeader.LogOffset + uint64 offset ) ( ArraySegment v )
+            let v =
+                if dummyLogEntry.IsEmpty then
+                    rightLogEntry
+                else
+                    let v = Array.zeroCreate<byte> totalLen
+                    Array.blit rightLogEntry 0 v ( loop 0 0 v ) rightLogEntry.Length
+                    v
+
+            if offset + ( uint32 totalLen ) <= header.LogLength then
+                do! fa.Write ( header.LogOffset + uint64 offset ) ( ArraySegment v )
             else
-                let len1 = structures.ImmHeader.LogLength - offset   // Length of the first half
+                let len1 = header.LogLength - offset   // Length of the first half
                 let len2 = ( uint32 v.Length ) - len1           // Length of the second half
 
                 // first half
-                do! fa.Write ( structures.ImmHeader.LogOffset + uint64 offset ) ( ArraySegment( v, 0, int32 len1 ) )
+                do! fa.Write ( header.LogOffset + uint64 offset ) ( ArraySegment( v, 0, int32 len1 ) )
 
                 // second half
-                do! fa.Write ( structures.ImmHeader.LogOffset ) ( ArraySegment( v, int32 len1, int32 len2 ) )
+                do! fa.Write ( header.LogOffset ) ( ArraySegment( v, int32 len1, int32 len2 ) )
         }
 
 
@@ -244,6 +253,6 @@ type VhdxCorrupter() =
             // Generate a correct log entry (1 item)
             let rightLogEntry = VhdxCorrupter.CreateLogEntry sectorInfo logOutputPos 5UL newLogGuid fileSize fileSize
 
-            do! VhdxCorrupter.WriteLogEntry outputFile structures logOutputPos dummyLogEntry rightLogEntry
+            do! VhdxCorrupter.WriteLogEntry outputFile structures.ImmHeader logOutputPos dummyLogEntry rightLogEntry
 
         }

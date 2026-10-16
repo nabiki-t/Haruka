@@ -529,7 +529,7 @@ type VhdxWriter() =
                         )
                     let logEntries =
                         VhdxCorrupter.CreateLogEntry listSec4K_BatData 0u 1UL newLogGuid currentFileSize reqFileSize
-                    do! VhdxCorrupter.WriteLogEntry fa structures 0u [] logEntries
+                    do! VhdxCorrupter.WriteLogEntry fa structures.ImmHeader 0u List.empty logEntries
 
                     if ex = 3 then
                         raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Write log entry." )
@@ -606,7 +606,7 @@ type VhdxWriter() =
                             |> Array.map ( fun struct( s, d ) -> struct( s, d.ToArray() ) )
                             |> Array.toList
                     let logEntries = VhdxCorrupter.CreateLogEntry listSec4K_SBData 0u 1UL newLogGuid currentFileSize currentFileSize
-                    do! VhdxCorrupter.WriteLogEntry fa structures 0u [] logEntries
+                    do! VhdxCorrupter.WriteLogEntry fa structures.ImmHeader 0u List.empty logEntries
 
                     // Update header( Update LogGuid )
                     let! wverhd1 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd with LogGuid = Guid.NewGuid() }
