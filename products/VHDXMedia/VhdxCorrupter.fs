@@ -154,12 +154,28 @@ type VhdxCorrupter() =
                 pos
 
         task {
-            // Combine the output data into a single array.
+            if ( rightLogEntry.Length &&& 0x00000FFF ) <> 0 then
+                raise <| ArgumentException( "Argument rightLogEntry must be multiple of 4KB." )
+            if rightLogEntry.Length < 4096 then
+                raise <| ArgumentException( "Argument rightLogEntry must be 4 KB or larger." )
+            dummyLogEntry
+            |> List.iter ( fun itr ->
+                if ( itr.Length &&& 0x00000FFF ) <> 0 then
+                    raise <| ArgumentException( "Argument dummyLogEntry must be multiple of 4KB." )
+                if itr.Length < 4096 then
+                    raise <| ArgumentException( "Argument dummyLogEntry must be 4 KB or larger." )
+            )
+            if ( offset &&& 0x00000FFFu ) <> 0u then
+                raise <| ArgumentException( "Argument offset must be multiple of 4KB." )
+
             let totalLen =
                 dummyLogEntry
                 |> List.sumBy ( fun itr -> itr.Length )
                 |> (+) rightLogEntry.Length
+            if uint32 totalLen > header.LogLength then
+                raise <| ArgumentException( "The log exceeds the log area length." )
 
+            // Combine the output data into a single array.
             let v =
                 if dummyLogEntry.IsEmpty then
                     rightLogEntry
@@ -168,14 +184,16 @@ type VhdxCorrupter() =
                     Array.blit rightLogEntry 0 v ( loop 0 0 v ) rightLogEntry.Length
                     v
 
-            if offset + ( uint32 totalLen ) <= header.LogLength then
-                do! fa.Write ( header.LogOffset + uint64 offset ) ( ArraySegment v )
+            let roffset = offset % header.LogLength
+
+            if roffset + ( uint32 totalLen ) <= header.LogLength then
+                do! fa.Write ( header.LogOffset + uint64 roffset ) ( ArraySegment v )
             else
-                let len1 = header.LogLength - offset   // Length of the first half
-                let len2 = ( uint32 v.Length ) - len1           // Length of the second half
+                let len1 = header.LogLength - roffset   // Length of the first half
+                let len2 = ( uint32 v.Length ) - len1   // Length of the second half
 
                 // first half
-                do! fa.Write ( header.LogOffset + uint64 offset ) ( ArraySegment( v, 0, int32 len1 ) )
+                do! fa.Write ( header.LogOffset + uint64 roffset ) ( ArraySegment( v, 0, int32 len1 ) )
 
                 // second half
                 do! fa.Write ( header.LogOffset ) ( ArraySegment( v, int32 len1, int32 len2 ) )
