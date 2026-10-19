@@ -134,6 +134,7 @@ type VhdxCorrupter_Test () =
     [<Theory>]
     [<InlineData( 0u )>]
     [<InlineData( 0xFE000u )>]
+    [<InlineData( 0x100000u )>]
     member _.WriteLogEntry_001 ( offset : uint ) =
         task {
             let fname = Path.GetTempFileName()
@@ -145,7 +146,7 @@ type VhdxCorrupter_Test () =
                 do! VhdxCorrupter.WriteLogEntry fa defaultImmHeader offset List.Empty rle
 
                 let buf = Array.zeroCreate<byte> 8192
-                do! fa.ReadArray ( uint64 offset ) buf
+                do! fa.ReadArray ( uint64 offset % 0x100000UL ) buf
                 Array.iter2 ( fun i j -> Assert.StrictEqual( i, j ) ) rle buf
             finally
                 fa.Close()
@@ -177,27 +178,10 @@ type VhdxCorrupter_Test () =
                 GlbFunc.DeleteFile fname
         }
 
-    [<Fact>]
-    member _.WriteLogEntry_003 () =
-        task {
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, false )
-            try
-                do! fa.SetFileSize 0x100000UL
-                let rle = Array.zeroCreate<byte> 8192
-                Random.Shared.NextBytes rle
-                do! VhdxCorrupter.WriteLogEntry fa defaultImmHeader 0x100000u List.Empty rle
-
-                let buf = Array.zeroCreate<byte> 8192
-                do! fa.ReadArray 0UL buf
-                Array.iter2 ( fun i j -> Assert.StrictEqual( i, j ) ) rle buf
-            finally
-                fa.Close()
-                GlbFunc.DeleteFile fname
-        }
-
-    [<Fact>]
-    member _.WriteLogEntry_004 () =
+    [<Theory>]
+    [<InlineData( 1 )>]
+    [<InlineData( 255 )>]
+    member _.WriteLogEntry_003 ( dlecnt : int32 ) =
         task {
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, 1u, false )
@@ -205,17 +189,73 @@ type VhdxCorrupter_Test () =
                 do! fa.SetFileSize 0x100000UL
                 let rle = Array.zeroCreate<byte> 4096
                 Random.Shared.NextBytes rle
-                let dle = Array.zeroCreate<byte> 4096
-                Random.Shared.NextBytes dle
-                do! VhdxCorrupter.WriteLogEntry fa defaultImmHeader 0u [ dle ] rle
+                let dle =
+                    List.init dlecnt ( fun _ ->
+                        let v = Array.zeroCreate<byte> 4096
+                        Random.Shared.NextBytes v
+                        v
+                    )
+                do! VhdxCorrupter.WriteLogEntry fa defaultImmHeader 0u dle rle
 
-                let buf = Array.zeroCreate<byte> 8192
+                let buf = Array.zeroCreate<byte> ( 4096 * dlecnt + 4096 )
                 do! fa.ReadArray 0UL buf
+                for i = 0 to dlecnt - 1 do
+                    for j = 0 to 4095 do
+                        Assert.StrictEqual( buf.[ i * 4096 + j ], dle.[i].[j] )
                 for i = 0 to 4095 do
-                    Assert.StrictEqual( buf.[i], dle.[i] )
-                for i = 0 to 4095 do
-                    Assert.StrictEqual( buf.[ i + 4096 ], rle.[i] )
+                    Assert.StrictEqual( buf.[ 4096 * dlecnt + i ], rle.[i] )
             finally
                 fa.Close()
                 GlbFunc.DeleteFile fname
         }
+
+    [<Fact>]
+    member _.Inject_001 () =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
+            let! str1 = VhdxReader.ReadVhdx fa
+            let testDataPos4K = ( str1.ImmHeader.LogOffset + ( uint64 str1.ImmHeader.LogLength ) ) / 4096UL
+            do! fa.SetFileSize ( max fa.FileSize ( ( testDataPos4K + 50UL ) * 4096UL ) )
+
+            let si = [
+                for i in 0UL .. 49UL do
+                    sec4k_me.ofUInt64 ( testDataPos4K + i )
+            ]
+            do! VhdxCorrupter.Inject fa si
+
+            let! str2 = VhdxReader.ReadVhdx fa
+            Assert.True( str1.LoadedVarHeader.SequenceNumber < str2.LoadedVarHeader.SequenceNumber )
+            Assert.NotStrictEqual( str1.LoadedVarHeader.FileWriteGuid, str2.LoadedVarHeader.FileWriteGuid )
+            Assert.StrictEqual( str1.LoadedVarHeader.DataWriteGuid, str2.LoadedVarHeader.DataWriteGuid )
+            Assert.NotStrictEqual( str1.LoadedVarHeader.LogGuid, str2.LoadedVarHeader.LogGuid )
+            Assert.StrictEqual( 5, str2.Log.Length )
+            for itr in str2.Log do
+                Assert.StrictEqual( 50, itr.DataSectors.Length )
+
+            Assert.StrictEqual( str1.Region, str2.Region )
+            Assert.StrictEqual( str1.BAT, str2.BAT )
+            Assert.StrictEqual( str1.VDI, str2.VDI )
+        })
+
+    [<Fact>]
+    member _.Inject_Fail_001 () =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
+            let! r =
+                Assert.ThrowsAsync<ArgumentException>( fun () -> task {
+                    do! VhdxCorrupter.Inject fa []
+                } )
+            Assert.StartsWith( "Injected sectores must be at least 1", r.Message )
+        } )
+
+    [<Fact>]
+    member _.Inject_Fail_002 () =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
+            let sec = [
+                for i in 0UL .. 50UL do
+                    sec4k_me.ofUInt64 i
+            ]
+            let! r =
+                Assert.ThrowsAsync<ArgumentException>( fun () -> task {
+                    do! VhdxCorrupter.Inject fa sec
+                } )
+            Assert.StartsWith( "The required log capacity exceeds the log area length", r.Message )
+        } )

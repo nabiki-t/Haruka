@@ -56,6 +56,54 @@ type VhdxCorrupter() =
         v
 
     /// <summary>
+    ///  Calculate the log entry header size based on the number of 4K sectores.
+    /// </summary>
+    /// <param name="entries">
+    ///  Number of 4K sectors where update information should be recorded
+    /// </param>
+    /// <returns>
+    ///  Log entry header size.
+    /// </returns>
+    static member LogEntryHeaderSizeFrom4KSecCount ( entries : uint32 ) : uint32 =
+        let headerRaw = 64u + entries * 32u
+        ( ( headerRaw + 4095u ) / 4096u ) * 4096u
+
+    /// <summary>
+    ///  Calculate the required log region size based on the number of 4K sectores.
+    /// </summary>
+    /// <param name="entries">
+    ///  Number of 4K sectors where update information should be recorded
+    /// </param>
+    /// <returns>
+    ///  Required log region size.
+    /// </returns>
+    static member LogEntrySizeFrom4KSecCount ( entries : uint32 ) : uint32 =
+        let headerSize = VhdxCorrupter.LogEntryHeaderSizeFrom4KSecCount entries
+        let dataSize = entries * 4096u
+        headerSize + dataSize
+
+    /// <summary>
+    ///  Determine the upper limit of the 4K sectors that can be recorded
+    ///  based on the size of the log area.
+    /// </summary>
+    /// <param name="capacity">
+    ///  Log region size. It msut be greater than 1MB and multiple of 1MB.
+    /// </param>
+    /// <returns>
+    ///  The number of 4K entries that can be recorded using a single log entry.
+    /// </returns>
+    static member Max4KSectorCountFromLogCapacity ( capacity : uint32 ) : uint32 =
+        let nApprox = ( capacity - 64u ) / 4128u
+        let k =
+            let headerRaw = 64u + 32u * nApprox
+            ( headerRaw + 4095u ) / 4096u
+        let n1 = ( 4096u * k - 64u ) / 32u
+        let n2 =
+            let s = VhdxCorrupter.LogEntrySizeFrom4KSecCount nApprox
+            s / 4096u - k
+        ( min n1 n2 )
+
+    /// <summary>
     ///  Create log entry.
     /// </summary>
     /// <param name="data">
@@ -87,15 +135,13 @@ type VhdxCorrupter() =
             ( argFFO : uint64 )
             ( argLFO : uint64 ) : byte[] =
 
-        let descNum = Seq.length data |> uint32             // Number of descriptor
-        let descSecLen =                                    // Bytes length of the descriptor sector.
-            let a = descNum * 32u + 64u
-            ( ( a + 4095u ) / 4096u ) * 4096u
-        let entryLength = descSecLen + ( descNum * 4096u )  // Bytes length of the log entry.
+        let descNum = Seq.length data |> uint32                             // Number of descriptor
+        let headerSize = VhdxCorrupter.LogEntryHeaderSizeFrom4KSecCount descNum
+        let entryLength = VhdxCorrupter.LogEntrySizeFrom4KSecCount descNum   // Bytes length of the log entry.
         let logEntry = Array.zeroCreate<byte> ( int32 entryLength )
 
         // Entry header
-        Array.blit ( Encoding.UTF8.GetBytes "loge" ) 0 logEntry 0 4    // Signature
+        Array.blit ( Encoding.UTF8.GetBytes "loge" ) 0 logEntry 0 4         // Signature
         ByteFunc.WriteU32LE logEntry 4u 0u            // Checksum
         ByteFunc.WriteU32LE logEntry 8u entryLength   // Entry length
         ByteFunc.WriteU32LE logEntry 12u tail         // tail
@@ -114,7 +160,7 @@ type VhdxCorrupter() =
         // Data sectores
         data
         |> Seq.iteri ( fun idx struct ( _, itr ) ->
-            let pos = descSecLen + uint32( idx * 4096 )
+            let pos = headerSize + uint32( idx * 4096 )
             Array.blit ( Encoding.UTF8.GetBytes "data" ) 0 logEntry ( int32 pos ) 4
             ByteFunc.WriteU32LE logEntry ( pos + 4u ) ( uint32 ( secnum >>> 32 ) )
             Array.blit itr 8 logEntry ( int32 pos + 8 ) 4084
@@ -215,6 +261,13 @@ type VhdxCorrupter() =
             let! structures = VhdxReader.ReadVhdx outputFile
             let fileSize = outputFile.GetFileSize()
 
+            if sectorIndices.IsEmpty then
+                raise <| ArgumentException( "Injected sectores must be at least 1." )
+
+            let reqLogSizse = ( VhdxCorrupter.LogEntrySizeFrom4KSecCount ( uint32 sectorIndices.Length ) ) * 5u
+            if reqLogSizse > structures.ImmHeader.LogLength then
+                raise <| ArgumentException( "The required log capacity exceeds the log area length." )
+
             // Update header
             let newLogGuid = Guid.NewGuid()
             let newHeader = {
@@ -230,7 +283,7 @@ type VhdxCorrupter() =
             let randbuf = Array.zeroCreate<byte> 4096
             for i in 1UL .. uint64 logSecCnt - 1UL do
                 Random.Shared.NextBytes randbuf
-                do! outputFile.Write ( structures.ImmHeader.LogOffset + i * 4096UL ) ( ArraySegment randbuf )
+                do! outputFile.WriteArray ( structures.ImmHeader.LogOffset + i * 4096UL ) randbuf
 
             // Generate dummy update data
             let dummyUpdateData = [
@@ -246,18 +299,19 @@ type VhdxCorrupter() =
 
             // Retrieve data from the specified 4K sectors and
             // fill in the remaining data with random numbers.
-            let sectorInfo = List< struct( SEC4K_T * byte[] ) >()
+            let sectorInfo = List< struct( SEC4K_T * byte[] ) >( sectorIndices.Length )
             let rnddata = Array.zeroCreate<byte> 4096
             Random.Shared.NextBytes rnddata
             for itr in sectorIndices do
                 let offset = uint64 itr * 4096UL
                 let readdata = Array.zeroCreate<byte> 4096
-                do! outputFile.Read offset ( ArraySegment readdata )
-                do! outputFile.Write offset ( ArraySegment rnddata )
+                do! outputFile.ReadArray offset readdata
+                do! outputFile.WriteArray offset rnddata
                 sectorInfo.Add ( struct ( itr, readdata ) )
 
             // Determine the log writing location.
-            let logOutputPos = Random.Shared.Next ( int32 logSecCnt ) * 4096 |> uint32
+            //let logOutputPos = Random.Shared.Next ( int32 logSecCnt ) * 4096 |> uint32
+            let logOutputPos = 0u
 
             // Generate four dummy log entries.
             let dummyLogEntry =

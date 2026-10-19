@@ -128,7 +128,7 @@ type VhdxLogManager (
 
                 // Calculate the number of entries that can be output from the current log output position.
                 let count = 
-                    VhdxWriter.Max4KSectorCountFromLogCapacity ( m_LogLength - nextLogWriteOffset )
+                    VhdxCorrupter.Max4KSectorCountFromLogCapacity ( m_LogLength - nextLogWriteOffset )
                     |> min ( sec4KsCnt - index )
 
                 let updates = Array.zeroCreate< struct( SEC4K_T * byte[] ) >( int count )
@@ -200,7 +200,7 @@ type VhdxLogManager (
 
                 // Calculate the number of entries that can be output from the current log output position.
                 let count = 
-                    VhdxWriter.Max4KSectorCountFromLogCapacity ( m_LogLength - nextLogWriteOffset )
+                    VhdxCorrupter.Max4KSectorCountFromLogCapacity ( m_LogLength - nextLogWriteOffset )
                     |> min ( sec4KsCnt - index )
 
                 let updates = Array.zeroCreate< struct( SEC4K_T * byte[] ) >( int count )
@@ -280,7 +280,7 @@ type VhdxLogManager (
             }
             pendingEntries.Add pendingEntry
 
-            nextLogWriteOffset <- nextLogWriteOffset + VhdxWriter.LogCapacityFrom4KSecCount ( uint32 updates.Length )
+            nextLogWriteOffset <- nextLogWriteOffset + VhdxCorrupter.LogEntrySizeFrom4KSecCount ( uint32 updates.Length )
             nextLogSequenceNumber <- nextLogSequenceNumber + 1UL
 
             // Only the first entry of a transaction activates LogGuid.

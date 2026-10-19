@@ -358,42 +358,6 @@ type VhdxWriter() =
             true
 
     /// <summary>
-    ///  Calculate the required log region size based on the number of 4K sectores.
-    /// </summary>
-    /// <param name="entries">
-    ///  Number of 4K sectors where update information should be recorded
-    /// </param>
-    /// <returns>
-    ///  Required log region size.
-    /// </returns>
-    static member LogCapacityFrom4KSecCount ( entries : uint32 ) : uint32 =
-        let headerRaw = 64u + entries * 32u
-        let headerSize = ( ( headerRaw + 4095u ) / 4096u ) * 4096u
-        let dataSize = entries * 4096u
-        headerSize + dataSize
-
-    /// <summary>
-    ///  Determine the upper limit of the 4K sectors that can be recorded
-    ///  based on the size of the log area.
-    /// </summary>
-    /// <param name="capacity">
-    ///  Log region size. It msut be greater than 1MB and multiple of 1MB.
-    /// </param>
-    /// <returns>
-    ///  The number of 4K entries that can be recorded using a single log entry.
-    /// </returns>
-    static member Max4KSectorCountFromLogCapacity ( capacity : uint32 ) : uint32 =
-        let nApprox = ( capacity - 64u ) / 4128u
-        let k =
-            let headerRaw = 64u + 32u * nApprox
-            ( headerRaw + 4095u ) / 4096u
-        let n1 = ( 4096u * k - 64u ) / 32u
-        let n2 =
-            let s = VhdxWriter.LogCapacityFrom4KSecCount nApprox
-            s / 4096u - k
-        ( min n1 n2 )
-
-    /// <summary>
     ///  Write PayloadBATEntry data to the buffer
     /// </summary>
     /// <param name="buf">
@@ -509,7 +473,7 @@ type VhdxWriter() =
     /// </returns>
     static member WriteUpdatedBAT ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) ( sec4Ks : SEC4K_T[] ) ( reqFileSize : uint64 ) ( ex : int32 ) : Task<VhdxMutableHeader> =
         task {
-            let logEntryUnit = VhdxWriter.Max4KSectorCountFromLogCapacity structures.ImmHeader.LogLength |> int
+            let logEntryUnit = VhdxCorrupter.Max4KSectorCountFromLogCapacity structures.ImmHeader.LogLength |> int
             let cycleCount = ( sec4Ks.Length + ( logEntryUnit - 1 ) ) / logEntryUnit
 
             let ps = PseudoSeqStat< struct( int32 * VhdxMutableHeader ), VhdxMutableHeader >( struct( 0, verhd ) )
@@ -587,7 +551,7 @@ type VhdxWriter() =
     static member WriteUpdatedSB ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) ( sec4Ks : struct( SEC4K_T * ArraySegment<byte> ) [] ) : Task<VhdxMutableHeader> =
         task {
             let logEntryUnit =
-                VhdxWriter.Max4KSectorCountFromLogCapacity structures.ImmHeader.LogLength
+                VhdxCorrupter.Max4KSectorCountFromLogCapacity structures.ImmHeader.LogLength
                 |> int
             //let logOutputPos = structures.ImmHeader.LogOffset
             let cycleCount = ( sec4Ks.Length + ( logEntryUnit - 1 ) ) / logEntryUnit
