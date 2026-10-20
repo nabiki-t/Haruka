@@ -259,3 +259,58 @@ type VhdxCorrupter_Test () =
                 } )
             Assert.StartsWith( "The required log capacity exceeds the log area length", r.Message )
         } )
+
+    [<Theory>]
+    [<InlineData( 0u, 4096u )>]
+    [<InlineData( 1u, 4096u )>]
+    [<InlineData( 126u, 4096u )>]
+    [<InlineData( 127u, 8192u )>]
+    [<InlineData( 254u, 8192u )>]
+    [<InlineData( 255u, 12288u )>]
+    [<InlineData( 382u, 12288u )>]
+    [<InlineData( 383u, 16384u )>]
+    [<InlineData( 134217598u, 4294963200u )>]
+    member _.LogEntryHeaderSizeFrom4KSecCount_001 ( entries : uint32 ) ( expr : uint32 ) =
+        Assert.StrictEqual( expr, VhdxCorrupter.LogEntryHeaderSizeFrom4KSecCount entries )
+
+    [<Fact>]
+    member _.LogEntryHeaderSizeFrom4KSecCount_Fail_001 () =
+        let r =
+            Assert.Throws<ArgumentException>( fun () ->
+                VhdxCorrupter.LogEntryHeaderSizeFrom4KSecCount 134217599u |> ignore
+            )
+        Assert.StartsWith( "entries must be 134217598 or less", r.Message )
+
+    [<Theory>]
+    [<InlineData( 0u, 4096u )>]
+    [<InlineData( 1u, 8192u )>]
+    [<InlineData( 126u, 520192u )>]
+    [<InlineData( 127u, 528384u )>]
+    [<InlineData( 254u, 1048576u )>]
+    [<InlineData( 255u, 1056768u )>]
+    [<InlineData( 382u, 1576960u )>]
+    [<InlineData( 383u, 1585152u )>]
+    [<InlineData( 1040446u, 4294963200u )>]
+    member _.LogEntrySizeFrom4KSecCount_001 ( entries : uint32 ) ( expr : uint32 ) =
+        Assert.StrictEqual( expr, VhdxCorrupter.LogEntrySizeFrom4KSecCount entries )
+
+    [<Fact>]
+    member _.LogEntrySizeFrom4KSecCount_Fail_001 () =
+        let r =
+            Assert.Throws<ArgumentException>( fun () ->
+                VhdxCorrupter.LogEntrySizeFrom4KSecCount 1040447u |> ignore
+            )
+        Assert.StartsWith( "entries must be 1040446 or less", r.Message )
+
+    [<Theory>]
+    [<InlineData( 0x00100000u, 254u )>]
+    [<InlineData( 0x00200000u, 508u )>]
+    [<InlineData( 0x00300000u, 762u )>]
+    [<InlineData( 0x04000000u, 16256u )>]
+    [<InlineData( 0x04100000u, 16510u )>]
+    [<InlineData( 0x04200000u, 16765u )>]
+    [<InlineData( 0xFFE00000u, 1039939u )>]
+    [<InlineData( 0xFFF00000u, 1040193u )>]
+    [<InlineData( 0xFFFFFFFFu, 1040446u )>]
+    member _.Max4KSectorCountFromLogCapacity_001 ( capacity : uint32 ) ( expr : uint32 ) =
+        Assert.StrictEqual( expr, VhdxCorrupter.Max4KSectorCountFromLogCapacity capacity )

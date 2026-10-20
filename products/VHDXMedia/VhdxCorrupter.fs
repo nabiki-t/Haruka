@@ -59,28 +59,32 @@ type VhdxCorrupter() =
     ///  Calculate the log entry header size based on the number of 4K sectores.
     /// </summary>
     /// <param name="entries">
-    ///  Number of 4K sectors where update information should be recorded
+    ///  Number of 4K sectors where update information should be recorded. Max 13,4217,598.
     /// </param>
     /// <returns>
     ///  Log entry header size.
     /// </returns>
     static member LogEntryHeaderSizeFrom4KSecCount ( entries : uint32 ) : uint32 =
-        let headerRaw = 64u + entries * 32u
-        ( ( headerRaw + 4095u ) / 4096u ) * 4096u
+        if entries > 134217598u then
+            raise <| ArgumentException( "entries must be 134217598 or less." )
+        let headerRaw = 64UL + ( uint64 entries ) * 32UL
+        ( ( headerRaw + 4095UL ) / 4096UL ) * 4096UL |> uint32
 
     /// <summary>
     ///  Calculate the required log region size based on the number of 4K sectores.
     /// </summary>
     /// <param name="entries">
-    ///  Number of 4K sectors where update information should be recorded
+    ///  Number of 4K sectors where update information should be recorded. Max 1,040,446.
     /// </param>
     /// <returns>
     ///  Required log region size.
     /// </returns>
     static member LogEntrySizeFrom4KSecCount ( entries : uint32 ) : uint32 =
+        if entries > 1040446u then
+            raise <| ArgumentException( "entries must be 1040446 or less." )
         let headerSize = VhdxCorrupter.LogEntryHeaderSizeFrom4KSecCount entries
-        let dataSize = entries * 4096u
-        headerSize + dataSize
+        let dataSize = ( uint64 entries ) * 4096UL
+        ( uint64 headerSize ) + dataSize |> uint32
 
     /// <summary>
     ///  Determine the upper limit of the 4K sectors that can be recorded
@@ -93,15 +97,21 @@ type VhdxCorrupter() =
     ///  The number of 4K entries that can be recorded using a single log entry.
     /// </returns>
     static member Max4KSectorCountFromLogCapacity ( capacity : uint32 ) : uint32 =
-        let nApprox = ( capacity - 64u ) / 4128u
-        let k =
-            let headerRaw = 64u + 32u * nApprox
-            ( headerRaw + 4095u ) / 4096u
-        let n1 = ( 4096u * k - 64u ) / 32u
-        let n2 =
-            let s = VhdxCorrupter.LogEntrySizeFrom4KSecCount nApprox
-            s / 4096u - k
-        ( min n1 n2 )
+        let capacity64 = uint64 capacity
+        let wmax = ( ( capacity64 + 1048575UL ) / 1048576UL ) * 256UL |> uint32 |> min 1040446u
+        let wmin = ( capacity64 / 1048576UL ) * 250UL |> uint32 |> min 1040446u
+
+        let rec binarySearch ( low : uint32 ) ( high : uint32 ) ( best : uint32 ) =
+            if low > high then
+                best
+            else
+                let mid = low + ( high - low ) / 2u
+                let currentSize = uint64 ( VhdxCorrupter.LogEntrySizeFrom4KSecCount mid )
+                if currentSize <= capacity64 then
+                    binarySearch ( mid + 1u ) high mid
+                else
+                    binarySearch low ( mid - 1u ) best
+        binarySearch wmin wmax wmin
 
     /// <summary>
     ///  Create log entry.
