@@ -479,6 +479,8 @@ type VhdxCreator() =
 
             if logAreaSize &&& 0x000FFFFFu <> 0u then
                 raise <| VhdxMediaException( sprintf "Log are size must be multiples of 1MB. Specified sizse=%d" logAreaSize )
+            if logAreaSize < 0x00100000u then
+                raise <| VhdxMediaException( sprintf "Log are size must be 1MB or more. Specified sizse=%d" logAreaSize )
             if payloadBlockSize < 0x100000u ||                                  // 1MB or more
                 0x10000000u < payloadBlockSize ||                               // 256MB or less
                 ( payloadBlockSize &&& ( payloadBlockSize - 1u ) ) <> 0u then   // Powers of 2

@@ -260,6 +260,39 @@ type VhdxCorrupter_Test () =
             Assert.StartsWith( "The required log capacity exceeds the log area length", r.Message )
         } )
 
+    [<Fact>]
+    member _.Inject_Fail_003 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            try
+                do! VhdxCreator.Create None fa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
+            finally
+                fa.Close()
+
+            let fa2 = FileAccessor( fname, 1u, true )
+            try
+                let! r =
+                    Assert.ThrowsAsync<InvalidOperationException>( fun () -> task {
+                        do! VhdxCorrupter.Inject fa2 [ sec4k_me.ofUInt64 512UL ]
+                    } )
+                Assert.StartsWith( "File opened read-only; Write not allowed", r.Message )
+            finally
+                fa2.Close()
+            GlbFunc.DeleteFile fname
+        }
+
+    [<Fact>]
+    member _.Inject_Fail_004 () =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
+            fa.Close()
+            let! r =
+                Assert.ThrowsAsync<InvalidOperationException>( fun () -> task {
+                    do! VhdxCorrupter.Inject fa [ sec4k_me.ofUInt64 512UL ]
+                } )
+            Assert.StartsWith( "No available stream. Exceeds multiplicity", r.Message )
+        } )
+
     [<Theory>]
     [<InlineData( 0u, 4096u )>]
     [<InlineData( 1u, 4096u )>]
