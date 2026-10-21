@@ -1436,6 +1436,10 @@ module Constants =
     let PRODUCT_DESCRIPTION : string =
         "Haruka software storage."
 
+    /// Name to be set in the creator string of a VHDX file.
+    let VHDX_CREATOR_NAME : string =
+        "Haruka.VhdxCreator"
+
     /// Haruka controller program file name.
     let CONTROLLER_EXE_NAME : string =
         match Environment.OSVersion.Platform with

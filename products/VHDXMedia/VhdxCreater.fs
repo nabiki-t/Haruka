@@ -38,7 +38,7 @@ type VhdxCreator() =
         let buf = Array.zeroCreate<byte> 520
         ByteFunc.WriteU64BE buf 0u 0x7668647866696C65UL
         let creator =
-            "VHDXTest.VhdxCreator"
+            Constants.VHDX_CREATOR_NAME
             |> Encoding.Unicode.GetBytes
         Array.blit creator 0 buf 8 creator.Length
         fa.Write 0UL ( ArraySegment buf )
@@ -503,7 +503,7 @@ type VhdxCreator() =
                 else
                     sectorBitmapCount * ( chunkRate + 1UL )
             let batRegionSize =
-                ( batEntryCount * 64UL + 0x00000000000FFFFFUL ) &&& 0xFFFFFFFFFFF00000UL
+                ( batEntryCount * 8UL + 0x00000000000FFFFFUL ) &&& 0xFFFFFFFFFFF00000UL
             let metadataStartPos = 1048576UL + uint64 logAreaSize
             let batRegionStartPos = metadataStartPos + 1048576UL
 
