@@ -146,8 +146,8 @@ type VhdxCreater_Test () =
                 Assert.Empty str1.VDI.ParentLocator
                 Assert.StrictEqual( uint64 bsize * 0x800000UL, str1.BAT.ChunkSize )
                 Assert.StrictEqual( str1.BAT.ChunkSize / uint64 pbsize, str1.BAT.ChunkRatio )
-                Assert.StrictEqual( ( vdsize + uint64 pbsize - 1UL ) / uint64 pbsize, str1.BAT.PayloadBlockCount )
-                Assert.StrictEqual( ( str1.BAT.PayloadBlockCount + str1.BAT.ChunkRatio - 1UL ) / str1.BAT.ChunkRatio , str1.BAT.SectorBitmapBlockCount )
+                Assert.StrictEqual( Functions.CeilDiv vdsize ( uint64 pbsize ), str1.BAT.PayloadBlockCount )
+                Assert.StrictEqual( Functions.CeilDiv str1.BAT.PayloadBlockCount str1.BAT.ChunkRatio , str1.BAT.SectorBitmapBlockCount )
                 Assert.StrictEqual( str1.BAT.PayloadBlockCount + ( str1.BAT.PayloadBlockCount - 1UL ) / str1.BAT.ChunkRatio, str1.BAT.BatEntryCount )
                 Assert.StrictEqual( int str1.BAT.PayloadBlockCount, str1.BAT.Payloads.Length )
                 Assert.StrictEqual( int str1.BAT.SectorBitmapBlockCount, str1.BAT.SectorBitmap.Length )

@@ -56,7 +56,7 @@ type VhdxMerge() =
             let buf = PooledBuffer.Rent 1048576
             let blocksize = Blocksize.toUInt32 srcStr.VDI.LogicalSectorSize
             let lbPerChunk = 1048576u / blocksize    // 2048か256
-            let chunkCount = ( uint32 cnt + lbPerChunk - 1u ) / lbPerChunk
+            let chunkCount = Functions.CeilDiv ( uint32 cnt ) lbPerChunk
             let copyLength = uint64 cnt * uint64 blocksize
 
             let srcStartBytePos =

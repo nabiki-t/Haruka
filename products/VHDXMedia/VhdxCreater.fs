@@ -494,18 +494,16 @@ type VhdxCreator() =
 
             let chunkSize = Blocksize.toUInt64 efSectorSize * 8388608UL
             let chunkRate = chunkSize / uint64 payloadBlockSize
-            let payloadBlockCount =
-                ( efVirtualDiskSize + ( uint64 payloadBlockSize - 1UL ) ) / ( uint64 payloadBlockSize )
-            let sectorBitmapCount = ( payloadBlockCount + ( chunkRate - 1UL ) ) / chunkRate
+            let payloadBlockCount = Functions.CeilDiv efVirtualDiskSize ( uint64 payloadBlockSize )
+            let sectorBitmapCount = Functions.CeilDiv payloadBlockCount chunkRate
             let batEntryCount =
                 if inputFile.IsNone then
                     payloadBlockCount + ( payloadBlockCount - 1UL ) / chunkRate
                 else
                     sectorBitmapCount * ( chunkRate + 1UL )
-            let batRegionSize =
-                ( batEntryCount * 8UL + 0x00000000000FFFFFUL ) &&& 0xFFFFFFFFFFF00000UL
-            let metadataStartPos = 1048576UL + uint64 logAreaSize
-            let batRegionStartPos = metadataStartPos + 1048576UL
+            let batRegionSize = Functions.CeilUnit ( batEntryCount * 8UL ) 0x100000UL
+            let metadataStartPos = 0x100000UL + uint64 logAreaSize
+            let batRegionStartPos = metadataStartPos + 0x100000UL
 
             // File type identifier
             do! outputFile.SetFileSize ( batRegionStartPos + batRegionSize )
@@ -518,7 +516,7 @@ type VhdxCreator() =
                 LogVersion = 0us;                   // Always 0
                 Version = 1us;                      // Always 1
                 LogLength = logAreaSize;
-                LogOffset = 1048576UL;
+                LogOffset = 0x100000UL;
                 Offset = 0x10000UL;
                 Index = 0;                          // unused
             }

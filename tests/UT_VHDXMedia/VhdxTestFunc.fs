@@ -201,7 +201,7 @@ type VhdxTestFunc() =
                 let logents = logEntries.[i].Descriptor
                 let entryBytes = [|
                     let dataCount = Array.fold ( fun cnt j -> cnt + ( match j with | Data _ -> 1 | _ -> 0 ) ) 0 logents
-                    let headerlength = Functions.AddPaddingLengthInt32 ( 64 + logents.Length * 32 ) 4096
+                    let headerlength = Functions.CeilUnit ( 64 + logents.Length * 32 ) 4096
                     let entryLength = headerlength + dataCount * 4096
                     let effSN = ( sequenceNumber + uint64 i )
                     // log entry header

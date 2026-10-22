@@ -57,9 +57,7 @@ type MemBufferMedia
     let m_BlockSize = Blocksize.toUInt64 m_Config.BlockSize
 
     /// Buffer line size in bytes. It must be multiple of the block size.
-    let m_BufferLineSize =
-        let a = ( argBufferLineBytes + ( m_BlockSize - 1UL ) ) / m_BlockSize
-        a * m_BlockSize
+    let m_BufferLineSize = Functions.CeilUnit argBufferLineBytes m_BlockSize
 
     /// Block count
     let m_BlockCount =

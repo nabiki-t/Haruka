@@ -602,7 +602,7 @@ type PRManager(
 
                 // prepare initiator name bytes array for TransportID
                 let initiatorPortNameStr = Encoding.UTF8.GetBytes iITN.InitiatorPortName
-                let initiatorPortNameBytesLen = Functions.AddPaddingLengthUInt32 ( uint32 initiatorPortNameStr.Length + 1u ) 4u
+                let initiatorPortNameBytesLen = Functions.CeilUnit ( uint32 initiatorPortNameStr.Length + 1u ) 4u
                 let buf = Array.zeroCreate<byte> ( int32 initiatorPortNameBytesLen )
                 Array.blit initiatorPortNameStr 0 buf 0 initiatorPortNameStr.Length
 

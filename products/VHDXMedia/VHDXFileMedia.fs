@@ -215,7 +215,7 @@ type VHDXFileMedia
                         raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
 
                     // Sector count (number of logical blocks to read)
-                    let totalSectors = ( readBytesLength_u64 + ( blockSize_u64 - 1UL ) ) / blockSize_u64
+                    let totalSectors = Functions.CeilDiv readBytesLength_u64 blockSize_u64
 
                     // payload block size and logical sector size for the last (child) file
                     let childPBSize = uint64 curStr.VDI.PayloadBlockSize
@@ -319,7 +319,7 @@ type VHDXFileMedia
                     let writeStartBytePos = uint64 argLBA * blockSize_u64 + offset
                     let writeStartBlockPos = writeStartBytePos / blockSize_u64 |> blkcnt_me.ofUInt64
                     let writeEndBytePos = writeStartBytePos + writeBytesLength_u64
-                    let writeEndBlockPos = ( writeEndBytePos + blockSize_u64 - 1UL ) / blockSize_u64 |> blkcnt_me.ofUInt64
+                    let writeEndBlockPos = Functions.CeilDiv writeEndBytePos blockSize_u64 |> blkcnt_me.ofUInt64
                     let writeBlockLength = writeEndBlockPos - writeStartBlockPos
 
                     // Check specified range is in media file.

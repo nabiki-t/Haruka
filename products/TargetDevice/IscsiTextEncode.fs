@@ -645,7 +645,7 @@ type IscsiTextEncode() =
     /// <returns>Encoded bytes array that conforms base64-constant format.</returns>
     static member Binary2Base64ConstantBytes ( v : byte[] ) : byte[] =
         // Encode bytes array to base64 string.
-        let EncodedLength = Functions.AddPaddingLengthInt32 ( v.Length * 4 / 3 ) 4
+        let EncodedLength = Functions.CeilUnit ( v.Length * 4 / 3 ) 4
 
         if EncodedLength <= 0 then
             Array.empty

@@ -53,9 +53,9 @@ type VhdxCommons_Test () =
         let chunkSize = 512UL * 8388608UL;                          // Blocksize * 2^23
         let chunkRatio = chunkSize / ( uint64 payloadBlockSize )    // ChunkSize / PayloadBlockSize
         let payloadBlockCount =                                     // ceil( PayloadBlockCount / ChunkRatio )
-                ( virtualDiskSize + ( uint64 payloadBlockSize ) - 1UL ) / ( uint64 payloadBlockSize )
+                Functions.CeilDiv virtualDiskSize ( uint64 payloadBlockSize )
         let SectorBitmapBlockCount =                                // ceil( PayloadBlockCount / ChunkRatio )
-                ( payloadBlockCount + chunkRatio - 1UL ) / chunkRatio
+                Functions.CeilDiv payloadBlockCount chunkRatio
         let batEntryCount =
                 if hasParent then
                     // SectorBitmapBlockCount * ( ChunkRatio + 1 )

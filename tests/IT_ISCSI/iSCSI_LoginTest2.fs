@@ -50,7 +50,7 @@ type iSCSI_LoginTest2_Fixture() =
             |> max Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength
             |> max Constants.NEGOPARAM_MAX_MaxBurstLength
             |> max Constants.NEGOPARAM_MAX_FirstBurstLength
-        Functions.AddPaddingLengthUInt32 w 4096u
+        Functions.CeilUnit w 4096u
 
     // Add default configurations
     let AddDefaultConf( client : ClientProc ): unit =
@@ -1245,7 +1245,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let mbl = r1.Params.MaxBurstLength
             Assert.True(( mbl = Constants.NEGOPARAM_MAX_MaxBurstLength ))
 
-            let accessLength = Functions.AddPaddingLengthUInt32 mbl m_MediaBlockSize
+            let accessLength = Functions.CeilUnit mbl m_MediaBlockSize
             let accessBlockCount = accessLength / m_MediaBlockSize
             let r2tCount =
                 let w = accessLength / mbl

@@ -1228,8 +1228,8 @@ type VhdxReader() =
             let! fileData = VhdxReader.ReadBytesWithLog log lastFileSize fa batRegion.FileOffset batRegion.Length
             let chunkSize = 0x800000UL * Blocksize.toUInt64 virtualDiskInfo.LogicalSectorSize
             let chunkRatio = chunkSize / uint64 virtualDiskInfo.PayloadBlockSize
-            let payloadBlockCount = ( virtualDiskInfo.VirtualDiskSize - 1UL ) / uint64 virtualDiskInfo.PayloadBlockSize + 1UL
-            let sectorBitmapBlockCount = ( payloadBlockCount - 1UL ) / chunkRatio + 1UL
+            let payloadBlockCount = Functions.CeilDiv virtualDiskInfo.VirtualDiskSize ( uint64 virtualDiskInfo.PayloadBlockSize )
+            let sectorBitmapBlockCount = Functions.CeilDiv payloadBlockCount chunkRatio
             let batEntryCount =
                 if not virtualDiskInfo.HasParent then
                     payloadBlockCount + ( ( payloadBlockCount - 1UL ) / chunkRatio )

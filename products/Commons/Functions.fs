@@ -48,119 +48,61 @@ type Functions() =
         let wguid = Guid.NewGuid()
         wguid.ToString()
 
-    // ----------------------------------------------------------------------------
     /// <summary>
-    ///   Add length number to padding count ( int32 )
+    ///  Perform round-up division.
     /// </summary>
-    /// <param name="length">
-    ///   The number of data length.
+    /// <param name="a">
+    ///  dividend
     /// </param>
-    /// <param name="unitLength">
-    ///   Unit length of data. Data length is incremented until multiple of unit length.
+    /// <param name="b">
+    ///  divisor
     /// </param>
     /// <returns>
-    ///   Data length include padding length ( int32 ).
+    ///  The result obtained by dividing a by b and rounding up any remainder.
+    ///  If the signs of a and b are different, the result will be negative.
+    ///  In this case, the value will be rounded up towards zero.
     /// </returns>
-    static member public AddPaddingLengthInt32 ( length : int32 ) ( unitLength : int32 ) : int32 =
-        if length % unitLength = 0 then
-            length
+    static member inline CeilDiv<'T
+        when 'T : ( static member (+) : 'T -> 'T -> 'T )
+        and  'T : ( static member (/) : 'T -> 'T -> 'T )
+        and  'T : ( static member (%) : 'T -> 'T -> 'T )
+        and  'T : ( static member One : 'T )
+        and  'T : ( static member Zero : 'T )
+        and  'T : comparison
+        and  'T : equality
+    > ( a : 'T ) (  b : 'T ) : 'T =
+        let z = LanguagePrimitives.GenericZero<'T>
+        if a % b <> z && ( ( a > z ) = ( b > z ) )then
+            ( a / b ) + LanguagePrimitives.GenericOne<'T>
         else
-            length + unitLength - ( length % unitLength )
+            ( a / b )
 
-    // ----------------------------------------------------------------------------
     /// <summary>
-    ///   Add length number to padding count ( uint32 )
+    ///  Round up to the specified unit.
     /// </summary>
-    /// <param name="length">
-    ///   The number of data length.
+    /// <param name="a">
+    ///  The value to be rounded up.
     /// </param>
-    /// <param name="unitLength">
-    ///   Unit length of data. Data length is incremented until multiple of unit length.
+    /// <param name="b">
+    ///  The unit used for rounding up.
     /// </param>
     /// <returns>
-    ///   Data length include padding length ( uint32 ).
+    ///  A value rounded up to a multiple of b.
+    ///  The sign of the resulting value will be equal to the sign of a.
+    ///  If the signs of a and b are different, the result is rounded to approximate 0.
+    ///  If the signs of a and b are equal, the result is rounded away from 0.
     /// </returns>
-    static member public AddPaddingLengthUInt32 ( length : uint32 ) ( unitLength : uint32 ) : uint32 =
-        if length % unitLength = 0u then
-            length
-        else
-            length + unitLength - ( length % unitLength )
-
-    // ----------------------------------------------------------------------------
-    /// <summary>
-    ///   Add length number to padding count ( int16 )
-    /// </summary>
-    /// <param name="length">
-    ///   The number of data length.
-    /// </param>
-    /// <param name="unitLength">
-    ///   Unit length of data. Data length is incremented until multiple of unit length.
-    /// </param>
-    /// <returns>
-    ///   Data length include padding length ( int16 ).
-    /// </returns>
-    static member public AddPaddingLengthInt16 ( length : int16 ) ( unitLength : int16 ) : int16 =
-        if length % unitLength = 0s then
-            length
-        else
-            length + unitLength - ( length % unitLength )
-
-    // ----------------------------------------------------------------------------
-    /// <summary>
-    ///   Add length number to padding count ( uint16 )
-    /// </summary>
-    /// <param name="length">
-    ///   The number of data length.
-    /// </param>
-    /// <param name="unitLength">
-    ///   Unit length of data. Data length is incremented until multiple of unit length.
-    /// </param>
-    /// <returns>
-    ///   Data length include padding length ( uint16 ).
-    /// </returns>
-    static member public AddPaddingLengthUInt16 ( length : uint16 ) ( unitLength : uint16 ) : uint16 =
-        if length % unitLength = 0us then
-            length
-        else
-            length + unitLength - ( length % unitLength )
-
-    // ----------------------------------------------------------------------------
-    /// <summary>
-    ///   Add length number to padding count ( sbyte )
-    /// </summary>
-    /// <param name="length">
-    ///   The number of data length.
-    /// </param>
-    /// <param name="unitLength">
-    ///   Unit length of data. Data length is incremented until multiple of unit length.
-    /// </param>
-    /// <returns>
-    ///   Data length include padding length ( sbyte ).
-    /// </returns>
-    static member public AddPaddingLengthInt8 ( length : sbyte ) ( unitLength : sbyte ) : sbyte =
-        if length % unitLength = 0y then
-            length
-        else
-            length + unitLength - ( length % unitLength )
-
-    // ----------------------------------------------------------------------------
-    /// <summary>
-    ///   Add length number to padding count ( byte )
-    /// </summary>
-    /// <param name="length">
-    ///   The number of data length.
-    /// </param>
-    /// <param name="unitLength">
-    ///   Unit length of data. Data length is incremented until multiple of unit length.
-    /// </param>
-    /// <returns>
-    ///   Data length include padding length ( byte ).
-    /// </returns>
-    static member public AddPaddingLengthUInt8 ( length : byte ) ( unitLength : byte ) : byte =
-        if length % unitLength = 0uy then
-            length
-        else
-            length + unitLength - ( length % unitLength )
+    static member inline CeilUnit<'T
+        when 'T : ( static member (+) : 'T -> 'T -> 'T )
+        and  'T : ( static member (*) : 'T -> 'T -> 'T )
+        and  'T : ( static member (/) : 'T -> 'T -> 'T )
+        and  'T : ( static member (%) : 'T -> 'T -> 'T )
+        and  'T : ( static member One : 'T )
+        and  'T : ( static member Zero : 'T )
+        and  'T : comparison
+        and  'T : equality
+    > ( a : 'T ) (  b : 'T ) : 'T =
+        ( Functions.CeilDiv a b ) * b
 
     // ----------------------------------------------------------------------------
     /// <summary>
@@ -340,7 +282,7 @@ type Functions() =
     ///   A bytes array.
     /// </param>
     static member PadBytesArray ( u : int32 ) ( m : int32 ) ( v : byte[] ) : byte [] =
-        let wl = Functions.AddPaddingLengthInt32 v.Length u
+        let wl = Functions.CeilUnit v.Length u
         let wa : byte[] = Array.zeroCreate( min wl m )
         Array.blit v 0 wa 0 ( min wa.Length v.Length )
         wa

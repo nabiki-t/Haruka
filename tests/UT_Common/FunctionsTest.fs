@@ -33,54 +33,50 @@ type Functions_Test () =
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
-   
+
+    [<Theory>]
+    [<InlineData( 0, 4, 0 )>]
+    [<InlineData( 1, 4, 1 )>]
+    [<InlineData( 4, 4, 1 )>]
+    [<InlineData( 5, 4, 2 )>]
+    [<InlineData( -10, 3, -3 )>]
+    [<InlineData( 10, -3, -3 )>]
+    [<InlineData( -10, -3, 4 )>]
+    [<InlineData( 0x7FFFFFFF, 0x7FFFFFFF, 1 )>]
+    [<InlineData( 0x80000000, 0xC0000000, 2 )>]
+    member _.CeilDiv_int32_001 ( v1 : int32 ) ( v2 : int32 ) ( v3 : int32 ) =
+        Assert.StrictEqual( v3, Functions.CeilDiv v1 v2 )
+
+    [<Theory>]
+    [<InlineData( 0u, 4u, 0u )>]
+    [<InlineData( 1u, 4u, 1u )>]
+    [<InlineData( 4u, 4u, 1u )>]
+    [<InlineData( 5u, 4u, 2u )>]
+    [<InlineData( 0xFFFFFFF0u, 0x0FFFFFFFu, 16u )>]
+    member _.CeilDiv_uint32_001 ( v1 : uint32 ) ( v2 : uint32 ) ( v3 : uint32 ) =
+        Assert.StrictEqual( v3, Functions.CeilDiv v1 v2 )
+
     [<Theory>]
     [<InlineData( 0, 4, 0 )>]
     [<InlineData( 1, 4, 4 )>]
     [<InlineData( 4, 4, 4 )>]
     [<InlineData( 5, 4, 8 )>]
-    member _.AddPaddingLength_001 ( v1 : int32 ) ( v2 : int32 ) ( v3 : int32 ) =
-        Assert.True( Functions.AddPaddingLengthInt32 v1 v2 = v3 )
+    [<InlineData( -10, 3, -9 )>]
+    [<InlineData( 10, -3, 9 )>]
+    [<InlineData( -10, -3, -12 )>]
+    [<InlineData( 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF )>]
+    [<InlineData( 0x80000000, 0xC0000000, 0x80000000 )>]
+    member _.CeilUnit_int32_001 ( v1 : int32 ) ( v2 : int32 ) ( v3 : int32 ) =
+        Assert.StrictEqual( v3, Functions.CeilUnit v1 v2 )
 
     [<Theory>]
-    [<InlineData( 0u, 5u, 0u )>]
-    [<InlineData( 1u, 5u, 5u )>]
-    [<InlineData( 5u, 5u, 5u )>]
-    [<InlineData( 6u, 5u, 10u )>]
-    member _.AddPaddingLength_002 ( v1 : uint32 ) ( v2 : uint32 ) ( v3 : uint32 ) =
-        Assert.True( Functions.AddPaddingLengthUInt32 v1 v2 = v3 )
-
-    [<Theory>]
-    [<InlineData( 0s, 2s, 0s )>]
-    [<InlineData( 1s, 2s, 2s )>]
-    [<InlineData( 3s, 2s, 4s )>]
-    [<InlineData( 4s, 2s, 4s )>]
-    member _.AddPaddingLength_003 ( v1 : int16 ) ( v2 : int16 ) ( v3 : int16 ) =
-        Assert.True( Functions.AddPaddingLengthInt16 v1 v2 = v3 )
-
-    [<Theory>]
-    [<InlineData( 0us, 4us, 0us )>]
-    [<InlineData( 1us, 4us, 4us )>]
-    [<InlineData( 4us, 4us, 4us )>]
-    [<InlineData( 5us, 4us, 8us )>]
-    member _.AddPaddingLength_004 ( v1 : uint16 ) ( v2 : uint16 ) ( v3 : uint16 ) =
-        Assert.True( Functions.AddPaddingLengthUInt16 v1 v2 = v3 )
-
-    [<Theory>]
-    [<InlineData( 0y, 4y, 0y )>]
-    [<InlineData( 1y, 4y, 4y )>]
-    [<InlineData( 4y, 4y, 4y )>]
-    [<InlineData( 5y, 4y, 8y )>]
-    member _.AddPaddingLength_005 ( v1 : sbyte ) ( v2 : sbyte ) ( v3 : sbyte ) =
-        Assert.True( Functions.AddPaddingLengthInt8 v1 v2 = v3 )
-    
-    [<Theory>]
-    [<InlineData( 0uy, 4uy, 0uy )>]
-    [<InlineData( 1uy, 4uy, 4uy )>]
-    [<InlineData( 4uy, 4uy, 4uy )>]
-    [<InlineData( 5uy, 4uy, 8uy )>]
-    member _.AddPaddingLength_006 ( v1 : byte ) ( v2 : byte ) ( v3 : byte ) =
-        Assert.True( Functions.AddPaddingLengthUInt8 v1 v2 = v3 )
+    [<InlineData( 0u, 4u, 0u )>]
+    [<InlineData( 1u, 4u, 4u )>]
+    [<InlineData( 4u, 4u, 4u )>]
+    [<InlineData( 5u, 4u, 8u )>]
+    [<InlineData( 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu )>]
+    member _.CeilUnit_uint32_001 ( v1 : uint32 ) ( v2 : uint32 ) ( v3 : uint32 ) =
+        Assert.StrictEqual( v3, Functions.CeilUnit v1 v2 )
 
     [<Fact>]
     member _.CheckBitflag_001() =

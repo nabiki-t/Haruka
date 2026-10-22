@@ -1598,7 +1598,7 @@ type GenScsiParams() =
                 name
         let iScsiNameBytes = Encoding.UTF8.GetBytes iScsiName
         let additionalLength =
-            Functions.AddPaddingLengthInt32 ( max 20 ( iScsiNameBytes.Length + 1 ) ) 4
+            Functions.CeilUnit ( max 20 ( iScsiNameBytes.Length + 1 ) ) 4
         let v = Array.zeroCreate<byte> additionalLength
         Array.blit iScsiNameBytes 0 v 0 iScsiNameBytes.Length
         [|

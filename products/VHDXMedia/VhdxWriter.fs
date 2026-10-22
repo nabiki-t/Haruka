@@ -133,7 +133,7 @@ type VhdxWriter() =
         freeRanges
         |> List.collect ( fun struct ( start, endPos ) ->
             let alignedStart =
-                let s = ( ( start + 1048576UL - 1UL) / 1048576UL ) * 1048576UL
+                let s = Functions.CeilUnit start 1048576UL
                 max s start
             let alignedEnd = endPos - ( endPos % 1048576UL )
 
@@ -474,7 +474,7 @@ type VhdxWriter() =
     static member WriteUpdatedBAT ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) ( sec4Ks : SEC4K_T[] ) ( reqFileSize : uint64 ) ( ex : int32 ) : Task<VhdxMutableHeader> =
         task {
             let logEntryUnit = VhdxCorrupter.Max4KSectorCountFromLogCapacity structures.ImmHeader.LogLength |> int
-            let cycleCount = ( sec4Ks.Length + ( logEntryUnit - 1 ) ) / logEntryUnit
+            let cycleCount = Functions.CeilDiv sec4Ks.Length logEntryUnit
 
             let ps = PseudoSeqStat< struct( int32 * VhdxMutableHeader ), VhdxMutableHeader >( struct( 0, verhd ) )
             for struct( cycle, wverhd ) in ps do
@@ -553,8 +553,7 @@ type VhdxWriter() =
             let logEntryUnit =
                 VhdxCorrupter.Max4KSectorCountFromLogCapacity structures.ImmHeader.LogLength
                 |> int
-            //let logOutputPos = structures.ImmHeader.LogOffset
-            let cycleCount = ( sec4Ks.Length + ( logEntryUnit - 1 ) ) / logEntryUnit
+            let cycleCount = Functions.CeilDiv sec4Ks.Length logEntryUnit
 
             let ps = PseudoSeqStat< struct ( int32 * VhdxMutableHeader ), VhdxMutableHeader >( struct( 0, verhd ) )
             for struct ( cycle, wverhd ) in ps do
