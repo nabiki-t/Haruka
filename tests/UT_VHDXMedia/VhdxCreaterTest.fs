@@ -113,21 +113,27 @@ type VhdxCreater_Test () =
         }
 
     [<Theory>]
-    [<InlineData( 0x100000u, 0x100000u,   0x4000000UL,      512 )>]
-    [<InlineData( 0x200000u, 0x100000u,   0x4000000UL,      512 )>]
-    [<InlineData( 0x100000u, 0x200000u,   0x4000000UL,      512 )>]
-    [<InlineData( 0x100000u, 0x100000u,   512UL,            512 )>]
-    [<InlineData( 0x100000u, 0x100000u,   0x8000000UL,      512 )>]
-    [<InlineData( 0x100000u, 0x100000u,   0x4000000UL,      4096 )>]
-    [<InlineData( 0x100000u, 0x100000u,   0x400000000000UL, 512 )>]
-    [<InlineData( 0x100000u, 0x10000000u, 0x400000000000UL, 4096 )>]
-    member _.Create_Dynamic_001 ( logsizse : uint32 ) ( pbsize : uint32 ) ( vdsize : uint64 ) ( bsize : int32 ) =
+    [<InlineData( 0x100000u, 0x100000u,   0x4000000UL,      512,  false )>]
+    [<InlineData( 0x200000u, 0x100000u,   0x4000000UL,      512,  false )>]
+    [<InlineData( 0x100000u, 0x200000u,   0x4000000UL,      512,  false )>]
+    [<InlineData( 0x100000u, 0x100000u,   512UL,            512,  false )>]
+    [<InlineData( 0x100000u, 0x100000u,   0x8000000UL,      512,  false )>]
+    [<InlineData( 0x100000u, 0x100000u,   0x4000000UL,      4096, false )>]
+    [<InlineData( 0x100000u, 0x100000u,   0x400000000000UL, 512,  false )>]
+    [<InlineData( 0x100000u, 0x10000000u, 0x400000000000UL, 4096, false )>]
+    [<InlineData( 0x100000u, 0x100000u,   0x4000000UL,      512,  true )>]
+    [<InlineData( 0x200000u, 0x100000u,   0x4000000UL,      512,  true )>]
+    [<InlineData( 0x100000u, 0x200000u,   0x4000000UL,      512,  true )>]
+    [<InlineData( 0x100000u, 0x100000u,   512UL,            512,  true )>]
+    [<InlineData( 0x100000u, 0x100000u,   0x8000000UL,      512,  true )>]
+    [<InlineData( 0x100000u, 0x100000u,   0x4000000UL,      4096, true )>]
+    member _.Create_Dynamic_Fix_001 ( logsizse : uint32 ) ( pbsize : uint32 ) ( vdsize : uint64 ) ( bsize : int32 ) ( isFixed : bool ) =
         task {
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, 1u, false )
             let ss = if bsize = 512 then Blocksize.BS_512 else Blocksize.BS_4096
             try
-                do! VhdxCreator.Create None fa logsizse pbsize false vdsize ss
+                do! VhdxCreator.Create None fa logsizse pbsize isFixed vdsize ss
                 let! str1 = VhdxReader.ReadVhdx fa
 
                 Assert.StrictEqual( Constants.VHDX_CREATOR_NAME, str1.Creator )
@@ -138,7 +144,10 @@ type VhdxCreater_Test () =
                 Assert.Empty str1.Log
                 Assert.StrictEqual( fa.FileSize, str1.LastFileSize )
                 Assert.StrictEqual( pbsize, str1.VDI.PayloadBlockSize )
-                Assert.StrictEqual( false, str1.VDI.LeaveBlockAllocated )
+                if isFixed then
+                    Assert.True( str1.VDI.LeaveBlockAllocated )
+                else
+                    Assert.False( str1.VDI.LeaveBlockAllocated )
                 Assert.False( str1.VDI.HasParent )
                 Assert.StrictEqual( vdsize, str1.VDI.VirtualDiskSize )
                 Assert.StrictEqual( ss, str1.VDI.LogicalSectorSize )
@@ -152,8 +161,12 @@ type VhdxCreater_Test () =
                 Assert.StrictEqual( int str1.BAT.PayloadBlockCount, str1.BAT.Payloads.Length )
                 Assert.StrictEqual( int str1.BAT.SectorBitmapBlockCount, str1.BAT.SectorBitmap.Length )
 
-                for itr in str1.BAT.Payloads do
-                    Assert.StrictEqual( BatEntryStatePB.PayloadNotPresent, itr.State  )
+                if not isFixed then
+                    for itr in str1.BAT.Payloads do
+                        Assert.StrictEqual( BatEntryStatePB.PayloadNotPresent, itr.State )
+                else
+                    for itr in str1.BAT.Payloads do
+                        Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, itr.State )
 
                 for itr in str1.BAT.SectorBitmap do
                     Assert.StrictEqual( BatEntryStateSB.SectorBitmapNotPresent, itr.SBState )
@@ -161,3 +174,4 @@ type VhdxCreater_Test () =
                 fa.Close()
                 GlbFunc.DeleteFile fname
         }
+

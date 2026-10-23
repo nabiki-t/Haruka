@@ -357,9 +357,7 @@ type VhdxCreator() =
                             ByteFunc.WriteU64LE entrybuf ( uint32 i * 8u ) 0UL
                         else
                             // Payload BAT Entry
-                            let payloadPos =
-                                batRegionStartPos + batRegionSize +
-                                ( uint64 i - 1UL ) * ( uint64 payloadBlockSize )
+                            let payloadPos = batRegionStartPos + batRegionSize + i * ( uint64 payloadBlockSize )
                             ByteFunc.WriteU64LE entrybuf ( uint32 i * 8u ) payloadPos
                             entrybuf.[ int32 i * 8 ] <- 6uy
                     do! fa.Write batRegionStartPos ( ArraySegment entrybuf )
