@@ -804,6 +804,9 @@ type VhdxTestFunc() =
     /// </param>
     static member CreateDifferencingVHDXFileAndTest ( f : ( FileAccessor -> FileAccessor -> Task ) ) : Task =
         task {
+            let fact a b c d =
+                let o = FileStreamOptions( Access = c, Mode = b, Share = d, Options = FileOptions.DeleteOnClose )
+                File.Open( a, o ) :> Stream
             let pfname = Path.GetTempFileName()
             let pfa = FileAccessor( pfname, 1u, false )
             let cfname = Path.GetTempFileName()

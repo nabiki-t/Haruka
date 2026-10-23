@@ -819,6 +819,7 @@ type VhdxReader_Test3 () =
             Assert.StrictEqual( 2, r.Length )
             Assert.StrictEqual( cfa.FileName, ( fst r.[1] ).FileName )
             Assert.StrictEqual( pfa.FileName, ( fst r.[0] ).FileName )
+            r |> Array.iter ( fst >> _.Close() )
         } )
 
     [<Fact>]
@@ -848,6 +849,7 @@ type VhdxReader_Test3 () =
                 Assert.StrictEqual( 2, r.Length )
                 Assert.StrictEqual( cfa.FileName, ( fst r.[1] ).FileName )
                 Assert.StrictEqual( wpfname, ( fst r.[0] ).FileName )
+                r |> Array.iter ( fst >> _.Close() )
 
             } )
         else
@@ -869,6 +871,7 @@ type VhdxReader_Test3 () =
                 ||> Array.iter2( fun expfa ( fa, _ ) ->
                     Assert.StrictEqual( Path.GetFileName expfa.FileName, Path.GetFileName fa.FileName )
                 )
+                r |> Array.iter ( fst >> _.Close() )
 
             finally
                 for itr in fas do

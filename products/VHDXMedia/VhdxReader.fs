@@ -16,6 +16,7 @@ open System.IO
 open System.Text
 open System.Threading.Tasks
 open System.Collections.Generic
+open System.Runtime.ExceptionServices
 
 open Haruka.Constants
 open Haruka.Commons
@@ -203,64 +204,74 @@ type VhdxReader() =
     /// </returns>
     static member ReadAllStructures( fa : FileAccessor ) : Task<( FileAccessor * VhdxStructures )[]> =
         task {
-            let acc = List<FileAccessor * VhdxStructures>()
-            let ps = PseudoSeq< struct ( FileAccessor * Guid voption ) >( struct( fa, ValueNone ) )
-            for struct( fn, expDWG ) in ps do
-                // Read metadata
-                let! meta = VhdxReader.ReadVhdx fn
-                let hasParent = meta.VDI.HasParent
+            let accSuccess = List<FileAccessor * VhdxStructures>()
+            let accForException = List<FileAccessor>()
+            try
+                let ps = PseudoSeq< struct ( FileAccessor * Guid voption ) >( struct( fa, ValueNone ) )
+                for struct( fn, expDWG ) in ps do
+                    // Read metadata
+                    let! meta = VhdxReader.ReadVhdx fn
+                    let hasParent = meta.VDI.HasParent
 
-                // Check Data Write Guid
-                if expDWG.IsSome && meta.LoadedVarHeader.DataWriteGuid <> expDWG.Value then
-                    raise <| VhdxMediaException( fa.FileName, "Data Write Guid does not match" )
+                    // Check Data Write Guid
+                    if expDWG.IsSome && meta.LoadedVarHeader.DataWriteGuid <> expDWG.Value then
+                        raise <| VhdxMediaException( fa.FileName, "Data Write Guid does not match" )
 
-                // Check if a File Write GUID with the same one already exists.
-                for ( _, itr ) in acc do
-                    if itr.LoadedVarHeader.FileWriteGuid = meta.LoadedVarHeader.FileWriteGuid then
-                        raise <| VhdxMediaException( fa.FileName, "The same file is specified as the parent VHDX file." )
+                    // Check if a File Write GUID with the same one already exists.
+                    for ( _, itr ) in accSuccess do
+                        if itr.LoadedVarHeader.FileWriteGuid = meta.LoadedVarHeader.FileWriteGuid then
+                            raise <| VhdxMediaException( fa.FileName, "The same file is specified as the parent VHDX file." )
 
-                if not hasParent then
-                    // If there is no parent file, add the current file to the list and finish.
-                    acc.Add( fn, meta )
-                    ps.Break()
-                else
-                    // The value of parent_linkage is the DataWriteGuid value expected in the parent VHDX file.
-                    let struct( parentDataWriteGuid, plt ) = VhdxCommons.GetParentFileName meta
-                    let parentFileName =
-                        match plt with
-                        | RelativePath x ->
-                            Path.Combine( [| Path.GetDirectoryName fn.FileName; x; |] )
-                        | VolumePath x ->
-                            x
-                        | AbsoluteWin32Path x ->
-                            x
-                    let parentFA = FileAccessor( parentFileName, fn.Multiplicity, fn.ReadOnly )
+                    if not hasParent then
+                        // If there is no parent file, add the current file to the list and finish.
+                        accSuccess.Add( fn, meta )
+                        ps.Break()
+                    else
+                        // The value of parent_linkage is the DataWriteGuid value expected in the parent VHDX file.
+                        let struct( parentDataWriteGuid, plt ) = VhdxCommons.GetParentFileName meta
+                        let parentFileName =
+                            match plt with
+                            | RelativePath x ->
+                                Path.Combine( [| Path.GetDirectoryName fn.FileName; x; |] )
+                            | VolumePath x ->
+                                x
+                            | AbsoluteWin32Path x ->
+                                x
+                        let parentFA = FileAccessor( parentFileName, fn.Multiplicity, fn.ReadOnly )
+                        accForException.Add parentFA
 
-                    // Read next parent VHDX file.
-                    acc.Add( fn, meta )
-                    ps.Continue( parentFA, ( ValueSome parentDataWriteGuid ) )
+                        // Read next parent VHDX file.
+                        accSuccess.Add( fn, meta )
+                        ps.Continue( parentFA, ( ValueSome parentDataWriteGuid ) )
 
-            acc.Reverse()
-            let rv = acc.ToArray()
+                accSuccess.Reverse()
+                let rv = accSuccess.ToArray()
 
-            // Verify that the metadata matches.
-            for i = 1 to rv.Length - 1 do
-                let vdi0 = ( snd rv.[0] ).VDI
-                let vdix = ( snd rv.[i] ).VDI
-                if vdi0.VirtualDiskSize <> vdix.VirtualDiskSize then
-                    let msg = sprintf "The virtual disk size of the parent (%d) does not match." i
-                    raise <| VhdxMediaException( fa.FileName, msg )
-                if vdi0.VirtualDiskId <> vdix.VirtualDiskId then
-                    let msg = sprintf "The virtual disk ID of the parent (%d) does not match." i
-                    raise <| VhdxMediaException( fa.FileName, msg )
-                if vdi0.LogicalSectorSize <> vdix.LogicalSectorSize then
-                    let msg = sprintf "The logical sector size of the parent (%d) does not match." i
-                    raise <| VhdxMediaException( fa.FileName, msg )
-                if vdi0.PhysicalSectorSize <> vdix.PhysicalSectorSize then
-                    let msg = sprintf "The physical sector size of the parent (%d) does not match." i
-                    raise <| VhdxMediaException( fa.FileName, msg )
+                // Verify that the metadata matches.
+                for i = 1 to rv.Length - 1 do
+                    let vdi0 = ( snd rv.[0] ).VDI
+                    let vdix = ( snd rv.[i] ).VDI
+                    if vdi0.VirtualDiskSize <> vdix.VirtualDiskSize then
+                        let msg = sprintf "The virtual disk size of the parent (%d) does not match." i
+                        raise <| VhdxMediaException( fa.FileName, msg )
+                    if vdi0.VirtualDiskId <> vdix.VirtualDiskId then
+                        let msg = sprintf "The virtual disk ID of the parent (%d) does not match." i
+                        raise <| VhdxMediaException( fa.FileName, msg )
+                    if vdi0.LogicalSectorSize <> vdix.LogicalSectorSize then
+                        let msg = sprintf "The logical sector size of the parent (%d) does not match." i
+                        raise <| VhdxMediaException( fa.FileName, msg )
+                    if vdi0.PhysicalSectorSize <> vdix.PhysicalSectorSize then
+                        let msg = sprintf "The physical sector size of the parent (%d) does not match." i
+                        raise <| VhdxMediaException( fa.FileName, msg )
             
-            return rv
+                return rv
+            with
+            | _ as x ->
+                accSuccess.Clear()
+                accForException.ForEach _.Close()
+                accForException.Clear()
+                ExceptionDispatchInfo.Capture( x ).Throw()
+                return raise( Exception() )
         }
 
     /// <summary>
