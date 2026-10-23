@@ -117,7 +117,7 @@ type Functions() =
     /// <returns>
     ///   If all of bit in d value specified by bitmask of f has 1, this function returns true. Otherwise, It returns false.
     /// </returns>
-    static member CheckBitflag ( d: byte ) ( f : byte ) : bool =
+    static member inline CheckBitflag<'T when 'T : ( static member (&&&) : 'T -> 'T -> 'T ) and 'T : equality > ( d: 'T ) ( f : 'T ) : bool =
         d &&& f = f
 
     // ----------------------------------------------------------------------------
@@ -133,104 +133,8 @@ type Functions() =
     /// <returns>
     ///   bitvalue, or 0.
     /// </returns>
-    static member SetBitflag ( flag: bool ) ( bitvalue : byte ) : byte =
-        if flag then bitvalue else 0uy
-
-    // ----------------------------------------------------------------------------
-    /// <summary>
-    ///   Test the first argument uint16 value by a bitmask in second argument.
-    /// </summary>
-    /// <param name="d">
-    ///   A uint16 value that tested by bitmask.
-    /// </param>
-    /// <param name="f">
-    ///   A bitmak value.
-    /// </param>
-    /// <returns>
-    ///   If all of bit in d value specified by bitmask of f has 1, this function returns true. Otherwise, It returns false.
-    /// </returns>
-    static member CheckBitflag16 ( d: uint16 ) ( f : uint16 ) : bool =
-        d &&& f = f
-
-    // ----------------------------------------------------------------------------
-    /// <summary>
-    ///   If flag value is true, it returns bitvalue. Otherwise it returns 0.
-    /// </summary>
-    /// <param name="flag">
-    ///   true, or false.
-    /// </param>
-    /// <param name="bitvalue">
-    ///   A value that returns when flag is true.
-    /// </param>
-    /// <returns>
-    ///   bitvalue, or 0.
-    /// </returns>
-    static member SetBitflag16 ( flag: bool ) ( bitvalue : uint16 ) : uint16 =
-        if flag then bitvalue else 0us
-
-    // ----------------------------------------------------------------------------
-    /// <summary>
-    ///   Test the first argument uint32 value by a bitmask in second argument.
-    /// </summary>
-    /// <param name="d">
-    ///   A uint32 value that tested by bitmask.
-    /// </param>
-    /// <param name="f">
-    ///   A bitmak value.
-    /// </param>
-    /// <returns>
-    ///   If all of bit in d value specified by bitmask of f has 1, this function returns true. Otherwise, It returns false.
-    /// </returns>
-    static member CheckBitflag32 ( d: uint32 ) ( f : uint32 ) : bool =
-        d &&& f = f
-
-    // ----------------------------------------------------------------------------
-    /// <summary>
-    ///   If flag value is true, it returns bitvalue. Otherwise it returns 0.
-    /// </summary>
-    /// <param name="flag">
-    ///   true, or false.
-    /// </param>
-    /// <param name="bitvalue">
-    ///   A value that returns when flag is true.
-    /// </param>
-    /// <returns>
-    ///   bitvalue, or 0.
-    /// </returns>
-    static member SetBitflag32 ( flag: bool ) ( bitvalue : uint32 ) : uint32 =
-        if flag then bitvalue else 0u
-
-    // ----------------------------------------------------------------------------
-    /// <summary>
-    ///   Test the first argument uint64 value by a bitmask in second argument.
-    /// </summary>
-    /// <param name="d">
-    ///   A uint64 value that tested by bitmask.
-    /// </param>
-    /// <param name="f">
-    ///   A bitmak value.
-    /// </param>
-    /// <returns>
-    ///   If all of bit in d value specified by bitmask of f has 1, this function returns true. Otherwise, It returns false.
-    /// </returns>
-    static member CheckBitflag64 ( d: uint64 ) ( f : uint64 ) : bool =
-        d &&& f = f
-
-    // ----------------------------------------------------------------------------
-    /// <summary>
-    ///   If flag value is true, it returns bitvalue. Otherwise it returns 0.
-    /// </summary>
-    /// <param name="flag">
-    ///   true, or false.
-    /// </param>
-    /// <param name="bitvalue">
-    ///   A value that returns when flag is true.
-    /// </param>
-    /// <returns>
-    ///   bitvalue, or 0.
-    /// </returns>
-    static member SetBitflag64 ( flag: bool ) ( bitvalue : uint64 ) : uint64 =
-        if flag then bitvalue else 0UL
+    static member inline SetBitflag<'T when 'T : ( static member Zero : 'T ) and 'T : equality > ( flag: bool ) ( bitvalue : 'T ) : 'T =
+        if flag then bitvalue else LanguagePrimitives.GenericZero<'T>
 
     // ----------------------------------------------------------------------------
     /// Compare string header
