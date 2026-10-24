@@ -37,12 +37,15 @@ open Haruka.Constants
 /// <param name="factory">
 ///  Specify the function to use when opening a file.
 /// </param>
-type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : bool, factory : ( string -> FileMode -> FileAccess -> FileShare -> Stream ) ) =
+/// <param name="checker">
+///  Specify a function to check for the existence of a file.
+/// </param>
+type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : bool, factory : string -> FileMode -> FileAccess -> FileShare -> Stream, checker : string -> bool ) =
 
     do
         if m_Multiplicity <= 0u || m_Multiplicity > Constants.LU_MAX_MULTIPLICITY then
             raise <| ArgumentException( sprintf "m_Duplex must be less than %d" Constants.LU_MAX_MULTIPLICITY, "m_Duplex" )
-        if File.Exists( m_FileName ) |> not then
+        if checker m_FileName |> not then
             raise <| FileNotFoundException( "File not found", m_FileName )
 
     /// Array of streams that access files
@@ -89,7 +92,25 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
     /// </param>
     new ( argFileName : string, argDuplex : uint32, argReadOnly : bool ) =
         let fact a b c d = File.Open( a, b, c, d ) :> Stream
-        new FileAccessor( argFileName, argDuplex, argReadOnly, fact )
+        new FileAccessor( argFileName, argDuplex, argReadOnly, fact, File.Exists )
+
+    /// <summary>
+    ///  Constructor for normal file access.
+    /// </summary>
+    /// <param name="argFileName">
+    ///  Full path name of the file.
+    /// </param>
+    /// <param name="argDuplex">
+    ///  Maximum number of simultaneous accesses.
+    /// </param>
+    /// <param name="argReadOnly">
+    ///  Specify True to open in read-only mode.
+    /// </param>
+    /// <param name="factory">
+    ///  Specify the function to use when opening a file.
+    /// </param>
+    new ( argFileName : string, argDuplex : uint32, argReadOnly : bool, factory : string -> FileMode -> FileAccess -> FileShare -> Stream ) =
+        new FileAccessor( argFileName, argDuplex, argReadOnly, factory, File.Exists )
 
     /// <summary>
     /// Close the file

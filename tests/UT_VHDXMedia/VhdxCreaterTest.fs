@@ -17,6 +17,7 @@ open System.Threading
 open System.Threading.Tasks
 open System.Text
 open System.Net
+open System.Runtime.InteropServices
 
 open Xunit
 
@@ -173,5 +174,107 @@ type VhdxCreater_Test () =
             finally
                 fa.Close()
                 GlbFunc.DeleteFile fname
+        }
+
+    [<Theory>]
+    //            pLogsizse, cLogsizse, pPBSize,     cPBSize,     pVDSize,          pBlockSize, isFixed
+    [<InlineData( 0x100000u, 0x100000u, 0x100000u,   0x100000u,   0x2000000UL,      512,        false )>]
+    [<InlineData( 0x200000u, 0x100000u, 0x100000u,   0x100000u,   0x2000000UL,      512,        false )>]
+    [<InlineData( 0x100000u, 0x200000u, 0x100000u,   0x100000u,   0x2000000UL,      512,        false )>]
+    [<InlineData( 0x100000u, 0x100000u, 0x200000u,   0x100000u,   0x2000000UL,      512,        false )>]
+    [<InlineData( 0x100000u, 0x100000u, 0x100000u,   0x200000u,   0x2000000UL,      512,        false )>]
+    [<InlineData( 0x100000u, 0x100000u, 0x100000u,   0x100000u,   0xF000000UL,      512,        false )>]
+    [<InlineData( 0x100000u, 0x100000u, 0x100000u,   0x100000u,   0x2000000UL,     4096,        false )>]
+    [<InlineData( 0x100000u, 0x100000u, 0x100000u,   0x100000u,   0x2000000UL,      512,        true )>]
+    member _.Create_Differential_001
+            ( pLogsizse : uint32 )  // log sizse for parent
+            ( cLogsizse : uint32 )  // log sizse for child
+            ( pPBSize : uint32 )    // payload block size for parent
+            ( cPBSize : uint32 )    // payload block sizse for child
+            ( pVDSize : uint64 )    // virtual disk sizse for parent
+            ( pBlockSize : int32 )  // sector block sizse for parent
+            ( isFixed : bool ) =    // fixed or not for child
+        task {
+            let pfname = Path.GetTempFileName()
+            let pfa = FileAccessor( pfname, 1u, false )
+            let cfname = Path.GetTempFileName()
+            let cfa = FileAccessor( cfname, 1u, false )
+            let ss = if pBlockSize = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+            try
+                do! VhdxCreator.Create None pfa pLogsizse pPBSize false pVDSize ss
+                let! pstr1 = VhdxReader.ReadVhdx pfa
+
+                do! VhdxCreator.Create ( Some pfa ) cfa cLogsizse cPBSize isFixed 0x400000000000UL Blocksize.BS_4096
+                let! cstr1 = VhdxReader.ReadVhdx cfa
+
+                Assert.StrictEqual( Constants.VHDX_CREATOR_NAME, cstr1.Creator )
+                Assert.StrictEqual( 0us, cstr1.ImmHeader.LogVersion )
+                Assert.StrictEqual( 1us, cstr1.ImmHeader.Version )
+                Assert.StrictEqual( cLogsizse, cstr1.ImmHeader.LogLength )
+                Assert.StrictEqual( 0x100000UL, cstr1.ImmHeader.LogOffset )
+                Assert.Empty cstr1.Log
+                Assert.StrictEqual( cfa.FileSize, cstr1.LastFileSize )
+                Assert.StrictEqual( cPBSize, cstr1.VDI.PayloadBlockSize )
+                Assert.False( cstr1.VDI.LeaveBlockAllocated )               // The specified value is ignored.
+                Assert.True( cstr1.VDI.HasParent )
+                Assert.StrictEqual( pstr1.LoadedVarHeader.DataWriteGuid.ToString "D", cstr1.VDI.ParentLocator.[ "parent_linkage" ] )
+
+                Assert.StrictEqual( pVDSize, cstr1.VDI.VirtualDiskSize )    // The specified value for a child disk is ignored.
+                Assert.StrictEqual( ss, cstr1.VDI.LogicalSectorSize )       // The specified value for a child disk is ignored.
+                Assert.StrictEqual( ss, cstr1.VDI.PhysicalSectorSize )      // The specified value for a child disk is ignored.
+
+                Assert.StrictEqual( uint64 pBlockSize * 0x800000UL, cstr1.BAT.ChunkSize )
+                Assert.StrictEqual( cstr1.BAT.ChunkSize / uint64 cPBSize, cstr1.BAT.ChunkRatio )
+                Assert.StrictEqual( Functions.CeilDiv pVDSize ( uint64 cPBSize ), cstr1.BAT.PayloadBlockCount )
+                Assert.StrictEqual( Functions.CeilDiv cstr1.BAT.PayloadBlockCount cstr1.BAT.ChunkRatio , cstr1.BAT.SectorBitmapBlockCount )
+                Assert.StrictEqual( cstr1.BAT.SectorBitmapBlockCount * ( cstr1.BAT.ChunkRatio + 1UL ), cstr1.BAT.BatEntryCount )
+                Assert.StrictEqual( int cstr1.BAT.PayloadBlockCount, cstr1.BAT.Payloads.Length )
+                Assert.StrictEqual( int cstr1.BAT.SectorBitmapBlockCount, cstr1.BAT.SectorBitmap.Length )
+
+                for itr in cstr1.BAT.Payloads do
+                    Assert.StrictEqual( BatEntryStatePB.PayloadNotPresent, itr.State )
+
+                for itr in cstr1.BAT.SectorBitmap do
+                    Assert.StrictEqual( BatEntryStateSB.SectorBitmapPresent, itr.SBState )
+                    for itr2 in itr.Bitmap do
+                        Assert.StrictEqual( 0uy, itr2 )
+            finally
+                pfa.Close()
+                GlbFunc.DeleteFile pfname
+                cfa.Close()
+                GlbFunc.DeleteFile cfname
+        }
+
+    [<Theory>]
+    [<InlineData( "aaa/bbb/aaa.txt", "relative_path", "aaa/bbb/aaa.txt", "aaa/bbb/aaa.txt" )>]
+    [<InlineData( @"\\?\Volume{a39f6765-c0e4-43a2-b175-54a46c2db4a9}\a.txt", "volume_path", @"\\?\Volume{a39f6765-c0e4-43a2-b175-54a46c2db4a9}\a.txt", @"\\?\Volume{a39f6765-c0e4-43a2-b175-54a46c2db4a9}\a.txt" )>]
+    [<InlineData( @"c:\aaa\bbb\aaa.txt", "absolute_win32_path", @"\\?\c:\aaa\bbb\aaa.txt", @"c:\aaa\bbb\aaa.txt" )>]
+    [<InlineData( @"\\?\c:\aaa\bbb\aaa.txt", "absolute_win32_path", @"\\?\c:\aaa\bbb\aaa.txt", @"\\?\c:\aaa\bbb\aaa.txt" )>]
+    member _.Create_Differential_002 ( parentPathName : string ) ( expKeyName : string ) ( expPathName1 : string ) ( expPathName2 : string ) =
+        task {
+            let pfname = Path.GetTempFileName()
+            let fact a b c d = File.Open( pfname, b, c, d ) :> Stream   // Disguise the file name.
+            let pfa = FileAccessor( parentPathName, 1u, false, fact, fun _ -> true )
+            let cfname = Path.GetTempFileName()
+            let cfa = FileAccessor( cfname, 1u, false )
+            try
+                do! VhdxCreator.Create None pfa 0x100000u 0x100000u false 0x2000000UL Blocksize.BS_512
+                let! pstr1 = VhdxReader.ReadVhdx pfa
+
+                do! VhdxCreator.Create ( Some pfa ) cfa 0x100000u 0x100000u false 0x2000000UL Blocksize.BS_512
+                let! cstr1 = VhdxReader.ReadVhdx cfa
+
+                Assert.True( cstr1.VDI.HasParent )
+                Assert.StrictEqual( pstr1.LoadedVarHeader.DataWriteGuid.ToString "D", cstr1.VDI.ParentLocator.[ "parent_linkage" ] )
+                if RuntimeInformation.IsOSPlatform OSPlatform.Windows then
+                    Assert.StrictEqual( expPathName1, cstr1.VDI.ParentLocator.[ expKeyName ] )
+                else
+                    Assert.StrictEqual( expPathName2, cstr1.VDI.ParentLocator.[ expKeyName ] )
+
+            finally
+                pfa.Close()
+                GlbFunc.DeleteFile pfname
+                cfa.Close()
+                GlbFunc.DeleteFile cfname
         }
 

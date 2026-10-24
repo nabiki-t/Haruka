@@ -177,6 +177,21 @@ type FileAccessorTest() =
         Assert.StrictEqual( 99UL, r.FileSize )
         File.Delete fname
 
+    [<Fact>]
+    member _.Constractor_Open_002() =
+        let fname = "aaa\\bbb.txt"
+        let mutable cnt1 = 0
+        let mutable cnt2 = 0
+        let factry ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+            cnt1 <- cnt1 + 1
+            new Stream_Stub( p_get_Length = fun _ -> 99L )
+        let checker ( fname : string ) : bool =
+            cnt2 <- cnt2 + 1
+            true
+        let r = FileAccessor( fname, 1u, true, factry, checker )
+        Assert.StrictEqual( 1, cnt1 )
+        Assert.StrictEqual( 1, cnt2 )
+
     [<Theory>]
     [<InlineData( 0UL, 0UL, 1 )>]
     [<InlineData( 0UL, 1UL, 0 )>]
@@ -246,9 +261,7 @@ type FileAccessorTest() =
                     p_Close = ( fun _ -> () )
                 )
 
-            let fname = Path.GetTempFileName()
-            File.WriteAllBytes( fname, [| 0uy |] )
-            let fa = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, true, fc )
+            let fa = FileAccessor( "a.txt", Constants.LU_MAX_MULTIPLICITY, true, fc, fun _ -> true )
 
             for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 fun () ->
@@ -275,7 +288,6 @@ type FileAccessorTest() =
             for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 sm.Release() |> ignore
             fa.Close()
-            File.Delete fname
         }
 
     [<Theory>]
@@ -296,8 +308,7 @@ type FileAccessorTest() =
                     p_Close = ( fun _ -> () )
                 )
 
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, true, fc )
+            let fa = FileAccessor( "aaa.txt", 1u, true, fc, fun _ -> true )
             let buf = Array.zeroCreate<byte> 1
 
             let! e =
@@ -309,9 +320,7 @@ type FileAccessorTest() =
 
                 } )
             Assert.StartsWith( "aaa", e.Message )
-
             fa.Close()
-            File.Delete fname
         }
 
     [<Theory>]
@@ -326,8 +335,7 @@ type FileAccessorTest() =
                     p_Close = ( fun _ -> () )
                 )
 
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, true, fc )
+            let fa = FileAccessor( "aaa.txt", 1u, true, fc, fun _ -> true )
             let buf = Array.zeroCreate<byte> 1
 
             let! e =
@@ -338,9 +346,7 @@ type FileAccessorTest() =
                         do! fa.ReadWithPseudoLimit 4096UL 0UL ( ArraySegment buf )
                 } )
             Assert.StartsWith( "bbb", e.Message )
-
             fa.Close()
-            File.Delete fname
         }
 
     [<Theory>]
@@ -360,10 +366,7 @@ type FileAccessorTest() =
                     }),
                     p_Close = ( fun _ -> () )
                 )
-
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, true, fc )
-
+            let fa = FileAccessor( "aaa.txt", 1u, true, fc, fun _ -> true )
             let! e =
                 Assert.ThrowsAsync< IOException >( fun () -> task {
                     let buf = Array.zeroCreate<byte> 1
@@ -374,9 +377,7 @@ type FileAccessorTest() =
                 } )
             Assert.StartsWith( "gggg", e.Message )
             Assert.StrictEqual( 1, cnt )
-
             fa.Close()
-            File.Delete fname
         }
 
     [<Theory>]
@@ -400,9 +401,7 @@ type FileAccessorTest() =
                     p_Close = ( fun _ -> () )
                 )
 
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, true, fc )
-
+            let fa = FileAccessor( "aaa.txt", 1u, true, fc, fun _ -> true )
             let! e =
                 Assert.ThrowsAsync< IOException >( fun () -> task {
                     let buf = Array.zeroCreate<byte> 1
@@ -413,9 +412,7 @@ type FileAccessorTest() =
                 } )
             Assert.StartsWith( "bbb", e.Message )
             Assert.StrictEqual( 3, cnt )
-
             fa.Close()
-            File.Delete fname
         }
 
     [<Theory>]
@@ -668,10 +665,7 @@ type FileAccessorTest() =
                     p_Seek = ( fun ( _, _ ) -> 0L ),
                     p_Close = ( fun _ -> () )
                 )
-
-            let fname = Path.GetTempFileName()
-            File.WriteAllBytes( fname, [| 0uy |] )
-            let fa = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, false, fc )
+            let fa = FileAccessor( "aaa.txt", Constants.LU_MAX_MULTIPLICITY, false, fc, fun _ -> true )
 
             for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 fun () ->
@@ -695,7 +689,6 @@ type FileAccessorTest() =
             for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 sm.Release() |> ignore
             fa.Close()
-            File.Delete fname
         }
 
     [<Fact>]
@@ -713,9 +706,7 @@ type FileAccessorTest() =
                     ),
                     p_Close = ( fun _ -> () )
                 )
-
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, false, fc )
+            let fa = FileAccessor( "aaaa.txt", 1u, false, fc, fun _ -> true )
             let buf = Array.zeroCreate<byte> 1
 
             let! e =
@@ -724,9 +715,7 @@ type FileAccessorTest() =
                     ()
                 } )
             Assert.StartsWith( "aaa", e.Message )
-
             fa.Close()
-            File.Delete fname
         }
 
     [<Fact>]
@@ -738,9 +727,7 @@ type FileAccessorTest() =
                     p_Seek = ( fun ( _, _ ) -> raise <| IOException "bbb" ),
                     p_Close = ( fun _ -> () )
                 )
-
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, false, fc )
+            let fa = FileAccessor( "abc.txt", 1u, false, fc, fun _ -> true )
             let buf = Array.zeroCreate<byte> 1
 
             let! e =
@@ -748,9 +735,7 @@ type FileAccessorTest() =
                     do! fa.Write 0UL ( ArraySegment buf )
                 } )
             Assert.StartsWith( "bbb", e.Message )
-
             fa.Close()
-            File.Delete fname
         }
 
     [<Fact>]
@@ -768,9 +753,7 @@ type FileAccessorTest() =
                     }),
                     p_Close = ( fun _ -> () )
                 )
-
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, false, fc )
+            let fa = FileAccessor( "abc.txt", 1u, false, fc, fun _ -> true )
             let! e =
                 Assert.ThrowsAsync< IOException >( fun () -> task {
                     let buf = Array.zeroCreate<byte> 1
@@ -778,9 +761,7 @@ type FileAccessorTest() =
                 } )
             Assert.StartsWith( "gggg", e.Message )
             Assert.StrictEqual( 1, cnt )
-
             fa.Close()
-            File.Delete fname
         }
 
     [<Fact>]
@@ -801,9 +782,7 @@ type FileAccessorTest() =
                     }),
                     p_Close = ( fun _ -> () )
                 )
-
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, false, fc )
+            let fa = FileAccessor( "aaa.txt", 1u, false, fc, fun _ -> true )
 
             let! e =
                 Assert.ThrowsAsync< IOException >( fun () -> task {
@@ -812,9 +791,7 @@ type FileAccessorTest() =
                 } )
             Assert.StartsWith( "bbb", e.Message )
             Assert.StrictEqual( 3, cnt )
-
             fa.Close()
-            File.Delete fname
         }
 
     [<Fact>]
@@ -873,15 +850,13 @@ type FileAccessorTest() =
     [<Fact>]
     member _.SetFileSize_Success_002() =
         task {
-            let fname = Path.GetTempFileName()
             let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
                 new Stream_Stub(
                     p_get_Length = ( fun () -> 10L )
                 )
-            let fa = FileAccessor( fname, 1u, false, fc )
+            let fa = FileAccessor( "aaa.txt", 1u, false, fc, fun _ -> true )
             do! fa.SetFileSize 10UL
             fa.Close()
-            File.Delete fname
         }
 
     [<Fact>]
@@ -914,9 +889,7 @@ type FileAccessorTest() =
                     p_FlushAsync = ( fun _ -> Task.FromResult() ),
                     p_Close = ( fun _ -> () )
                 )
-
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, false, fc )
+            let fa = FileAccessor( "a.txt", Constants.LU_MAX_MULTIPLICITY, false, fc, fun _ -> true )
 
             for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 fun () ->
@@ -938,7 +911,6 @@ type FileAccessorTest() =
             for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 sm.Release() |> ignore
             fa.Close()
-            File.Delete fname
         }
 
     [<Fact>]
@@ -954,9 +926,7 @@ type FileAccessorTest() =
                     ),
                     p_Close = ( fun _ -> () )
                 )
-
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, false, fc )
+            let fa = FileAccessor( "a.txt", 1u, false, fc, fun _ -> true )
 
             let! e =
                 Assert.ThrowsAsync< IOException >( fun () -> task {
@@ -964,9 +934,7 @@ type FileAccessorTest() =
                 } )
             Assert.StartsWith( "gggg", e.Message )
             Assert.StrictEqual( 1, cnt )
-
             fa.Close()
-            File.Delete fname
         }
 
     [<Fact>]
@@ -985,18 +953,14 @@ type FileAccessorTest() =
                     ),
                     p_Close = ( fun _ -> () )
                 )
-
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, false, fc )
+            let fa = FileAccessor( "a.txt", 1u, false, fc, fun _ -> true )
             let! e =
                 Assert.ThrowsAsync< IOException >( fun () -> task {
                     do! fa.SetFileSize 0UL
                 } )
             Assert.StartsWith( "bbb", e.Message )
             Assert.StrictEqual( 3, cnt )
-
             fa.Close()
-            File.Delete fname
         }
 
     [<Fact>]
@@ -1062,9 +1026,7 @@ type FileAccessorTest() =
                     ),
                     p_Close = ( fun _ -> () )
                 )
-
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 4u, false, fc )
+            let fa = FileAccessor( "a.txt", 4u, false, fc, fun _ -> true )
 
             for _ = 1 to 4 do
                 fun () ->
@@ -1089,13 +1051,11 @@ type FileAccessorTest() =
             for _ = 1 to 4 do
                 sm.Release() |> ignore
             fa.Close()
-            File.Delete fname
         }
 
     [<Fact>]
     member _.GetFileSize_Success_002 () =
         task {
-            let fname = Path.GetTempFileName()
             let mutable cnt = 0
             let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
                 new Stream_Stub(
@@ -1109,12 +1069,11 @@ type FileAccessorTest() =
                     p_Close = ( fun _ -> () )
                 )
 
-            let fa = FileAccessor( fname, 1u, false, fc )
+            let fa = FileAccessor( "a.txt", 1u, false, fc, fun _ -> true )
             Assert.StrictEqual( 10UL, fa.FileSize )
             Assert.StrictEqual( 20UL, fa.GetFileSize() )
             Assert.StrictEqual( 20UL, fa.FileSize )
             fa.Close()
-            File.Delete fname
         }
 
 

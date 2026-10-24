@@ -16,6 +16,7 @@ open System.IO
 open System.Text
 open System.Threading.Tasks
 open System.Text.RegularExpressions
+open System.Runtime.InteropServices
 
 open Haruka.Constants
 open Haruka.Commons
@@ -108,10 +109,10 @@ type VhdxCreator() =
         if VhdxCreator.VolumePathRegex.IsMatch pathName then
             struct( "volume_path", pathName )
         elif Path.IsPathFullyQualified pathName then
-            if pathName.StartsWith @"\\?\" then
-                struct( "absolute_win32_path", pathName )
-            else
+            if RuntimeInformation.IsOSPlatform OSPlatform.Windows && not ( pathName.StartsWith @"\\?\" ) then
                 struct( "absolute_win32_path", @"\\?\" + pathName )
+            else
+                struct( "absolute_win32_path", pathName )
         else
             struct( "relative_path", pathName )
 
@@ -475,6 +476,9 @@ type VhdxCreator() =
                 | None ->
                     sectorSize
 
+            // Fixed or not. Differencing virtual disks are always dynamic virtual disks.
+            let efIsFixed = parentStructures.IsNone && isFixed
+
             if logAreaSize &&& 0x000FFFFFu <> 0u then
                 raise <| VhdxMediaException( sprintf "Log are size must be multiples of 1MB. Specified sizse=%d" logAreaSize )
             if logAreaSize < 0x00100000u then
@@ -544,7 +548,7 @@ type VhdxCreator() =
                         Map.empty
                 let vdi = {
                     PayloadBlockSize = payloadBlockSize;
-                    LeaveBlockAllocated = isFixed;
+                    LeaveBlockAllocated = efIsFixed;
                     HasParent = hasParent;
                     VirtualDiskSize = efVirtualDiskSize;
                     VirtualDiskId = efVirtualDiskID;
@@ -558,7 +562,7 @@ type VhdxCreator() =
 
             // BAT
             do! VhdxCreator.WriteBAT
-                    outputFile isFixed inputFile.IsSome batRegionStartPos
+                    outputFile efIsFixed inputFile.IsSome batRegionStartPos
                     batEntryCount payloadBlockCount sectorBitmapCount
                     batRegionSize payloadBlockSize chunkRate
         }
