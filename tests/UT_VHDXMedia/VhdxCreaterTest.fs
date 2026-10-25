@@ -246,10 +246,13 @@ type VhdxCreater_Test () =
         }
 
     [<Theory>]
-    [<InlineData( "aaa/bbb/aaa.txt", "relative_path", "aaa/bbb/aaa.txt", "aaa/bbb/aaa.txt" )>]
-    [<InlineData( @"\\?\Volume{a39f6765-c0e4-43a2-b175-54a46c2db4a9}\a.txt", "volume_path", @"\\?\Volume{a39f6765-c0e4-43a2-b175-54a46c2db4a9}\a.txt", @"\\?\Volume{a39f6765-c0e4-43a2-b175-54a46c2db4a9}\a.txt" )>]
-    [<InlineData( @"c:\aaa\bbb\aaa.txt", "absolute_win32_path", @"\\?\c:\aaa\bbb\aaa.txt", @"c:\aaa\bbb\aaa.txt" )>]
-    [<InlineData( @"\\?\c:\aaa\bbb\aaa.txt", "absolute_win32_path", @"\\?\c:\aaa\bbb\aaa.txt", @"\\?\c:\aaa\bbb\aaa.txt" )>]
+    [<InlineData(   @"aaa/bbb/aaa.txt", "relative_path", @"aaa/bbb/aaa.txt", @"aaa/bbb/aaa.txt" )>]
+    [<InlineData(   @"aaa\bbb\aaa.txt", "relative_path", @"aaa/bbb/aaa.txt", @"aaa\bbb\aaa.txt" )>]
+    [<InlineData(   @"\\?\Volume{a39f6765-c0e4-43a2-b175-54a46c2db4a9}\a.txt", "volume_path",
+                    @"\\?\Volume{a39f6765-c0e4-43a2-b175-54a46c2db4a9}\a.txt",
+                    @"\\?\Volume{a39f6765-c0e4-43a2-b175-54a46c2db4a9}\a.txt" )>]
+    [<InlineData(   @"c:\aaa\bbb\aaa.txt", "absolute_win32_path", @"\\?\c:\aaa\bbb\aaa.txt", @"c:\aaa\bbb\aaa.txt" )>]
+    [<InlineData(   @"\\?\c:\aaa\bbb\aaa.txt", "absolute_win32_path", @"\\?\c:\aaa\bbb\aaa.txt", @"\\?\c:\aaa\bbb\aaa.txt" )>]
     member _.Create_Differential_002 ( parentPathName : string ) ( expKeyName : string ) ( expPathName1 : string ) ( expPathName2 : string ) =
         task {
             let pfname = Path.GetTempFileName()
@@ -276,5 +279,113 @@ type VhdxCreater_Test () =
                 GlbFunc.DeleteFile pfname
                 cfa.Close()
                 GlbFunc.DeleteFile cfname
+        }
+
+    [<Theory>]
+    [<InlineData( "", "relative_path", 32767, 32767 )>]
+    [<InlineData( @"\\?\Volume{a39f6765-c0e4-43a2-b175-54a46c2db4a9}\", "volume_path", 32718, 32718 )>]
+    [<InlineData( @"c:\", "absolute_win32_path", 32760, 32764 )>]
+    [<InlineData( @"\\?\c:\", "absolute_win32_path", 32760, 32760 )>]
+    member _.Create_Differential_003 ( pathhdr : string ) ( expKeyName : string ) ( addlen1 : int32 ) ( addlen2 : int32 ) =
+        task {
+            let pfname = Path.GetTempFileName()
+            let fact a b c d = File.Open( pfname, b, c, d ) :> Stream
+            let waddlen =  if RuntimeInformation.IsOSPlatform OSPlatform.Windows then addlen1 else addlen2
+            let parentPathName = pathhdr + String.replicate waddlen "a"
+            let pfa = FileAccessor( parentPathName, 1u, false, fact, fun _ -> true )
+
+            let cfname = Path.GetTempFileName()
+            let cfa = FileAccessor( cfname, 1u, false )
+            try
+                do! VhdxCreator.Create None pfa 0x100000u 0x100000u false 0x2000000UL Blocksize.BS_512
+                do! VhdxCreator.Create ( Some pfa ) cfa 0x100000u 0x100000u false 0x2000000UL Blocksize.BS_512
+                let! cstr1 = VhdxReader.ReadVhdx cfa
+                Assert.StrictEqual( 32767, cstr1.VDI.ParentLocator.[ expKeyName ].Length )
+
+            finally
+                pfa.Close()
+                GlbFunc.DeleteFile pfname
+                cfa.Close()
+                GlbFunc.DeleteFile cfname
+        }
+
+    [<Theory>]
+    [<InlineData( "", 32768, 32768 )>]
+    [<InlineData( @"\\?\Volume{a39f6765-c0e4-43a2-b175-54a46c2db4a9}\", 32719, 32719 )>]
+    [<InlineData( @"c:\", 32761, 32765 )>]
+    [<InlineData( @"\\?\c:\", 32761, 32761 )>]
+    member _.Create_Differential_Fail_001 ( pathhdr : string ) ( addlen1 : int32 ) ( addlen2 : int32 ) =
+        task {
+            let pfname = Path.GetTempFileName()
+            let fact a b c d = File.Open( pfname, b, c, d ) :> Stream
+            let waddlen =  if RuntimeInformation.IsOSPlatform OSPlatform.Windows then addlen1 else addlen2
+            let parentPathName = pathhdr + String.replicate waddlen "a"
+            let pfa = FileAccessor( parentPathName, 1u, false, fact, fun _ -> true )
+
+            let cfname = Path.GetTempFileName()
+            let cfa = FileAccessor( cfname, 1u, false )
+
+            try
+                do! VhdxCreator.Create None pfa 0x100000u 0x100000u false 0x2000000UL Blocksize.BS_512
+                let! r = Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    do! VhdxCreator.Create ( Some pfa ) cfa 0x100000u 0x100000u false 0x2000000UL Blocksize.BS_512
+                })
+                Assert.StartsWith( "Parent VHDX file name is too long", r.Message )
+
+            finally
+                pfa.Close()
+                GlbFunc.DeleteFile pfname
+                cfa.Close()
+                GlbFunc.DeleteFile cfname
+        }
+
+    [<Theory>]
+    [<InlineData( 0x1000000UL,     0x100000u, 0x100000u, false, 512  )>]
+    [<InlineData( 512UL,           0x100000u, 0x100000u, false, 512  )>]
+    [<InlineData( 1UL,             0x100000u, 0x200000u, false, 512  )>]
+    [<InlineData( 0x1000000UL,     0x100000u, 0x100000u, true,  4096 )>]
+    member _.RawToVHDX_001 ( inputSizse : uint64 ) ( logsizse : uint32 ) ( pbsize : uint32 ) ( isFixed : bool ) ( bsize : int32 ) =
+        task {
+            let rawfname = Path.GetTempFileName()
+            let rawfs = new FileStream( rawfname, FileMode.Open, FileAccess.Write, FileShare.None )
+            try
+                let cnt = Functions.CeilDiv inputSizse 0x100000UL
+                let buf = Array.zeroCreate<byte> 0x100000
+                for i in 0UL .. cnt - 1UL do
+                    Random.Shared.NextBytes buf
+                    let len = min 0x100000UL ( inputSizse - i * 0x100000UL )
+                    rawfs.Write( buf, 0, int len )
+                Assert.StrictEqual( inputSizse, uint64 rawfs.Length )
+            finally
+                rawfs.Close()
+                rawfs.Dispose()
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            let ss = if bsize = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+            try
+                do! VhdxCreator.RawToVHDX rawfname fa logsizse pbsize isFixed ss
+                let! str1 = VhdxReader.ReadVhdx fa
+
+                let rawfs = new FileStream( rawfname, FileMode.Open, FileAccess.Read, FileShare.None )
+                try
+                    let buf1 = Array.zeroCreate<byte> ( int pbsize )
+                    let buf2 = Array.zeroCreate<byte> ( int pbsize )
+                    for i in 0UL .. ( str1.BAT.PayloadBlockCount - 1UL ) do
+                        let vdoffset = str1.BAT.Payloads.[ int i ].FileOffset
+                        let rawoffset = i * ( uint64 pbsize )
+                        let rawlen = min ( uint64 pbsize ) ( uint64 rawfs.Length - rawoffset )
+                        do! fa.ReadArray vdoffset buf1
+                        rawfs.Seek( int64 rawoffset, SeekOrigin.Begin ) |> ignore
+                        rawfs.Read( buf2, 0, int rawlen ) |> ignore
+                        for j = 0 to int rawlen - 1 do
+                            Assert.StrictEqual( buf1.[j], buf2.[j] )
+                finally
+                    rawfs.Close()
+                    rawfs.Dispose()
+            finally
+                fa.Close()
+                GlbFunc.DeleteFile fname
+                GlbFunc.DeleteFile rawfname
         }
 

@@ -114,7 +114,7 @@ type VhdxCreator() =
             else
                 struct( "absolute_win32_path", pathName )
         else
-            struct( "relative_path", pathName )
+            struct( "relative_path", pathName.Replace( Path.DirectorySeparatorChar, '/' ) )
 
     /// <summary>
     ///  Create bytes array for metadata.
@@ -193,6 +193,9 @@ type VhdxCreator() =
                         ( Encoding.Unicode.GetBytes "absolute_win32_path" ), ( Encoding.Unicode.GetBytes vdi.ParentLocator.[ "absolute_win32_path" ] )
                     else
                         Array.Empty(), Array.Empty()
+
+                if relativePathVal.Length > 65535 || volumePathVal.Length > 65535 || absoluteWin32PathVal.Length > 65535 then
+                    raise <| VhdxMediaException( "Parent VHDX file name is too long." )
 
                 let parentLinkageKey_StartPos = 20 + 12 * keyValueCount
                 let parentLinkageVal_StartPos = parentLinkageKey_StartPos + parentLinkageKey.Length
@@ -599,7 +602,8 @@ type VhdxCreator() =
         task {
             // Get length of input raw file.
             use rawfs = new FileStream( inputPath, FileMode.Open, FileAccess.Read, FileShare.None )
-            let virtualDiskSize = uint64 rawfs.Length
+            let rafFileSize = rawfs.Length |> uint64
+            let virtualDiskSize = Functions.CeilUnit rafFileSize ( Blocksize.toUInt64 sectorSize )
 
             // Create empty VHDX file.
             do! VhdxCreator.Create None outputFile logAreaSize payloadBlockSize isFixed virtualDiskSize sectorSize
@@ -609,8 +613,7 @@ type VhdxCreator() =
                 let! structures = VhdxReader.ReadVhdx outputFile
                 let metadataStartPos = 1048576UL + uint64 logAreaSize
                 let batRegionStartPos = metadataStartPos + 1048576UL
-                let batRegionSize =
-                    ( structures.BAT.BatEntryCount * 64UL + 0x00000000000FFFFFUL ) &&& 0xFFFFFFFFFFF00000UL
+                let batRegionSize = Functions.CeilUnit ( structures.BAT.BatEntryCount * 8UL ) 0x100000UL
 
                 do! VhdxCreator.WriteBAT
                         outputFile true false batRegionStartPos
@@ -628,7 +631,7 @@ type VhdxCreator() =
             for i = 0 to ( int32 structures.BAT.PayloadBlockCount - 1 ) do
                 let ent = structures.BAT.Payloads.[i]
                 let spos = ( uint64 i ) * ( uint64 payloadBlockSize )
-                let len = min ( int32 payloadBlockSize ) ( int32 ( virtualDiskSize - spos ) )
+                let len = min ( int32 payloadBlockSize ) ( int32 ( rafFileSize - spos ) )
                 rawfs.Seek( int64 spos, SeekOrigin.Begin ) |> ignore
                 rawfs.ReadExactly( buf, 0, len )
                 do! outputFile.Write ent.FileOffset ( ArraySegment( buf, 0, len ) )
