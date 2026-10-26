@@ -389,3 +389,40 @@ type VhdxCreater_Test () =
                 GlbFunc.DeleteFile rawfname
         }
 
+    [<Fact>]
+    member _.RawToVHDX_Fail_001 () =
+        task {
+            let rawfname = Path.Combine( Path.GetTempPath(), Guid.NewGuid() |> _.ToString() )
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            try
+                let! _ = Assert.ThrowsAnyAsync<FileNotFoundException>( fun () -> task {
+                    do! VhdxCreator.RawToVHDX rawfname fa 0x100000u 0x100000u true Blocksize.BS_512
+                })
+                ()
+            finally
+                fa.Close()
+                GlbFunc.DeleteFile fname
+        }
+
+    [<Fact>]
+    member _.RawToVHDX_Fail_002 () =
+        task {
+            let rawfname = Path.GetTempFileName()
+            try
+                File.WriteAllBytes( rawfname, Array.zeroCreate<byte> 512 )
+
+                let fname = Path.GetTempFileName()
+                let fa = FileAccessor( fname, 1u, true )
+                try
+                    let! r = Assert.ThrowsAsync<InvalidOperationException>( fun () -> task {
+                        do! VhdxCreator.RawToVHDX rawfname fa 0x100000u 0x100000u true Blocksize.BS_512
+                    })
+                    Assert.StartsWith( "File opened read-only", r.Message )
+                finally
+                    fa.Close()
+                    GlbFunc.DeleteFile fname
+            finally
+                GlbFunc.DeleteFile rawfname
+        }
+
