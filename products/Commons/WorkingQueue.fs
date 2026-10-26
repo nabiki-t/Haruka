@@ -66,7 +66,7 @@ type WorkingTaskQueue<'T>( m_WorkFunc : ( 'T -> Task<unit> ), m_ConsCount : uint
 
     do
         // start working loop.
-        for _ in [ 1u .. m_ConsCount ] do
+        for _ in 1u .. m_ConsCount do
             this.Work()|> ignore
 
     /// <summary>
@@ -259,7 +259,7 @@ type WorkingLambdaQueue<'T>( m_WorkFunc : ( 'T -> unit ), m_ConsCount : uint32 )
 
     do
         // start working loop.
-        for _ in [ 1u .. m_ConsCount ] do
+        for _ in 1u .. m_ConsCount do
             this.Work()|> ignore
 
     /// <summary>
