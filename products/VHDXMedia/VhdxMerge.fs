@@ -294,7 +294,7 @@ type VhdxMerge() =
                     updatedPB4K.Add( secidx ) |> ignore
 
                     // Zero out unused portions at the LBA unit.
-                    for wlba in [ uint64 lbastart .. uint64 lbaend - 1UL ] do
+                    for wlba in uint64 lbastart .. uint64 lbaend - 1UL do
                         let bitValue =
                             let struct( sbIdx, bytePos, bitPos ) = VhdxCommons.LBAtoSectorBitmapIndex ( blkcnt_me.ofUInt64 wlba ) structures
                             let sbEntry = structures.BAT.SectorBitmap.[ int32 sbIdx ]
@@ -318,7 +318,7 @@ type VhdxMerge() =
             let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
             // Output updated BAT entry
-            return! VhdxWriter.WriteUpdatedBAT fa structures verhd updated4KSecsForBAT structures.LastFileSize 0
+            return! VhdxWriter.WriteUpdatedBAT fa structures verhd updated4KSecsForBAT structures.LastFileSize
         }
 
     /// <summary>
@@ -351,7 +351,7 @@ type VhdxMerge() =
                 let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
                 // Output BAT entries.
-                let! verhd5 = VhdxWriter.WriteUpdatedBAT mfa mstr verhd4 updated4KSecsForBAT requiredFileSize 0
+                let! verhd5 = VhdxWriter.WriteUpdatedBAT mfa mstr verhd4 updated4KSecsForBAT requiredFileSize
 
                 // Copy payload data.
                 for struct( start, cnt ) in updateLbaBuf do
@@ -550,7 +550,7 @@ type VhdxMerge() =
                 let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
                 // Output BAT entries.
-                let! verhd5 = VhdxWriter.WriteUpdatedBAT mfa mstr verhd4 updated4KSecsForBAT requiredFileSize 0
+                let! verhd5 = VhdxWriter.WriteUpdatedBAT mfa mstr verhd4 updated4KSecsForBAT requiredFileSize
 
                 // Output sector bitmap.
                 let! verhd6 = VhdxWriter.WriteUpdatedSB mfa mstr verhd5 updated4KSecsForSB

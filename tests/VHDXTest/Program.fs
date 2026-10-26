@@ -163,7 +163,6 @@ type CmdArgs() =
                 Varb = VHDXUtilCmdType.Write;
                 NamedArgs = [|
                     ( "/l", CRV_uint64( 0UL, UInt64.MaxValue ) );
-                    ( "/int", CRV_int32( 1, 99 ) );
                 |];
                 ValuelessArgs = Array.empty;
                 NamelessArgs = [| CRVM_String( 256 ); CRVM_String( 256 ); |];
@@ -307,9 +306,8 @@ let main ( argv : string[] ) : int32 =
             let rawfile = cmd.DefaultNamelessString 0 ""
             let vhdxfile = cmd.DefaultNamelessString 1 ""
             let lba = cmd.DefaultNamedUInt64 "/l" 0UL |> blkcnt_me.ofUInt64
-            let ex = cmd.DefaultNamedInt32 "/int" 0
             let fa = FileAccessor( vhdxfile, 1u, false )
-            do! VhdxWriter.Write fa rawfile lba ex
+            do! VhdxWriter.Write fa rawfile lba
             fa.Close()
 
         | Random ->

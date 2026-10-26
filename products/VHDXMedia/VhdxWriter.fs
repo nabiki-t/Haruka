@@ -36,7 +36,7 @@ type VhdxWriter() =
     /// <returns>
     ///  Array of used range offsets
     /// </returns>
-    static member getUsedRegions ( payloads : PayloadBATEntry[] ) : uint64 [] =
+    static member GetUsedRegions ( payloads : PayloadBATEntry[] ) : uint64 [] =
         payloads
         |> Array.choose ( fun e ->
             match e.State with
@@ -60,7 +60,7 @@ type VhdxWriter() =
     /// <returns>
     ///  used range, file offset and length in bytes.
     /// </returns>
-    static member mergeIntervals ( structures : VhdxStructures ) ( intervals : uint64 [] ) : struct ( uint64 * uint64 ) list =
+    static member MergeIntervals ( structures : VhdxStructures ) ( intervals : uint64 [] ) : struct ( uint64 * uint64 ) list =
         let payloadBlockSize = structures.VDI.PayloadBlockSize |> uint64
         let initial =
             [
@@ -111,8 +111,8 @@ type VhdxWriter() =
         // Calculate the free space by subtracting the used area from the entire file.
         let freeRanges =
             payloads
-            |> VhdxWriter.getUsedRegions
-            |> VhdxWriter.mergeIntervals structures
+            |> VhdxWriter.GetUsedRegions
+            |> VhdxWriter.MergeIntervals structures
             |> List.fold ( fun struct ( prevEnd, acc ) struct ( s, e ) -> 
                 let acc =
                     if prevEnd < s then
@@ -287,7 +287,7 @@ type VhdxWriter() =
         : Dictionary< SEC4K_T, ArraySegment<byte> > =
 
         let updatedSB4K = Dictionary< SEC4K_T, ArraySegment<byte> >()
-        for i in [ 0UL .. blkcnt_me.toUInt64 cnt - 1UL ] do
+        for i in 0UL .. blkcnt_me.toUInt64 cnt - 1UL do
             let wcnt = blkcnt_me.ofUInt64 i
             VhdxWriter.UpdateSBForAllocate structures ( lba + wcnt ) updatedPB4K updatedSB4K |> ignore
         updatedSB4K
@@ -471,7 +471,7 @@ type VhdxWriter() =
     /// <returns>
     ///  Next header sequence number.
     /// </returns>
-    static member WriteUpdatedBAT ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) ( sec4Ks : SEC4K_T[] ) ( reqFileSize : uint64 ) ( ex : int32 ) : Task<VhdxMutableHeader> =
+    static member WriteUpdatedBAT ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) ( sec4Ks : SEC4K_T[] ) ( reqFileSize : uint64 ) : Task<VhdxMutableHeader> =
         task {
             let logEntryUnit = VhdxCorrupter.Max4KSectorCountFromLogCapacity structures.ImmHeader.LogLength |> int
             let cycleCount = Functions.CeilDiv sec4Ks.Length logEntryUnit
@@ -495,34 +495,19 @@ type VhdxWriter() =
                         VhdxCorrupter.CreateLogEntry listSec4K_BatData 0u 1UL newLogGuid currentFileSize reqFileSize
                     do! VhdxCorrupter.WriteLogEntry fa structures.ImmHeader 0u List.empty logEntries
 
-                    if ex = 3 then
-                        raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Write log entry." )
-
                     // Update header( Update LogGuid )
                     let! wverhd1 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd with LogGuid = Guid.NewGuid() }
-
-                    if ex = 4 then
-                        raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Update header( Update LogGuid )." )
 
                     // Set file size
                     if currentFileSize < reqFileSize then
                         do! fa.SetFileSize( reqFileSize )
 
-                    if ex = 5 then
-                        raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Set file size." )
-
                     // Write BAT data to file
                     for struct ( sec4k, batData ) in listSec4K_BatData do
                         do! fa.Write ( uint64 sec4k * 4096UL ) ( ArraySegment batData )
 
-                    if ex = 6 then
-                        raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Write BAT to file." )
-
                     // Update header ( Set LogGuid to zero )
                     let! wverhd2 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd1 with LogGuid = Guid() }
-
-                    if ex = 7 then
-                        raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Update header ( Set LogGuid to zero )." )
 
                     ps.Continue( struct( cycle + 1, wverhd2 ) )
                 else
@@ -629,7 +614,7 @@ type VhdxWriter() =
     /// <param name="lba">
     ///  Address in virtual disk whete raw data to be wrote.
     /// </param>
-    static member Write ( vhdxFile : FileAccessor ) ( rawFileName : string ) ( lba : BLKCNT64_T ) ( ex : int32 ) : Task =
+    static member Write ( vhdxFile : FileAccessor ) ( rawFileName : string ) ( lba : BLKCNT64_T ) : Task =
         task {
             let! structures = VhdxReader.ReadVhdx vhdxFile
             let sectorSize = structures.VDI.LogicalSectorSize |> Blocksize.toUInt64
@@ -658,14 +643,8 @@ type VhdxWriter() =
                 else
                     Task.FromResult structures.LoadedVarHeader
 
-            if ex = 1 then
-                raise <| VhdxMediaException( "Stop processing based on user specification. : Flash log entries." )
-
             // Update FileWriteGuid and DataWriteGuid
             let! verhd2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid vhdxFile structures verhd1
-
-            if ex = 2 then
-                raise <| VhdxMediaException( "Stop processing based on user specification. Update FileWriteGuid and DataWriteGuid." )
 
             // Allocate Payload block. structures2 will be updated.
             let struct( updatedPB4K, requiredFileSize ) =
@@ -682,20 +661,14 @@ type VhdxWriter() =
             let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
             // Output the updated BATEntry
-            let! verhd3 = VhdxWriter.WriteUpdatedBAT vhdxFile structures verhd2 updated4KSecsForBAT requiredFileSize ex
+            let! verhd3 = VhdxWriter.WriteUpdatedBAT vhdxFile structures verhd2 updated4KSecsForBAT requiredFileSize
  
-            if ex = 8 then
-                raise <| VhdxMediaException( "Stop processing based on user specification. Output the updated BATEntry." )
-
             // Output sector bitmap.
             let! verhd4 =
                 if updated4KSecsForSB.Length > 0 then
                     VhdxWriter.WriteUpdatedSB vhdxFile structures verhd3 updated4KSecsForSB
                 else
                     Task.FromResult verhd3
-
-            if ex = 9 then
-                raise <| VhdxMediaException( "Stop processing based on user specification. Output sector bitmap." )
 
             // Output RAW data
             do! VhdxWriter.OutputRawData rawfs vhdxFile lba structures
