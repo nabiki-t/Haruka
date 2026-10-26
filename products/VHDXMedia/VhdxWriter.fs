@@ -55,29 +55,44 @@ type VhdxWriter() =
     ///  VHDX file controll structures.
     /// </param>
     /// <param name="intervals">
-    ///  
+    ///   Array of used range offsets.
     /// </param>
     /// <returns>
-    ///  used range, file offset and length in bytes.
+    ///  Start and end positions of the used area.
+    ///  The range is represented as a half-open interval.
+    ///  Therefore, the end position is not included in the used region.
     /// </returns>
     static member MergeIntervals ( structures : VhdxStructures ) ( intervals : uint64 [] ) : struct ( uint64 * uint64 ) list =
         let payloadBlockSize = structures.VDI.PayloadBlockSize |> uint64
         let initial =
             [
-                // header
-                struct( 0UL, 1048575UL );
+                // header(1MB)
+                struct( 0UL, 0x100000UL );
+
                 // log
-                struct( structures.ImmHeader.LogOffset, structures.ImmHeader.LogOffset + uint64 structures.ImmHeader.LogLength - 1UL )
+                let a = structures.ImmHeader.LogOffset
+                let b = uint64 structures.ImmHeader.LogLength
+                if a + b < a then raise <| VhdxMediaException( "Unexpected the log offset or the log length value." )
+                struct( a, a + b )
+
                 // Regions( metadata, BAT, etc. )
                 for i in structures.Region.Entries do
-                    struct( i.FileOffset, i.FileOffset + uint64 i.Length - 1UL )
+                    let a = i.FileOffset
+                    let b = uint64 i.Length
+                    if a + b < a then raise <| VhdxMediaException( "Unexpected the region offset or the region length value." )
+                    struct( a, a + b )
+
                 // Sector bitmap
                 for i in structures.BAT.SectorBitmap do
                     if i.SBState = BatEntryStateSB.SectorBitmapPresent then
-                        struct( i.FileOffset, i.FileOffset + 1048575UL );
+                        if i.FileOffset + 0x100000UL < a then raise <| VhdxMediaException( "Unexpected the sector bitmap offset value." )
+                        struct( i.FileOffset, i.FileOffset + 0x100000UL ) // 1MB length
+
                 // payload block
                 for i in intervals do
-                        struct( i, i + payloadBlockSize - 1UL );
+                    if i + payloadBlockSize < i then
+                        raise <| VhdxMediaException( "Unexpected the payload block offset value." )
+                    struct( i, i + payloadBlockSize );
             ]
 
         initial
