@@ -27,6 +27,7 @@
     <Compile Include="VhdxCheckerTest.fs" />
     <Compile Include="VhdxCorrupterTest.fs" />
     <Compile Include="VhdxCreaterTest.fs" />
+    <Compile Include="VhdxWriterTest.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 

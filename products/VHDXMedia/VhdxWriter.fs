@@ -85,7 +85,8 @@ type VhdxWriter() =
                 // Sector bitmap
                 for i in structures.BAT.SectorBitmap do
                     if i.SBState = BatEntryStateSB.SectorBitmapPresent then
-                        if i.FileOffset + 0x100000UL < a then raise <| VhdxMediaException( "Unexpected the sector bitmap offset value." )
+                        if i.FileOffset + 0x100000UL < i.FileOffset then
+                            raise <| VhdxMediaException( "Unexpected the sector bitmap offset value." )
                         struct( i.FileOffset, i.FileOffset + 0x100000UL ) // 1MB length
 
                 // payload block
