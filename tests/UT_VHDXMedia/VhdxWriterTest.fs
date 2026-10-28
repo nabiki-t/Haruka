@@ -202,3 +202,233 @@ type VhdxWriter_Test () =
             VhdxWriter.MergeIntervals str [| UInt64.MaxValue - 0x0FFFFFUL |] |> ignore
         )
         Assert.StartsWith( "Unexpected the payload block offset value", r.Message )
+
+    [<Fact>]
+    member _.MergeIntervals_001() =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512
+        let str2 = {
+            str with
+                // log
+                ImmHeader.LogOffset = 0x200000UL;
+                ImmHeader.LogLength = 0x100000u;
+                // Region
+                Region.Entries = [
+                    { Guid = Guid(); FileOffset = 0x400000UL; Length = 0x100000u; Required = true; };
+                    { Guid = Guid(); FileOffset = 0x600000UL; Length = 0x100000u; Required = true; };
+                ]
+                // Payloads(ignored)
+                BAT.Payloads = [|
+                    { BatEntryIndex = 0UL; State = BatEntryStatePB.PayloadFullyPresent; FileOffset = 0x800000UL; }
+                |]
+                // SectorBitmap
+                BAT.SectorBitmap = [|
+                    { BatEntryIndex = 0UL; SBState = BatEntryStateSB.SectorBitmapPresent; FileOffset = 0xA00000UL; Bitmap = [||] };
+                    { BatEntryIndex = 0UL; SBState = BatEntryStateSB.SectorBitmapPresent; FileOffset = 0xC00000UL; Bitmap = [||] };
+                |]
+        }
+        let r = VhdxWriter.MergeIntervals str2 [||]
+        Assert.StrictEqual( 6, r.Length )
+        Assert.StrictEqual( struct ( 0x000000UL, 0x100000UL ), r.[0] ) // header
+        Assert.StrictEqual( struct ( 0x200000UL, 0x300000UL ), r.[1] ) // log
+        Assert.StrictEqual( struct ( 0x400000UL, 0x500000UL ), r.[2] ) // Region
+        Assert.StrictEqual( struct ( 0x600000UL, 0x700000UL ), r.[3] ) // Region
+        Assert.StrictEqual( struct ( 0xA00000UL, 0xB00000UL ), r.[4] ) // SectorBitmap
+        Assert.StrictEqual( struct ( 0xC00000UL, 0xD00000UL ), r.[5] ) // SectorBitmap
+
+    [<Fact>]
+    member _.MergeIntervals_002() =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512
+        let str2 = {
+            str with
+                // log
+                ImmHeader.LogOffset = 0x200000UL;
+                ImmHeader.LogLength = 0x100000u;
+                // Region
+                Region.Entries = []
+                // Payloads
+                BAT.Payloads = [||]
+                // SectorBitmap
+                BAT.SectorBitmap = [|
+                    { BatEntryIndex = 0UL; SBState = BatEntryStateSB.SectorBitmapNotPresent; FileOffset = 0xA00000UL; Bitmap = [||] };  // ignored
+                    { BatEntryIndex = 0UL; SBState = BatEntryStateSB.SectorBitmapPresent; FileOffset = 0xC00000UL; Bitmap = [||] };
+                |]
+        }
+        let r = VhdxWriter.MergeIntervals str2 [||]
+        Assert.StrictEqual( 3, r.Length )
+        Assert.StrictEqual( struct ( 0x000000UL, 0x100000UL ), r.[0] ) // header
+        Assert.StrictEqual( struct ( 0x200000UL, 0x300000UL ), r.[1] ) // log
+        Assert.StrictEqual( struct ( 0xC00000UL, 0xD00000UL ), r.[2] ) // SectorBitmap
+
+    static member m_MergeIntervals_003_data : obj[][] = [|
+        [|
+            [||];
+            [|
+                struct ( 0x000000UL, 0x400000UL );  // header, log, Region(metadata, BAT)
+            |];
+        |];
+        [|
+            [|
+                0x500000UL;
+                0x700000UL;
+            |];
+            [|
+                struct ( 0x000000UL, 0x400000UL );
+                struct ( 0x500000UL, 0x600000UL );
+                struct ( 0x700000UL, 0x800000UL );
+            |];
+        |];
+        [|
+            [|
+                0x500000UL;
+                0x600000UL;
+            |];
+            [|
+                struct ( 0x000000UL, 0x400000UL );
+                struct ( 0x500000UL, 0x700000UL );
+            |];
+        |];
+        [|
+            [|
+                0x500000UL;
+                0x580000UL;
+            |];
+            [|
+                struct ( 0x000000UL, 0x400000UL );
+                struct ( 0x500000UL, 0x680000UL );
+            |];
+        |];
+        [|
+            [|
+                0x500000UL;
+                0x500000UL;
+            |];
+            [|
+                struct ( 0x000000UL, 0x400000UL );
+                struct ( 0x500000UL, 0x600000UL );
+            |];
+        |];
+        [|
+            [|
+                0x500000UL;
+                0x480000UL;
+            |];
+            [|
+                struct ( 0x000000UL, 0x400000UL );
+                struct ( 0x480000UL, 0x600000UL );
+            |];
+        |];
+        [|
+            [|
+                0x580000UL;
+                0x480000UL;
+            |];
+            [|
+                struct ( 0x000000UL, 0x400000UL );
+                struct ( 0x480000UL, 0x680000UL );
+            |];
+        |];
+        [|
+            [|
+                0x600000UL;
+                0x480000UL;
+            |];
+            [|
+                struct ( 0x000000UL, 0x400000UL );
+                struct ( 0x480000UL, 0x580000UL );
+                struct ( 0x600000UL, 0x700000UL );
+            |];
+        |];
+        [|
+            [|
+                0x500000UL;
+                0x400000UL;
+            |];
+            [|
+                struct ( 0x000000UL, 0x600000UL );
+            |];
+        |];
+        [|
+            [|
+                0x500000UL;
+                0x280000UL;
+            |];
+            [|
+                struct ( 0x000000UL, 0x400000UL );
+                struct ( 0x500000UL, 0x600000UL );
+            |];
+        |];
+        [|
+            [|
+                0x400000UL;
+                0x380000UL;
+            |];
+            [|
+                struct ( 0x000000UL, 0x500000UL );
+            |];
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_MergeIntervals_003_data" )>]
+    member _.MergeIntervals_003 ( interval : uint64[] ) ( rxpr : struct( uint64 * uint64 )[] ) =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512
+        let r = VhdxWriter.MergeIntervals str interval
+        Assert.True(( rxpr = List.toArray r ))
+
+    static member m_BuildFreeList_001_data : obj[][] = [|
+        [|
+            [| 0x400000UL; 0x500000UL; 0x600000UL; 0x700000UL; 0x800000UL; 0x900000UL; |];
+            [||];
+        |];
+        [|
+            [| 0x400000UL; 0x500000UL; 0x600000UL; 0x700000UL; 0x800000UL; 0x880000UL; |];
+            [||];
+        |];
+        [|
+            [| 0x400000UL; 0x500000UL; 0x600000UL; 0x700000UL; 0x800000UL; |];
+            [| 0x900000UL; |];
+        |];
+        [|
+            [| 0x400000UL; 0x500000UL; 0x600000UL; 0x680000UL; 0x880000UL; 0x900000UL; |];
+            [||];
+        |];
+        [|
+            [| 0x400000UL; 0x500000UL; 0x600000UL; 0x880000UL; 0x900000UL; |];
+            [| 0x700000UL; |];
+        |];
+        [|
+            [| 0x400000UL; 0x500000UL; 0x600000UL; 0x900000UL; |];
+            [| 0x700000UL; 0x800000UL; |];
+        |];
+        [|
+            [| 0x400000UL; 0x500000UL; 0x600000UL; 0x800000UL; 0x900000UL; |];
+            [| 0x700000UL; |];
+        |];
+        [|
+            [| 0x400000UL; 0x600000UL; 0x800000UL; 0x900000UL; |];
+            [| 0x500000UL; 0x700000UL; |];
+        |];
+        [|
+            [| 0x400000UL; 0x800000UL; 0x900000UL; |];
+            [| 0x500000UL; 0x600000UL; 0x700000UL; |];
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_BuildFreeList_001_data" )>]
+    member _.BuildFreeList_001 ( interval : uint64[] ) ( rxpr : uint64 [] ) =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512
+        let str2 = {
+            str with
+                BAT.Payloads = [|
+                    for i in interval do
+                        yield {
+                            BatEntryIndex = 0UL;
+                            State = BatEntryStatePB.PayloadFullyPresent;
+                            FileOffset = i;
+                        }
+                |]
+
+        }
+        let r = VhdxWriter.BuildFreeList str2
+        Assert.True(( rxpr = List.toArray r ))
