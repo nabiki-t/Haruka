@@ -373,50 +373,68 @@ type VhdxWriter_Test () =
     member _.MergeIntervals_003 ( interval : uint64[] ) ( rxpr : struct( uint64 * uint64 )[] ) =
         let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512
         let r = VhdxWriter.MergeIntervals str interval
-        Assert.True(( rxpr = List.toArray r ))
+        Assert.True(( rxpr = r ))
 
     static member m_BuildFreeList_001_data : obj[][] = [|
         [|
             [| 0x400000UL; 0x500000UL; 0x600000UL; 0x700000UL; 0x800000UL; 0x900000UL; |];
+            0xA00000UL;
+            10UL;
             [||];
         |];
         [|
             [| 0x400000UL; 0x500000UL; 0x600000UL; 0x700000UL; 0x800000UL; 0x880000UL; |];
+            0xA00000UL;
+            10UL;
             [||];
         |];
         [|
             [| 0x400000UL; 0x500000UL; 0x600000UL; 0x700000UL; 0x800000UL; |];
+            0xA00000UL;
+            10UL;
             [| 0x900000UL; |];
         |];
         [|
             [| 0x400000UL; 0x500000UL; 0x600000UL; 0x680000UL; 0x880000UL; 0x900000UL; |];
+            0xA00000UL;
+            10UL;
             [||];
         |];
         [|
             [| 0x400000UL; 0x500000UL; 0x600000UL; 0x880000UL; 0x900000UL; |];
+            0xA00000UL;
+            10UL;
             [| 0x700000UL; |];
         |];
         [|
             [| 0x400000UL; 0x500000UL; 0x600000UL; 0x900000UL; |];
+            0xA00000UL;
+            10UL;
             [| 0x700000UL; 0x800000UL; |];
         |];
         [|
             [| 0x400000UL; 0x500000UL; 0x600000UL; 0x800000UL; 0x900000UL; |];
+            0xA00000UL;
+            10UL;
             [| 0x700000UL; |];
         |];
         [|
             [| 0x400000UL; 0x600000UL; 0x800000UL; 0x900000UL; |];
+            0xA00000UL;
+            10UL;
             [| 0x500000UL; 0x700000UL; |];
         |];
         [|
             [| 0x400000UL; 0x800000UL; 0x900000UL; |];
+            0xA00000UL;
+            10UL;
             [| 0x500000UL; 0x600000UL; 0x700000UL; |];
         |];
     |]
 
     [<Theory>]
     [<MemberData( "m_BuildFreeList_001_data" )>]
-    member _.BuildFreeList_001 ( interval : uint64[] ) ( rxpr : uint64 [] ) =
+    member _.BuildFreeList_001 ( interval : uint64[] ) ( fsize : uint64 ) ( maxcnt : uint64 ) ( rxpr : uint64 [] ) =
         let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512
         let str2 = {
             str with
@@ -427,8 +445,28 @@ type VhdxWriter_Test () =
                             State = BatEntryStatePB.PayloadFullyPresent;
                             FileOffset = i;
                         }
-                |]
-
+                |];
+                LastFileSize = fsize;
         }
-        let r = VhdxWriter.BuildFreeList str2
-        Assert.True(( rxpr = List.toArray r ))
+        let r = VhdxWriter.BuildFreeList str2 maxcnt
+        Assert.True(( rxpr = r ))
+
+    [<Fact>]
+    member _.BuildFreeList_009() =
+        let payloadCount = 67108864
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x400000000000UL Blocksize.BS_512
+        let str2 = {
+            str with
+                BAT.Payloads = [|
+                    for i = 0 to payloadCount - 1 do
+                        yield {
+                            BatEntryIndex = uint64 i;
+                            State = BatEntryStatePB.PayloadFullyPresent;
+                            FileOffset = 0x200000UL * ( uint64 i );
+                        }
+                |];
+                //LastFileSize = uint64 payloadCount * 0x100000UL;
+        }
+
+        let r = VhdxWriter.BuildFreeList str2 ( uint64 10 )
+        ()

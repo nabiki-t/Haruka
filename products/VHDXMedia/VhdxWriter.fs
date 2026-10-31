@@ -62,10 +62,10 @@ type VhdxWriter() =
     ///  The range is represented as a half-open interval.
     ///  Therefore, the end position is not included in the used region.
     /// </returns>
-    static member MergeIntervals ( structures : VhdxStructures ) ( intervals : uint64 [] ) : struct ( uint64 * uint64 ) list =
+    static member MergeIntervals ( structures : VhdxStructures ) ( intervals : uint64 [] ) : struct ( uint64 * uint64 ) [] =
         let payloadBlockSize = structures.VDI.PayloadBlockSize |> uint64
         let initial =
-            [
+            [|
                 // header(1MB)
                 struct( 0UL, 0x100000UL );
 
@@ -94,20 +94,24 @@ type VhdxWriter() =
                     if i + payloadBlockSize < i then
                         raise <| VhdxMediaException( "Unexpected the payload block offset value." )
                     struct( i, i + payloadBlockSize );
-            ]
+            |]
+            |> Array.sortBy ( fun struct( a, _ ) -> a )
 
-        initial
-        |> List.sortBy ( fun struct( a, _ ) -> a )
-        |> List.fold ( fun acc struct( s, e ) ->
-            match acc with
-            | [] -> [ struct( s, e ) ]
-            | ( ps, pe ) :: rest ->
-                if s <= pe then
-                    struct( ps, max pe e ) :: rest
+        let struct( s, e ) = initial.[0]
+        Array.unfold ( fun struct( idx, ws1, we1 ) ->
+            let rec loop ( idx2 : int ) ( ws2 : uint64 ) ( we2 : uint64 ) =
+                if idx2 < initial.Length then
+                    let struct( s, e ) = initial.[ idx2 ]
+                    if s <= we2 then
+                        loop ( idx2 + 1 ) ( ws2 ) ( max we2 e )
+                    else
+                        Some( struct( ws2, we2 ), struct( idx2 + 1, s, e ) )
+                elif idx2 = initial.Length then
+                    Some( struct( ws2, we2 ), struct( idx2 + 1, 0UL, 0UL ) )
                 else
-                    struct( s, e ) :: acc
-        ) []
-        |> List.rev
+                    None
+            loop idx ws1 we1
+        ) struct( 1, s, e )
 
     /// <summary>
     ///  Identify unused areas.
@@ -115,54 +119,113 @@ type VhdxWriter() =
     /// <param name="structures">
     ///  VHDX file structures data.
     /// </param>
+    /// <param name="maxPBCount">
+    ///  Specify the maximum number of payload blocks to allocate.
+    /// </param>
     /// <returns>
     ///  The start position of the unused area.
     ///  The size of a single unused area is the payload block length.
     /// </returns>
-    static member BuildFreeList ( structures : VhdxStructures ) : uint64 list =
+    static member BuildFreeList ( structures : VhdxStructures ) ( maxPBCount : uint64 ) : uint64 [] =
 
-        let payloads = structures.BAT.Payloads
-        let payloadBlockSize = structures.VDI.PayloadBlockSize |> uint64
+        let mb = 1048576UL
+        let payloadBlockSize = uint64 structures.VDI.PayloadBlockSize
+        if payloadBlockSize = 0UL then
+            raise <| VhdxMediaException( "Unexpected the payload block size value." )
 
-        // Calculate the free space by subtracting the used area from the entire file.
-        let freeRanges =
-            payloads
-            |> VhdxWriter.GetUsedRegions
-            |> VhdxWriter.MergeIntervals structures
-            |> List.fold ( fun struct ( prevEnd, acc ) struct ( s, e ) -> 
-                let acc =
-                    if prevEnd < s then
-                        struct ( prevEnd, s ) :: acc
+        let fileSize = structures.LastFileSize
+        let chunkCount = Functions.CeilDiv fileSize mb
+
+        // The maximum size of a virtual disk image is 64 TB.
+        // While it is expected that the physical file size will not significantly exceed this, there is no guarantee.
+        if chunkCount > uint64 Int32.MaxValue * 8UL then
+            raise <| VhdxMediaException( "The file is too large to build the free-space bitmap." )
+
+        let bitmap = PooledBuffer.RentAndInit ( Functions.CeilDiv chunkCount 8UL |> int )
+        try
+            let markUsed ( start : uint64 ) ( finish : uint64 ) : unit =
+                if finish > start && start < fileSize then
+                    let firstChunk = start / mb
+                    let finishChunk = min chunkCount ( Functions.CeilDiv finish mb )
+                    for chunk in firstChunk .. finishChunk - 1UL do
+                        let byteIndex = int ( chunk / 8UL )
+                        let bitMask = 1uy <<< int ( chunk % 8UL )
+                        bitmap.Array.[ byteIndex ] <- bitmap.Array.[ byteIndex ] ||| bitMask
+
+            let markRange ( start : uint64 ) ( length : uint64 ) ( errorMessage : string ) : unit =
+                let finish = start + length
+                if finish < start then
+                    raise <| VhdxMediaException( errorMessage )
+                markUsed start finish
+
+            // Header
+            markUsed 0UL mb
+
+            // Log
+            markRange structures.ImmHeader.LogOffset ( uint64 structures.ImmHeader.LogLength ) "Unexpected the log offset or the log length value."
+
+            // Regions (metadata, BAT, etc.)
+            for region in structures.Region.Entries do
+                markRange region.FileOffset ( uint64 region.Length ) "Unexpected the region offset or the region length value."
+
+            // Sector bitmap
+            for entry in structures.BAT.SectorBitmap do
+                if entry.SBState = BatEntryStateSB.SectorBitmapPresent then
+                    markRange entry.FileOffset mb "Unexpected the sector bitmap offset value."
+
+            // Payload blocks
+            for entry in structures.BAT.Payloads do
+                match entry.State with
+                | PayloadFullyPresent
+                | PayloadPartiallyPresent ->
+                    markRange entry.FileOffset payloadBlockSize "Unexpected the payload block offset value."
+                | _ -> ()
+
+            let rec findUsedChunk ( chunk : uint64 ) ( endChunk : uint64 ) : uint64 voption =
+                if chunk < endChunk then
+                    let byteIndex = int ( chunk / 8UL )
+                    let bitMask = 1uy <<< int ( chunk % 8UL )
+                    if ( bitmap.[byteIndex] &&& bitMask ) <> 0uy then
+                        ValueSome chunk
                     else
-                        acc
-                struct ( e, acc )
-            ) ( struct ( 0UL, [] ) )
-            |> ( fun struct ( lastEnd, acc ) ->
-                if lastEnd < structures.LastFileSize then
-                    struct ( lastEnd, structures.LastFileSize ) :: acc
+                        findUsedChunk ( chunk + 1UL ) endChunk
                 else
-                    acc
-            )
-            |> List.rev
+                    ValueNone
 
-        // Split into units of PayloadBlockSize.
-        freeRanges
-        |> List.collect ( fun struct ( start, endPos ) ->
-            let alignedStart =
-                let s = Functions.CeilUnit start 1048576UL
-                max s start
-            let alignedEnd = endPos - ( endPos % 1048576UL )
+            let rec findNextFree ( candidate : uint64 ) : struct( uint64 * uint64 ) voption =
+                if candidate > fileSize || payloadBlockSize > fileSize - candidate then
+                    ValueNone
+                else
+                    let endOffset = candidate + payloadBlockSize
+                    let firstChunk = candidate / mb
+                    let endChunk = Functions.CeilDiv endOffset mb
+                    match findUsedChunk firstChunk endChunk with
+                    | ValueNone ->
+                        ValueSome struct ( candidate, endOffset )
+                    | ValueSome usedChunk ->
+                        let nextChunk = usedChunk + 1UL
+                        let nextCandidate =
+                            if nextChunk > UInt64.MaxValue / mb then
+                                fileSize
+                            else
+                                min fileSize ( nextChunk * mb )
+                        if nextCandidate <= candidate then
+                            ValueNone
+                        else
+                            findNextFree nextCandidate
 
-            if alignedStart >= alignedEnd then
-                []
-            else
-                let length = alignedEnd - alignedStart
-                let blockCount = length / payloadBlockSize
-
-                List.init ( int32 blockCount ) ( fun i ->
-                    alignedStart + uint64 i * payloadBlockSize
-                )
-        )
+            Array.unfold ( fun ( candidate, allocated ) ->
+                if allocated >= maxPBCount then
+                    None
+                else
+                    match findNextFree candidate with
+                    | ValueSome struct ( freeBlock, nextCandidate ) ->
+                        Some ( freeBlock, ( nextCandidate, allocated + 1UL ) )
+                    | ValueNone ->
+                        None
+            ) ( 0UL, 0UL )
+        finally
+            bitmap.Return()
 
     /// <summary>
     ///  If any payload blocks that will be needed in the future are not yet allocated,
@@ -191,9 +254,12 @@ type VhdxWriter() =
             else
                 PayloadFullyPresent;
         let updated4KSecs = HashSet<SEC4K_T>()
+        let maxRequirePBCnt =
+            let w = pbSize / Blocksize.toUInt64 structures.VDI.LogicalSectorSize
+            ( Functions.CeilDiv ( uint64 cnt ) w ) + 1UL
 
         // build free list
-        let freeList = VhdxWriter.BuildFreeList structures
+        let freeList = VhdxWriter.BuildFreeList structures maxRequirePBCnt |> Array.toList
 
         // allocate space and update BAT entry
         let rec loop ( wcnt : BLKCNT64_T ) ( restFreeList : uint64 list ) ( gfs : uint64 ) : uint64 =

@@ -178,7 +178,7 @@ type VhdxMerge() =
             updateLbaBuf.[i] <- struct( blkcnt_me.ofUInt64 UInt64.MaxValue, blkcnt_me.ofUInt32 UInt32.MaxValue )
 
         let updatedPB4K = HashSet<SEC4K_T>()
-        let freeList = VhdxWriter.BuildFreeList mstr
+        let freeList = VhdxWriter.BuildFreeList mstr mstr.BAT.PayloadBlockCount |> Array.toList
 
         // Update BAT
         let rec loop1 ( lba1 : BLKCNT64_T, ubufcnt1 : int, restFreeList1 : uint64 list, gfs1 : uint64 )  : uint64 * BLKCNT64_T =
@@ -427,7 +427,7 @@ type VhdxMerge() =
 
         let updatedSB4K = Dictionary< SEC4K_T, ArraySegment<byte> >()
         let updatedPB4K = HashSet<SEC4K_T>()
-        let freeList = VhdxWriter.BuildFreeList mstr
+        let freeList = VhdxWriter.BuildFreeList mstr mstr.BAT.PayloadBlockCount |> Array.toList
 
         // Update BAT
         let rec loop1 ( lba1 : BLKCNT64_T, ubufcnt1 : int, restFreeList1 : uint64 list, gfs1 : uint64 )  : uint64 * BLKCNT64_T =
