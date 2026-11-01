@@ -159,33 +159,36 @@ type Functions() =
     ///  The value to be set. If true, 1 is set; if false, 0 is set.
     /// </param>
     static member inline SetBitflagArrayLimit ( v : byte[] ) ( arrayLen : int ) ( s : uint64 ) ( e : uint64 ) ( f : bool ) : unit =
-        let efArLen = min arrayLen v.Length
-        let es = min s e |> min ( uint64 efArLen <<< 3 )
-        let ee = max s e |> min ( uint64 efArLen <<< 3 )
-        let firstByte = int ( es >>> 3 )
-        let lastByte = int ( ee >>> 3 )
-        let firstBit = int ( es &&& 0x07UL )
-        let lastBit = int ( ee &&& 0x07UL )
+        let efArLen = min arrayLen v.Length |> max 0
+        let efArBitLen = uint64 efArLen <<< 3
+        if efArLen > 0 && s <> e then
+            let es = min s e |> min efArBitLen
+            let ee = ( max s e ) - 1UL |> min ( efArBitLen - 1UL )
+            if es < efArBitLen then
+                let firstByte = int ( es >>> 3 )
+                let lastByte = int ( ee >>> 3 )
+                let firstBit = int ( es &&& 0x07UL )
+                let lastBit = int ( ee &&& 0x07UL )
 
-        if firstByte = lastByte then
-            let bitCount = lastBit - firstBit + 1
-            v.[ firstByte ] <-
-                let mask = ( ( 1 <<< bitCount ) - 1 ) <<< firstBit |> byte
-                if f then v.[ firstByte ] ||| mask else v.[ firstByte ] &&& ~~~mask
-        else
-            v.[ firstByte ] <-
-                let mask1 = 0xFF &&& ( 0xFF <<< firstBit ) |> byte
-                if f then v.[ firstByte ] ||| mask1 else v.[ firstByte ] &&& ~~~mask1
+                if firstByte = lastByte then
+                    let bitCount = lastBit - firstBit + 1
+                    v.[ firstByte ] <-
+                        let mask = ( ( 1 <<< bitCount ) - 1 ) <<< firstBit |> byte
+                        if f then v.[ firstByte ] ||| mask else v.[ firstByte ] &&& ~~~mask
+                else
+                    v.[ firstByte ] <-
+                        let mask1 = 0xFF &&& ( 0xFF <<< firstBit ) |> byte
+                        if f then v.[ firstByte ] ||| mask1 else v.[ firstByte ] &&& ~~~mask1
 
-            let middleStart = firstByte + 1
-            let middleCount = lastByte - firstByte - 1
-            if middleCount > 0 then
-                let rv = if f then 0xFFuy else 0x00uy
-                Array.Fill<byte>( v, rv, middleStart, middleCount )
+                    let middleStart = firstByte + 1
+                    let middleCount = lastByte - firstByte - 1
+                    if middleCount > 0 then
+                        let rv = if f then 0xFFuy else 0x00uy
+                        Array.Fill<byte>( v, rv, middleStart, middleCount )
 
-            v.[ lastByte ] <-
-                let mask2 = ( 1 <<< ( lastBit + 1 ) ) - 1 |> byte
-                if f then v.[ lastByte ] ||| mask2 else v.[ lastByte ] &&& ~~~mask2
+                    v.[ lastByte ] <-
+                        let mask2 = ( 1 <<< ( lastBit + 1 ) ) - 1 |> byte
+                        if f then v.[ lastByte ] ||| mask2 else v.[ lastByte ] &&& ~~~mask2
 
     // ----------------------------------------------------------------------------
     /// <summary>

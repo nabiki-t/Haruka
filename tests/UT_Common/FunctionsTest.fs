@@ -94,6 +94,173 @@ type Functions_Test () =
     member _.SetBitflag_002() =
         Assert.True( ( Functions.SetBitflag false 0x1Fuy ) = 0x00uy )
 
+    [<Theory>]
+    [<InlineData( 0x00, 2UL, 6UL, true,  0x3C )>]
+    [<InlineData( 0xFF, 2UL, 6UL, false, 0xC3 )>]
+    [<InlineData( 0x00, 0UL, 8UL, true,  0xFF )>]
+    [<InlineData( 0xFF, 0UL, 8UL, false, 0x00 )>]
+    [<InlineData( 0x00, 0UL, 1UL, true,  0x01 )>]
+    [<InlineData( 0x00, 7UL, 8UL, true,  0x80 )>]
+    [<InlineData( 0xFF, 7UL, 8UL, false, 0x7F )>]
+    [<InlineData( 0x00, 3UL, 3UL, true,  0x00 )>]
+    [<InlineData( 0x00, 0UL, 0UL, true,  0x00 )>]
+    member _.SetBitflagArrayLimit_001( vv : byte ) ( s : uint64 ) ( e : uint64 ) ( f : bool ) ( rexp : byte ) =
+        let v = [| vv |]
+        Functions.SetBitflagArrayLimit v 1 s e f
+        Assert.True(( [| rexp |] = v ))
+
+    static member m_SetBitflagArrayLimit_002_data : obj[][]  = [|
+        [|
+            [| 0xA5uy; 0xA5uy; 0xA5uy; 0xA5uy; |];
+            4UL;  21UL; true;
+            [| 0xF5uy; 0xFFuy; 0xBFuy; 0xA5uy; |];
+        |];
+        [|
+            [| 0xA5uy; 0xA5uy; 0xA5uy; 0xA5uy; |];
+            4UL;  21UL; false;
+            [| 0x05uy; 0x00uy; 0xA0uy; 0xA5uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; 0x00uy; |];
+            0UL;  16UL; true;
+            [| 0xFFuy; 0xFFuy; 0x00uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; 0x00uy; |];
+            8UL;  16UL; true;
+            [| 0x00uy; 0xFFuy; 0x00uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; |];
+            7UL;  9UL;  true;
+            [| 0x80uy; 0x01uy; |];
+        |];
+        [|
+            [| 0xFFuy; 0xFFuy; |];
+            10UL; 2UL;  false;
+            [| 0x03uy; 0xFCuy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; |];
+            8UL;  8UL;  true;
+            [| 0x00uy; 0x00uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; |];
+            8UL;  7UL;  true;
+            [| 0x80uy; 0x00uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; |];
+            15UL; 16UL; true;
+            [| 0x00uy; 0x80uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; |];
+            15UL; 17UL; true;
+            [| 0x00uy; 0x80uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; |];
+            16UL; 17UL; true;
+            [| 0x00uy; 0x00uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; |];
+            17UL; 17UL; true;
+            [| 0x00uy; 0x00uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; |];
+            0xFFFFFFFFFFFFFFFEUL; 0xFFFFFFFFFFFFFFFFUL; true;
+            [| 0x00uy; 0x00uy; |];
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SetBitflagArrayLimit_002_data" )>]
+    member _.SetBitflagArrayLimit_002 ( v : byte[] ) ( s : uint64 ) ( e : uint64 ) ( f : bool ) ( expv : byte[] ) =
+        Functions.SetBitflagArrayLimit v v.Length s e f
+        Assert.True(( expv = v ))
+
+    static member m_SetBitflagArrayLimit_003_data : obj[][]  = [|
+        [|
+            [| 0x00uy; 0x00uy; 0x00uy; 0x5Auy; |];
+            3; 0UL;  24UL; true;
+            [| 0xFFuy; 0xFFuy; 0xFFuy; 0x5Auy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            5; 0UL;  40UL; true;
+            [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |];
+        |];
+        [|
+            [| 0xA5uy; 0xA5uy; 0xA5uy; 0xA5uy; |];
+            0; 0UL;  40UL; true;
+            [| 0xA5uy; 0xA5uy; 0xA5uy; 0xA5uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            -1; 0UL;  40UL; true;
+            [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            0x7FFFFFFF; 8UL;  40UL; true;
+            [| 0x00uy; 0xFFuy; 0xFFuy; 0xFFuy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            0x80000000; 8UL;  40UL; true;
+            [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SetBitflagArrayLimit_003_data" )>]
+    member _.SetBitflagArrayLimit_003 ( v : byte[] ) ( arlen : int ) ( s : uint64 ) ( e : uint64 ) ( f : bool ) ( expv : byte[] ) =
+        Functions.SetBitflagArrayLimit v arlen s e f
+        Assert.True(( expv = v ))
+
+    static member m_SetBitflagArray_001_data : obj[][]  = [|
+        [|
+            [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            8UL;  16UL; true;
+            [| 0x00uy; 0xFFuy; 0x00uy; 0x00uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            8UL;  40UL; true;
+            [| 0x00uy; 0xFFuy; 0xFFuy; 0xFFuy; |];
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SetBitflagArray_001_data" )>]
+    member _.SetBitflagArray_001 ( v : byte[] ) ( s : uint64 ) ( e : uint64 ) ( f : bool ) ( expv : byte[] ) =
+        Functions.SetBitflagArray v s e f
+        Assert.True(( expv = v ))
+
+    static member m_SetBitflagPooledBuffer_001 : obj[][]  = [|
+        [|
+            [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            8UL;  16UL; true;
+            [| 0x00uy; 0xFFuy; 0x00uy; 0x00uy; |];
+        |];
+        [|
+            [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |];
+            8UL;  40UL; true;
+            [| 0x00uy; 0xFFuy; 0xFFuy; 0xFFuy; |];
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SetBitflagPooledBuffer_001" )>]
+    member _.SetBitflagPooledBuffer_001 ( v : byte[] ) ( s : uint64 ) ( e : uint64 ) ( f : bool ) ( expv : byte[] ) =
+        let p = PooledBuffer.Rent v
+        Functions.SetBitflagPooledBuffer p s e f
+        Assert.True(( expv = p.Array.[ 0 .. v.Length - 1 ] ))
+
     [<Fact>]
     member _.CompareStringHeader_001() =
         Assert.True( Functions.CompareStringHeader "aaa" "aaabbb" = 0 )
