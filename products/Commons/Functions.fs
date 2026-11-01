@@ -137,6 +137,101 @@ type Functions() =
         if flag then bitvalue else LanguagePrimitives.GenericZero<'T>
 
     // ----------------------------------------------------------------------------
+    /// <summary>
+    ///  Set bit flags in a specified region within an array.
+    /// </summary>
+    /// <param name="v">
+    ///  The array for which bit flags are to be set
+    /// </param>
+    /// <param name="arrayLen">
+    ///  Maximum length of the array. No values ​​will be set in any area beyond this limit.
+    /// </param>
+    /// <param name="s">
+    ///  The starting position of the range for which values ​​are to be set.
+    ///  It is specified as the number of bits from the beginning of the array.
+    /// </param>
+    /// <param name="e">
+    ///  The end position of the range for which the value is to be set. 
+    ///  It is specified as the number of bits from the beginning of the array.
+    ///  The bit at the end position is not included in the range.
+    /// </param>
+    /// <param name="f">
+    ///  The value to be set. If true, 1 is set; if false, 0 is set.
+    /// </param>
+    static member inline SetBitflagArrayLimit ( v : byte[] ) ( arrayLen : int ) ( s : uint64 ) ( e : uint64 ) ( f : bool ) : unit =
+        let efArLen = min arrayLen v.Length
+        let es = min s e |> min ( uint64 efArLen <<< 3 )
+        let ee = max s e |> min ( uint64 efArLen <<< 3 )
+        let firstByte = int ( es >>> 3 )
+        let lastByte = int ( ee >>> 3 )
+        let firstBit = int ( es &&& 0x07UL )
+        let lastBit = int ( ee &&& 0x07UL )
+
+        if firstByte = lastByte then
+            let bitCount = lastBit - firstBit + 1
+            v.[ firstByte ] <-
+                let mask = ( ( 1 <<< bitCount ) - 1 ) <<< firstBit |> byte
+                if f then v.[ firstByte ] ||| mask else v.[ firstByte ] &&& ~~~mask
+        else
+            v.[ firstByte ] <-
+                let mask1 = 0xFF &&& ( 0xFF <<< firstBit ) |> byte
+                if f then v.[ firstByte ] ||| mask1 else v.[ firstByte ] &&& ~~~mask1
+
+            let middleStart = firstByte + 1
+            let middleCount = lastByte - firstByte - 1
+            if middleCount > 0 then
+                let rv = if f then 0xFFuy else 0x00uy
+                Array.Fill<byte>( v, rv, middleStart, middleCount )
+
+            v.[ lastByte ] <-
+                let mask2 = ( 1 <<< ( lastBit + 1 ) ) - 1 |> byte
+                if f then v.[ lastByte ] ||| mask2 else v.[ lastByte ] &&& ~~~mask2
+
+    // ----------------------------------------------------------------------------
+    /// <summary>
+    ///  Set bit flags in an array.
+    /// </summary>
+    /// <param name="v">
+    ///  The array for which bit flags are to be set
+    /// </param>
+    /// <param name="s">
+    ///  The starting position of the range for which values ​​are to be set.
+    ///  It is specified as the number of bits from the beginning of the array.
+    /// </param>
+    /// <param name="e">
+    ///  The end position of the range for which the value is to be set. 
+    ///  It is specified as the number of bits from the beginning of the array.
+    ///  The bit at the end position is not included in the range.
+    /// </param>
+    /// <param name="f">
+    ///  The value to be set. If true, 1 is set; if false, 0 is set.
+    /// </param>
+    static member inline SetBitflagArray ( v : byte[] ) ( s : uint64 ) ( e : uint64 ) ( f : bool ) : unit =
+        Functions.SetBitflagArrayLimit v v.Length s e f
+
+    // ----------------------------------------------------------------------------
+    /// <summary>
+    ///  Set bit flags in an array.
+    /// </summary>
+    /// <param name="v">
+    ///  The pooledBuffer for which bit flags are to be set
+    /// </param>
+    /// <param name="s">
+    ///  The starting position of the range for which values ​​are to be set.
+    ///  It is specified as the number of bits from the beginning of the array.
+    /// </param>
+    /// <param name="e">
+    ///  The end position of the range for which the value is to be set. 
+    ///  It is specified as the number of bits from the beginning of the array.
+    ///  The bit at the end position is not included in the range.
+    /// </param>
+    /// <param name="f">
+    ///  The value to be set. If true, 1 is set; if false, 0 is set.
+    /// </param>
+    static member inline SetBitflagPooledBuffer ( v : PooledBuffer ) ( s : uint64 ) ( e : uint64 ) ( f : bool ) : unit =
+        Functions.SetBitflagArrayLimit v.Array v.Length s e f
+
+    // ----------------------------------------------------------------------------
     /// Compare string header
     static member CompareStringHeader ( s1 : string ) ( s2 : string ) =
         System.String.Compare( s1, 0, s2, 0, ( min s1.Length s2.Length ), StringComparison.Ordinal )
