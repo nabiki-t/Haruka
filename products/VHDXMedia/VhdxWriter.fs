@@ -28,92 +28,6 @@ open Haruka.Commons
 type VhdxWriter() =
 
     /// <summary>
-    ///  Search for used areas.
-    /// </summary>
-    /// <param name="payloads">
-    ///  Payload BAT entries
-    /// </param>
-    /// <returns>
-    ///  Array of used range offsets
-    /// </returns>
-    static member GetUsedRegions ( payloads : PayloadBATEntry[] ) : uint64 [] =
-        payloads
-        |> Array.choose ( fun e ->
-            match e.State with
-            | PayloadFullyPresent
-            | PayloadPartiallyPresent ->
-                Some ( e.FileOffset )
-            | _ ->
-                None
-        )
-        |> Array.sort
-
-    /// <sumary>
-    ///  Consolidate contiguous used areas.
-    /// </summary>
-    /// <param name="structures">
-    ///  VHDX file controll structures.
-    /// </param>
-    /// <param name="intervals">
-    ///   Array of used range offsets.
-    /// </param>
-    /// <returns>
-    ///  Start and end positions of the used area.
-    ///  The range is represented as a half-open interval.
-    ///  Therefore, the end position is not included in the used region.
-    /// </returns>
-    static member MergeIntervals ( structures : VhdxStructures ) ( intervals : uint64 [] ) : struct ( uint64 * uint64 ) [] =
-        let payloadBlockSize = structures.VDI.PayloadBlockSize |> uint64
-        let initial =
-            [|
-                // header(1MB)
-                struct( 0UL, 0x100000UL );
-
-                // log
-                let a = structures.ImmHeader.LogOffset
-                let b = uint64 structures.ImmHeader.LogLength
-                if a + b < a then raise <| VhdxMediaException( "Unexpected the log offset or the log length value." )
-                struct( a, a + b )
-
-                // Regions( metadata, BAT, etc. )
-                for i in structures.Region.Entries do
-                    let a = i.FileOffset
-                    let b = uint64 i.Length
-                    if a + b < a then raise <| VhdxMediaException( "Unexpected the region offset or the region length value." )
-                    struct( a, a + b )
-
-                // Sector bitmap
-                for i in structures.BAT.SectorBitmap do
-                    if i.SBState = BatEntryStateSB.SectorBitmapPresent then
-                        if i.FileOffset + 0x100000UL < i.FileOffset then
-                            raise <| VhdxMediaException( "Unexpected the sector bitmap offset value." )
-                        struct( i.FileOffset, i.FileOffset + 0x100000UL ) // 1MB length
-
-                // payload block
-                for i in intervals do
-                    if i + payloadBlockSize < i then
-                        raise <| VhdxMediaException( "Unexpected the payload block offset value." )
-                    struct( i, i + payloadBlockSize );
-            |]
-            |> Array.sortBy ( fun struct( a, _ ) -> a )
-
-        let struct( s, e ) = initial.[0]
-        Array.unfold ( fun struct( idx, ws1, we1 ) ->
-            let rec loop ( idx2 : int ) ( ws2 : uint64 ) ( we2 : uint64 ) =
-                if idx2 < initial.Length then
-                    let struct( s, e ) = initial.[ idx2 ]
-                    if s <= we2 then
-                        loop ( idx2 + 1 ) ( ws2 ) ( max we2 e )
-                    else
-                        Some( struct( ws2, we2 ), struct( idx2 + 1, s, e ) )
-                elif idx2 = initial.Length then
-                    Some( struct( ws2, we2 ), struct( idx2 + 1, 0UL, 0UL ) )
-                else
-                    None
-            loop idx ws1 we1
-        ) struct( 1, s, e )
-
-    /// <summary>
     ///  Identify unused areas.
     /// </summary>
     /// <param name="structures">
@@ -143,23 +57,16 @@ type VhdxWriter() =
 
         let bitmap = PooledBuffer.RentAndInit ( Functions.CeilDiv chunkCount 8UL |> int )
         try
-            let markUsed ( start : uint64 ) ( finish : uint64 ) : unit =
-                if finish > start && start < fileSize then
-                    let firstChunk = start / mb
-                    let finishChunk = min chunkCount ( Functions.CeilDiv finish mb )
-                    for chunk in firstChunk .. finishChunk - 1UL do
-                        let byteIndex = int ( chunk / 8UL )
-                        let bitMask = 1uy <<< int ( chunk % 8UL )
-                        bitmap.Array.[ byteIndex ] <- bitmap.Array.[ byteIndex ] ||| bitMask
-
             let markRange ( start : uint64 ) ( length : uint64 ) ( errorMessage : string ) : unit =
                 let finish = start + length
                 if finish < start then
                     raise <| VhdxMediaException( errorMessage )
-                markUsed start finish
+                let s = start / mb
+                let f = Functions.CeilDiv finish mb
+                Functions.SetBitflagPooledBuffer bitmap s f true
 
             // Header
-            markUsed 0UL mb
+            markRange 0UL mb ""
 
             // Log
             markRange structures.ImmHeader.LogOffset ( uint64 structures.ImmHeader.LogLength ) "Unexpected the log offset or the log length value."
