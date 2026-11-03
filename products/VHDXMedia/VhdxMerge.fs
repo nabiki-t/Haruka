@@ -178,10 +178,13 @@ type VhdxMerge() =
             updateLbaBuf.[i] <- struct( blkcnt_me.ofUInt64 UInt64.MaxValue, blkcnt_me.ofUInt32 UInt32.MaxValue )
 
         let updatedPB4K = HashSet<SEC4K_T>()
-        let freeList = VhdxWriter.BuildFreeList mstr mstr.BAT.PayloadBlockCount |> Array.toList
+        let enumFreeList =
+            VhdxWriter.BuildFreeList mstr mstr.BAT.PayloadBlockCount
+            |> Array.toSeq
+            |> _.GetEnumerator()
 
         // Update BAT
-        let rec loop1 ( lba1 : BLKCNT64_T, ubufcnt1 : int, restFreeList1 : uint64 list, gfs1 : uint64 )  : uint64 * BLKCNT64_T =
+        let rec loop1 struct ( lba1 : BLKCNT64_T, ubufcnt1 : int, gfs1 : uint64 )  : uint64 * BLKCNT64_T =
             if lba1 < d_VirtualDiskLBACount && ubufcnt1 < updateLbaBuf.Length then
 
                 let struct( pdidx, pblbaoff ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 dstr
@@ -195,22 +198,22 @@ type VhdxMerge() =
                     // Nothing to do.
                     let struct( a, _ ) = updateLbaBuf.[ ubufcnt1 ]
                     if a = blkcnt_me.ofUInt64 UInt64.MaxValue then
-                        loop1( lbaend, ubufcnt1, restFreeList1, gfs1 )
+                        loop1( lbaend, ubufcnt1, gfs1 )
                     else
-                        loop1( lbaend, ubufcnt1 + 1, restFreeList1, gfs1 )
+                        loop1( lbaend, ubufcnt1 + 1, gfs1 )
 
                 | PayloadZero               // Since it is explicitly set to 0, that value must also be reflected in the target of the update.
                 | PayloadPartiallyPresent   // Under normal circumstances, this state is impossible.
                 | PayloadFullyPresent ->
                     // Allocate space in LBA units.
-                    let rec loop2 ( lba2 : BLKCNT64_T ) ( ubufcnt2 : int ) ( restFreeList2 : uint64 list ) ( gfs2 : uint64 ) : ( BLKCNT64_T * int * uint64 list * uint64 ) =
+                    let rec loop2 ( lba2 : BLKCNT64_T ) ( ubufcnt2 : int ) ( gfs2 : uint64 ) : struct ( BLKCNT64_T * int * uint64 ) =
                         if ubufcnt2 >= updateLbaBuf.Length then
-                            lba2, ubufcnt2, restFreeList2, gfs2
+                            struct( lba2, ubufcnt2, gfs2 )
                         elif lba2 >= lbaend  then
                             // If a range spans across payload blocks, it is not treated as a contiguous region.
-                            lba2, ( ubufcnt2 + 1 ), restFreeList2, gfs2
+                            struct( lba2, ( ubufcnt2 + 1 ), gfs2 )
                         else
-                            let ( nextRFL, nextGFS2 ) = VhdxWriter.UpdatePBForAllocate mstr lba2 restFreeList2 gfs2 updatedPB4K
+                            let nextGFS2 = VhdxWriter.UpdatePBForAllocate mstr lba2 enumFreeList gfs2 updatedPB4K
                             let struct( sbIdx, bytePos, bitPos ) = VhdxCommons.LBAtoSectorBitmapIndex lba2 mstr
                             let sbEntry = mstr.BAT.SectorBitmap.[ int32 sbIdx ].Bitmap
                             let bitValue = ( sbEntry.[ int32 bytePos ] >>> ( int32 bitPos ) ) &&& 1uy
@@ -228,21 +231,21 @@ type VhdxMerge() =
                                 // There is no need to output the sector bitmap updates to the file.
                                 sbEntry.[ int32 bytePos ] <- sbEntry.[ int32 bytePos ] ||| ( 1uy <<< ( int32 bitPos ) )
 
-                                loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextRFL nextGFS2
+                                loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextGFS2
                             else
                                 let struct( a, _ ) = updateLbaBuf.[ ubufcnt2 ]
                                 if a = blkcnt_me.ofUInt64 UInt64.MaxValue then
-                                    loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextRFL nextGFS2
+                                    loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextGFS2
                                 else
-                                    loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ( ubufcnt2 + 1 ) nextRFL nextGFS2
+                                    loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ( ubufcnt2 + 1 ) nextGFS2
 
-                    loop2 lbastart ubufcnt1 restFreeList1 gfs1
+                    loop2 lbastart ubufcnt1 gfs1
                     |> loop1
 
             else
                 gfs1, lba1
 
-        let requiredFileSize, nextlba = loop1( startLba, 0, freeList, mstr.LastFileSize )
+        let requiredFileSize, nextlba = loop1 struct ( startLba, 0, mstr.LastFileSize )
         requiredFileSize, updatedPB4K, nextlba
 
     /// <summary>
@@ -427,10 +430,13 @@ type VhdxMerge() =
 
         let updatedSB4K = Dictionary< SEC4K_T, ArraySegment<byte> >()
         let updatedPB4K = HashSet<SEC4K_T>()
-        let freeList = VhdxWriter.BuildFreeList mstr mstr.BAT.PayloadBlockCount |> Array.toList
+        let enumFreeList =
+            VhdxWriter.BuildFreeList mstr mstr.BAT.PayloadBlockCount
+            |> Array.toSeq
+            |> _.GetEnumerator()
 
         // Update BAT
-        let rec loop1 ( lba1 : BLKCNT64_T, ubufcnt1 : int, restFreeList1 : uint64 list, gfs1 : uint64 )  : uint64 * BLKCNT64_T =
+        let rec loop1 struct ( lba1 : BLKCNT64_T, ubufcnt1 : int, gfs1 : uint64 )  : struct( uint64 * BLKCNT64_T ) =
             if lba1 < d_VirtualDiskLBACount && ubufcnt1 < updateLbaBuf.Length then
 
                 let struct( pdidx, pblbaoff ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 dstr
@@ -444,21 +450,21 @@ type VhdxMerge() =
                     // Nothing to do.
                     let struct( a, b ) = updateLbaBuf.[ ubufcnt1 ]
                     if a = blkcnt_me.ofUInt64 UInt64.MaxValue then
-                        loop1( lbaend, ubufcnt1, restFreeList1, gfs1 )
+                        loop1 struct ( lbaend, ubufcnt1, gfs1 )
                     else
-                        loop1( lbaend, ubufcnt1 + 1, restFreeList1, gfs1 )
+                        loop1 struct ( lbaend, ubufcnt1 + 1, gfs1 )
 
                 | PayloadZero  // Since it is explicitly set to 0, that value must also be reflected in the target of the update.
                 | PayloadFullyPresent ->
                     // Allocate space in LBA units.
-                    let rec loop2 ( lba2 : BLKCNT64_T ) ( ubufcnt2 : int ) ( restFreeList2 : uint64 list ) ( gfs2 : uint64 ) : ( BLKCNT64_T * int * uint64 list * uint64 ) =
+                    let rec loop2 ( lba2 : BLKCNT64_T ) ( ubufcnt2 : int ) ( gfs2 : uint64 ) : struct ( BLKCNT64_T * int * uint64 ) =
                         if ubufcnt2 >= updateLbaBuf.Length then
-                            lba2, ubufcnt2, restFreeList2, gfs2
+                            struct( lba2, ubufcnt2, gfs2 )
                         elif lba2 >= lbaend  then
                             // If a range spans across payload blocks, it is not treated as a contiguous region.
-                            lba2, ( ubufcnt2 + 1 ), restFreeList2, gfs2
+                            struct( lba2, ( ubufcnt2 + 1 ), gfs2 )
                         else
-                            let ( nextRFL, nextGFS2 ) = VhdxWriter.UpdatePBForAllocate mstr lba2 restFreeList2 gfs2 updatedPB4K
+                            let nextGFS2 = VhdxWriter.UpdatePBForAllocate mstr lba2 enumFreeList gfs2 updatedPB4K
                             if VhdxWriter.UpdateSBForAllocate mstr lba2 updatedPB4K updatedSB4K then
                                 // The value needs to be copied to this LBA.
                                 let struct( a, b ) = updateLbaBuf.[ ubufcnt2 ]
@@ -466,31 +472,31 @@ type VhdxMerge() =
                                     updateLbaBuf.[ ubufcnt2 ] <- struct( lba2, blkcnt_me.ofUInt32 1u )
                                 else
                                     updateLbaBuf.[ ubufcnt2 ] <- struct( a, b + blkcnt_me.ofUInt32 1u )
-                                loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextRFL nextGFS2
+                                loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextGFS2
                             else
                                 let struct( a, _ ) = updateLbaBuf.[ ubufcnt2 ]
                                 if a = blkcnt_me.ofUInt64 UInt64.MaxValue then
-                                    loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextRFL nextGFS2
+                                    loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextGFS2
                                 else
-                                    loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ( ubufcnt2 + 1 ) nextRFL nextGFS2
+                                    loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ( ubufcnt2 + 1 ) nextGFS2
 
-                    loop2 lbastart ubufcnt1 restFreeList1 gfs1
+                    loop2 lbastart ubufcnt1 gfs1
                     |> loop1
 
                 | PayloadPartiallyPresent ->
                     // Check the target VHDX file for used areas on an LBA basis.
-                    let rec loop2 ( lba2 : BLKCNT64_T ) ( ubufcnt2 : int ) ( restFreeList2 : uint64 list ) ( gfs2 : uint64 ) : ( BLKCNT64_T * int * uint64 list * uint64 ) =
+                    let rec loop2 ( lba2 : BLKCNT64_T ) ( ubufcnt2 : int ) ( gfs2 : uint64 ) : struct ( BLKCNT64_T * int * uint64 ) =
                         if ubufcnt2 >= updateLbaBuf.Length then
-                            lba2, ubufcnt2, restFreeList2, gfs2
+                            struct( lba2, ubufcnt2, gfs2 )
                         elif lba2 >= lbaend  then
                             // If a range spans across payload blocks, it is not treated as a contiguous region.
-                            lba2, ( ubufcnt2 + 1 ), restFreeList2, gfs2
+                            struct( lba2, ( ubufcnt2 + 1 ), gfs2 )
                         else
                             let struct( dsbidx, bytePos, bitPos ) = VhdxCommons.LBAtoSectorBitmapIndex lba2 dstr
                             let dsbState = ( dstr.BAT.SectorBitmap.[ int32 dsbidx ].Bitmap.[ int32 bytePos ] >>> ( int32 bitPos ) ) &&& 1uy
                             if dsbState = 1uy then
                                 // The logical sector in question is in use.
-                                let ( nextRFL, nextGFS2 ) = VhdxWriter.UpdatePBForAllocate mstr lba2 restFreeList2 gfs2 updatedPB4K
+                                let nextGFS2 = VhdxWriter.UpdatePBForAllocate mstr lba2 enumFreeList gfs2 updatedPB4K
                                 if VhdxWriter.UpdateSBForAllocate mstr lba2 updatedPB4K updatedSB4K then
                                     // The value needs to be copied to this LBA.
                                     let struct( a, b ) = updateLbaBuf.[ ubufcnt2 ]
@@ -498,16 +504,16 @@ type VhdxMerge() =
                                         updateLbaBuf.[ ubufcnt2 ] <- struct( lba2, blkcnt_me.ofUInt32 1u )
                                     else
                                         updateLbaBuf.[ ubufcnt2 ] <- struct( lba2, b + blkcnt_me.ofUInt32 1u )
-                                loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextRFL nextGFS2
+                                loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextGFS2
                             else
                                 // Since the logical sector in question is unused, there is no need to allocate it to the target VHDX.
-                                loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ( ubufcnt2 + 1 ) restFreeList2 gfs2
-                    loop2 lbastart ubufcnt1 restFreeList1 gfs1
+                                loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ( ubufcnt2 + 1 ) gfs2
+                    loop2 lbastart ubufcnt1 gfs1
                     |> loop1
             else
                 gfs1, lba1
 
-        let requiredFileSize, nextlba = loop1( startLba, 0, freeList, mstr.LastFileSize )
+        let struct( requiredFileSize, nextlba ) = loop1 struct ( startLba, 0, mstr.LastFileSize )
         requiredFileSize, updatedPB4K, updatedSB4K, nextlba
 
     /// <summary>

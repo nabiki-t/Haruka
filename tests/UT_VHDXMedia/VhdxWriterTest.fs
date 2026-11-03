@@ -16,6 +16,7 @@ open System.IO
 open System.Threading
 open System.Threading.Tasks
 open System.Text
+open System.Collections.Generic
 
 open Xunit
 
@@ -400,3 +401,22 @@ type VhdxWriter_Test () =
         }
         let r = VhdxWriter.BuildFreeList str2 maxcnt
         Assert.True(( rxpr = r ))
+
+    static member m_UpdatePBForAllocate_001_data : obj[][] = [|
+        [| BatEntryStatePB.PayloadFullyPresent; |];
+        [| BatEntryStatePB.PayloadPartiallyPresent; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_UpdatePBForAllocate_001_data" )>]
+    member _.UpdatePBForAllocate_001 ( stat : BatEntryStatePB ) =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512
+        str.BAT.Payloads.[0] <- {
+            str.BAT.Payloads.[0] with
+                State = stat;
+        }
+        use e = [||] |> Array.toSeq |> _.GetEnumerator()
+        let updated4KSecs = HashSet<SEC4K_T>()
+        let gfs = VhdxWriter.UpdatePBForAllocate str blkcnt_me.zero64 e 0xA00000UL updated4KSecs
+        Assert.StrictEqual( 0xA00000UL, gfs )
+        Assert.Empty updated4KSecs

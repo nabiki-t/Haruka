@@ -166,17 +166,20 @@ type VhdxWriter() =
             ( Functions.CeilDiv ( uint64 cnt ) w ) + 1UL
 
         // build free list
-        let freeList = VhdxWriter.BuildFreeList structures maxRequirePBCnt |> Array.toList
+        use enumFreeList =
+            VhdxWriter.BuildFreeList structures maxRequirePBCnt
+            |> Array.toSeq
+            |> _.GetEnumerator()
 
         // allocate space and update BAT entry
-        let rec loop ( wcnt : BLKCNT64_T ) ( restFreeList : uint64 list ) ( gfs : uint64 ) : uint64 =
+        let rec loop ( wcnt : BLKCNT64_T ) ( gfs : uint64 ) : uint64 =
             if wcnt < cnt then
-                let ( nextFL, nextgfs ) =
-                    VhdxWriter.UpdatePBForAllocate structures ( lba + wcnt ) restFreeList gfs updated4KSecs
-                loop ( wcnt + blkcnt_me.ofUInt64 1UL ) nextFL nextgfs
+                let nextgfs =
+                    VhdxWriter.UpdatePBForAllocate structures ( lba + wcnt ) enumFreeList gfs updated4KSecs
+                loop ( wcnt + blkcnt_me.ofUInt64 1UL ) nextgfs
             else
                 gfs
-        let requiredFileSize = loop blkcnt_me.zero64 freeList structures.LastFileSize
+        let requiredFileSize = loop blkcnt_me.zero64 structures.LastFileSize
 
         struct ( updated4KSecs, requiredFileSize )
 
@@ -204,10 +207,10 @@ type VhdxWriter() =
     static member UpdatePBForAllocate
         ( structures : VhdxStructures )
         ( lba : BLKCNT64_T )
-        ( restFreeList : uint64 list )
+        ( restFreeList : IEnumerator<uint64> )
         ( gfs : uint64 )
         ( updated4KSecs : HashSet<SEC4K_T> )
-        : ( uint64 list * uint64 ) =
+        : uint64 =
 
         let pbSize = uint64 structures.VDI.PayloadBlockSize
         let allocPBStat = if structures.VDI.HasParent then PayloadPartiallyPresent else PayloadFullyPresent;
@@ -221,12 +224,11 @@ type VhdxWriter() =
         | PayloadUnapped ->
 
             // allocate free space
-            let fileoffset, nextFL, nextgfs =
-                match restFreeList with
-                | [] ->
-                    gfs, [], ( gfs + pbSize )
-                | a :: b ->
-                    a, b, gfs
+            let struct( fileoffset, nextgfs ) =
+                if restFreeList.MoveNext() then
+                    restFreeList.Current, gfs
+                else
+                    struct( gfs, ( gfs + pbSize ) )
 
             // update payload block BAT entry
             structures.BAT.Payloads.[ int32 pbidx ] <-
@@ -242,12 +244,12 @@ type VhdxWriter() =
             updated4KSecs.Add secidx |> ignore
 
             // To next LBA block
-            nextFL, nextgfs
+            nextgfs
 
         | PayloadFullyPresent
         | PayloadPartiallyPresent ->
             // Already allocated
-            restFreeList, gfs
+            gfs
 
     /// <summary>
     ///  Mark the sector bitmap corresponding to the area to be updated as used.
