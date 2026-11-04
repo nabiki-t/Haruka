@@ -153,35 +153,46 @@ type VhdxWriter() =
     ///  Pair of BAT updated 4K sector numbers and the file size required after allocation.
     /// </returns>
     static member AllocatePayloadBlock ( structures : VhdxStructures ) ( lba : BLKCNT64_T ) ( cnt : BLKCNT64_T ) : struct ( HashSet<SEC4K_T> * uint64 ) =
-        let hasParent = structures.VDI.HasParent
-        let pbSize = uint64 structures.VDI.PayloadBlockSize
-        let allocPBStat = 
-            if hasParent then
-                PayloadPartiallyPresent
-            else
-                PayloadFullyPresent;
-        let updated4KSecs = HashSet<SEC4K_T>()
-        let maxRequirePBCnt =
-            let w = pbSize / Blocksize.toUInt64 structures.VDI.LogicalSectorSize
-            ( Functions.CeilDiv ( uint64 cnt ) w ) + 1UL
 
-        // build free list
-        use enumFreeList =
-            VhdxWriter.BuildFreeList structures maxRequirePBCnt
-            |> Array.toSeq
-            |> _.GetEnumerator()
+        let blkSize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
+        if not <| Functions.CheckAccessRange lba ( uint64 cnt * blkSize ) ( structures.VDI.VirtualDiskSize / blkSize ) blkSize then
+            raise <| VhdxMediaException( "Unexpected addcess range." )
 
-        // allocate space and update BAT entry
-        let rec loop ( wcnt : BLKCNT64_T ) ( gfs : uint64 ) : uint64 =
-            if wcnt < cnt then
-                let nextgfs =
-                    VhdxWriter.UpdatePBForAllocate structures ( lba + wcnt ) enumFreeList gfs updated4KSecs
-                loop ( wcnt + blkcnt_me.ofUInt64 1UL ) nextgfs
-            else
-                gfs
-        let requiredFileSize = loop blkcnt_me.zero64 structures.LastFileSize
+        if cnt > blkcnt_me.zero64 then
+            let pbSize = uint64 structures.VDI.PayloadBlockSize
+            if pbSize = 0UL then
+                raise <| VhdxMediaException( "Unexpected the payload block size value." )
 
-        struct ( updated4KSecs, requiredFileSize )
+            let hasParent = structures.VDI.HasParent
+            let allocPBStat = 
+                if hasParent then
+                    PayloadPartiallyPresent
+                else
+                    PayloadFullyPresent;
+            let updated4KSecs = HashSet<SEC4K_T>()
+            let maxRequirePBCnt =
+                let w = pbSize / Blocksize.toUInt64 structures.VDI.LogicalSectorSize
+                ( Functions.CeilDiv ( uint64 cnt ) w ) + 1UL
+
+            // build free list
+            use enumFreeList =
+                VhdxWriter.BuildFreeList structures maxRequirePBCnt
+                |> Array.toSeq
+                |> _.GetEnumerator()
+
+            // allocate space and update BAT entry
+            let rec loop ( wcnt : BLKCNT64_T ) ( gfs : uint64 ) : uint64 =
+                if wcnt < cnt then
+                    let nextgfs =
+                        VhdxWriter.UpdatePBForAllocate structures ( lba + wcnt ) enumFreeList gfs updated4KSecs
+                    loop ( wcnt + blkcnt_me.ofUInt64 1UL ) nextgfs
+                else
+                    gfs
+            let requiredFileSize = loop blkcnt_me.zero64 structures.LastFileSize
+
+            struct ( updated4KSecs, requiredFileSize )
+        else
+            struct ( HashSet<SEC4K_T>(), structures.LastFileSize )
 
     /// <summary>
     ///  Allocate payload blocks to enable data writing to the specified LBA.
@@ -211,6 +222,10 @@ type VhdxWriter() =
         ( gfs : uint64 )
         ( updated4KSecs : HashSet<SEC4K_T> )
         : uint64 =
+
+        let blkSize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
+        if not <| Functions.CheckAccessRange lba blkSize ( structures.VDI.VirtualDiskSize / blkSize ) blkSize then
+            raise <| VhdxMediaException( "Unexpected addcess range." )
 
         let pbSize = uint64 structures.VDI.PayloadBlockSize
         let allocPBStat = if structures.VDI.HasParent then PayloadPartiallyPresent else PayloadFullyPresent;
@@ -277,11 +292,18 @@ type VhdxWriter() =
         ( cnt : BLKCNT64_T )
         : Dictionary< SEC4K_T, ArraySegment<byte> > =
 
-        let updatedSB4K = Dictionary< SEC4K_T, ArraySegment<byte> >()
-        for i in 0UL .. blkcnt_me.toUInt64 cnt - 1UL do
-            let wcnt = blkcnt_me.ofUInt64 i
-            VhdxWriter.UpdateSBForAllocate structures ( lba + wcnt ) updatedPB4K updatedSB4K |> ignore
-        updatedSB4K
+        let blkSize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
+        if not <| Functions.CheckAccessRange lba ( uint64 cnt * blkSize ) ( structures.VDI.VirtualDiskSize / blkSize ) blkSize then
+            raise <| VhdxMediaException( "Unexpected addcess range." )
+
+        if cnt > blkcnt_me.zero64 then
+            let updatedSB4K = Dictionary< SEC4K_T, ArraySegment<byte> >()
+            for i in 0UL .. blkcnt_me.toUInt64 cnt - 1UL do
+                let wcnt = blkcnt_me.ofUInt64 i
+                VhdxWriter.UpdateSBForAllocate structures ( lba + wcnt ) updatedPB4K updatedSB4K |> ignore
+            updatedSB4K
+        else
+            Dictionary< SEC4K_T, ArraySegment<byte> >()
 
     /// <summary>
     ///  Mark the sector corresponding to the specified LBA as used in the sector bitmap.
