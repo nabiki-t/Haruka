@@ -155,8 +155,9 @@ type VhdxWriter() =
     static member AllocatePayloadBlock ( structures : VhdxStructures ) ( lba : BLKCNT64_T ) ( cnt : BLKCNT64_T ) : struct ( HashSet<SEC4K_T> * uint64 ) =
 
         let blkSize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
-        if not <| Functions.CheckAccessRange lba ( uint64 cnt * blkSize ) ( structures.VDI.VirtualDiskSize / blkSize ) blkSize then
-            raise <| VhdxMediaException( "Unexpected addcess range." )
+        let mediaBlkCnt = blkcnt_me.ofUInt64 ( Functions.CeilDiv structures.VDI.VirtualDiskSize blkSize )
+        if not <| Functions.CheckAccessRangeBlock lba cnt mediaBlkCnt then
+            raise <| VhdxMediaException( "Unexpected access range." )
 
         if cnt > blkcnt_me.zero64 then
             let pbSize = uint64 structures.VDI.PayloadBlockSize
@@ -224,8 +225,9 @@ type VhdxWriter() =
         : uint64 =
 
         let blkSize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
-        if not <| Functions.CheckAccessRange lba blkSize ( structures.VDI.VirtualDiskSize / blkSize ) blkSize then
-            raise <| VhdxMediaException( "Unexpected addcess range." )
+        let mediaBlkCnt = blkcnt_me.ofUInt64 ( Functions.CeilDiv structures.VDI.VirtualDiskSize blkSize )
+        if not <| Functions.CheckAccessRangeBlock lba ( blkcnt_me.ofUInt64 1UL ) mediaBlkCnt then
+            raise <| VhdxMediaException( "Unexpected access range." )
 
         let pbSize = uint64 structures.VDI.PayloadBlockSize
         let allocPBStat = if structures.VDI.HasParent then PayloadPartiallyPresent else PayloadFullyPresent;
@@ -293,8 +295,9 @@ type VhdxWriter() =
         : Dictionary< SEC4K_T, ArraySegment<byte> > =
 
         let blkSize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
-        if not <| Functions.CheckAccessRange lba ( uint64 cnt * blkSize ) ( structures.VDI.VirtualDiskSize / blkSize ) blkSize then
-            raise <| VhdxMediaException( "Unexpected addcess range." )
+        let mediaBlkCnt = blkcnt_me.ofUInt64 ( Functions.CeilDiv structures.VDI.VirtualDiskSize blkSize )
+        if not <| Functions.CheckAccessRangeBlock lba cnt mediaBlkCnt then
+            raise <| VhdxMediaException( "Unexpected access range." )
 
         if cnt > blkcnt_me.zero64 then
             let updatedSB4K = Dictionary< SEC4K_T, ArraySegment<byte> >()
@@ -324,6 +327,12 @@ type VhdxWriter() =
     ///  Returns false if the specified LBA was already marked as used.
     /// </returns>
     static member UpdateSBForAllocate ( structures : VhdxStructures ) ( lba : BLKCNT64_T ) ( updatedPB4K : HashSet<SEC4K_T> ) ( updatedSB4K : Dictionary< SEC4K_T, ArraySegment<byte> > ) : bool =
+
+        let blkSize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
+        let mediaBlkCnt = blkcnt_me.ofUInt64 ( Functions.CeilDiv structures.VDI.VirtualDiskSize blkSize )
+        if not <| Functions.CheckAccessRangeBlock lba ( blkcnt_me.ofUInt64 1UL ) mediaBlkCnt then
+            raise <| VhdxMediaException( "Unexpected access range." )
+
         let bat = structures.BAT
         let struct( sbIdx, bytePos, bitPos ) = VhdxCommons.LBAtoSectorBitmapIndex lba structures
         let sbEntry = bat.SectorBitmap.[ int32 sbIdx ]

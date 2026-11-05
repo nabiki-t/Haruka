@@ -1788,6 +1788,22 @@ type Functions_Test () =
         Assert.StrictEqual( expr, r )
 
     [<Theory>]
+    [<InlineData( 0UL, 0UL, 0UL, true )>]
+    [<InlineData( 0UL, 0UL, 10UL, true )>]
+    [<InlineData( 0UL, 10UL, 10UL, true )>]
+    [<InlineData( 0UL, 11UL, 10UL, false )>]
+    [<InlineData( 9UL, 1UL, 10UL, true )>]
+    [<InlineData( 9UL, 2UL, 10UL, false )>]
+    [<InlineData( 10UL, 0UL, 10UL, true )>]
+    [<InlineData( 10UL, 1UL, 10UL, false )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFEUL, 1UL, 0xFFFFFFFFFFFFFFFFUL, true )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFEUL, 2UL, 0xFFFFFFFFFFFFFFFFUL, false )>]
+    [<InlineData( 0x8000000000000000UL, 0x8000000000000000UL, 0xFFFFFFFFFFFFFFFFUL, false )>]
+    member _.CheckAccessRangeBlock_001 ( sBlkPos : uint64 ) ( trBlks : uint64 ) ( mediaBlks : uint64 ) ( expr : bool ) =
+        let r = Functions.CheckAccessRangeBlock ( blkcnt_me.ofUInt64 sBlkPos ) ( blkcnt_me.ofUInt64 trBlks ) ( blkcnt_me.ofUInt64 mediaBlks )
+        Assert.StrictEqual( expr, r )
+
+    [<Theory>]
     [<InlineData( 0UL,  10UL, 20UL, 10UL, false )>]
     [<InlineData( 0UL,  10UL, 20UL, 0UL,  false )>]
     [<InlineData( 0UL,  10UL, 10UL, 10UL, false )>]

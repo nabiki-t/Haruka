@@ -1143,11 +1143,30 @@ type Functions() =
     ///  If all of access range is in the media, it returns true, otherwise false.
     /// </returns>
     static member CheckAccessRange ( sBlkPos : BLKCNT64_T ) ( trBytes : uint64 ) ( mediaBlks : uint64 ) ( blkSize : uint64 ) : bool =
-        let struct ( d, r ) = Math.DivRem( trBytes, blkSize )
-        let trBlks = if r > 0UL then d + 1UL else d
+        let trBlks = Functions.CeilDiv trBytes blkSize
+        Functions.CheckAccessRangeBlock sBlkPos ( blkcnt_me.ofUInt64 trBlks ) ( blkcnt_me.ofUInt64 mediaBlks )
+
+    /// <summary>
+    ///  Check media access range.
+    /// </summary>
+    /// <param name="sBlkPos">
+    ///  Access start position in blocks.
+    /// </param>
+    /// <param name="trBlks">
+    ///  Access length in blocks.
+    /// </param>
+    /// <param name="mediaBlks">
+    ///  Usable media block count.
+    /// </param>
+    /// <returns>
+    ///  If all of access range is in the media, it returns true, otherwise false.
+    /// </returns>
+    static member CheckAccessRangeBlock ( sBlkPos : BLKCNT64_T ) ( trBlks : BLKCNT64_T ) ( mediaBlks : BLKCNT64_T ) : bool =
         let sBlkPos_u64 = blkcnt_me.toUInt64 sBlkPos
-        let eBlkPos = sBlkPos_u64 + trBlks
-        ( sBlkPos_u64 <= mediaBlks && trBlks <= mediaBlks && eBlkPos <= mediaBlks && eBlkPos >= sBlkPos_u64 && eBlkPos >= trBlks )
+        let trBlks_u64 = blkcnt_me.toUInt64 trBlks
+        let mediaBlks_u64 = blkcnt_me.toUInt64 mediaBlks
+        let eBlkPos = sBlkPos_u64 + trBlks_u64
+        ( sBlkPos_u64 <= mediaBlks_u64 && trBlks_u64 <= mediaBlks_u64 && eBlkPos <= mediaBlks_u64 && eBlkPos >= sBlkPos_u64 && eBlkPos >= trBlks_u64 )
 
     /// <summary>
     ///  Determine whether two regions specified by offset and length overlap.

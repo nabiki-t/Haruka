@@ -526,4 +526,45 @@ type VhdxWriter_Test () =
             Assert.Throws<VhdxMediaException>( fun () ->
                 VhdxWriter.UpdatePBForAllocate str ( blkcnt_me.ofUInt64 lba ) e vds updated4KSecs |> ignore
             )
-        Assert.StartsWith( "Unexpected addcess range", r.Message )
+        Assert.StartsWith( "Unexpected access range", r.Message )
+
+    [<Theory>]
+    [<InlineData( 0x2000000000UL,       0x01UL,               0x400000000000UL, 512 )>]
+    [<InlineData( 0x00UL,               0x2000000001UL,       0x400000000000UL, 512 )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFFUL, 0x00UL,               0x400000000000UL, 512 )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFFUL, 0xFFUL,               0x400000000000UL, 512 )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFFUL, 0xFFFFFFFFFFFFFFFFUL, 0x400000000000UL, 512 )>]
+    [<InlineData( 0x00UL,               0xFFFFFFFFFFFFFFFFUL, 0x400000000000UL, 512 )>]
+    [<InlineData( 0x400000000UL,        0x01UL,               0x400000000000UL, 4096 )>]
+    [<InlineData( 0x800UL,              0x801UL,               0x1000000UL,      4096 )>]
+    member _.AllocatePayloadBlock_Fail_001 ( lba : uint64 ) ( cnt : uint64 ) ( vds : uint64 ) ( argbs : int ) =
+        let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxWriter.AllocatePayloadBlock str ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 cnt ) |> ignore
+            )
+        Assert.StartsWith( "Unexpected access range", r.Message )
+
+    [<Theory>]
+    [<InlineData( 0x2000000000UL,       0x400000000000UL, 512 )>]
+    [<InlineData( 0x400000000UL,        0x400000000000UL, 4096 )>]
+    [<InlineData( 0x00UL,               0x1000000UL,      4096 )>]
+    member _.AllocatePayloadBlock_002 ( lba : uint64 ) ( vds : uint64 ) ( argbs : int ) =
+        let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs
+        let struct( h, g ) = VhdxWriter.AllocatePayloadBlock str ( blkcnt_me.ofUInt64 lba ) blkcnt_me.zero64
+        Assert.Empty h
+        Assert.StrictEqual( vds, g )
+
+    [<Fact>]
+    member _.AllocatePayloadBlock_Fail_002 () =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512
+        let str2 = { str with VDI.PayloadBlockSize = 0u; }
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxWriter.AllocatePayloadBlock str2 blkcnt_me.zero64 ( blkcnt_me.ofUInt64 1UL ) |> ignore
+            )
+        Assert.StartsWith( "Unexpected the payload block size value", r.Message )
+
+
