@@ -61,7 +61,7 @@ type VhdxWriter_Test () =
                 LogGuid = Guid();
             };
             Log = [];
-            LastFileSize = virtualDiskSize;
+            LastFileSize = virtualDiskSize + batRegionStartPos + sectorBitmapCount * 1048576UL;
             Region = {
                 Signature = 0u;
                 Checksum = 0u;
@@ -546,17 +546,6 @@ type VhdxWriter_Test () =
             )
         Assert.StartsWith( "Unexpected access range", r.Message )
 
-    [<Theory>]
-    [<InlineData( 0x2000000000UL,       0x400000000000UL, 512 )>]
-    [<InlineData( 0x400000000UL,        0x400000000000UL, 4096 )>]
-    [<InlineData( 0x00UL,               0x1000000UL,      4096 )>]
-    member _.AllocatePayloadBlock_002 ( lba : uint64 ) ( vds : uint64 ) ( argbs : int ) =
-        let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs
-        let struct( h, g ) = VhdxWriter.AllocatePayloadBlock str ( blkcnt_me.ofUInt64 lba ) blkcnt_me.zero64
-        Assert.Empty h
-        Assert.StrictEqual( vds, g )
-
     [<Fact>]
     member _.AllocatePayloadBlock_Fail_002 () =
         let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512
@@ -567,4 +556,145 @@ type VhdxWriter_Test () =
             )
         Assert.StartsWith( "Unexpected the payload block size value", r.Message )
 
+    // When the number of logical blocks to be allocated is 0
+    [<Theory>]
+    [<InlineData( 0x2000000000UL,       0x400000000000UL, 512 )>]
+    [<InlineData( 0x400000000UL,        0x400000000000UL, 4096 )>]
+    [<InlineData( 0x00UL,               0x1000000UL,      4096 )>]
+    member _.AllocatePayloadBlock_002 ( lba : uint64 ) ( vds : uint64 ) ( argbs : int ) =
+        let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs
+        let struct( h, g ) = VhdxWriter.AllocatePayloadBlock str ( blkcnt_me.ofUInt64 lba ) blkcnt_me.zero64
+        Assert.Empty h
+        Assert.StrictEqual( str.LastFileSize, g )
 
+    // Only one BAT entry is subject to update.
+    [<Theory>]
+    [<InlineData( 0UL,       1UL,    0UL, 0 )>]     // head
+    [<InlineData( 1UL,       1UL,    0UL, 0 )>]     // 1
+    [<InlineData( 2048UL,    1UL,    0UL, 1 )>]     // The beginning of the second BAT entry
+    [<InlineData( 1048576UL, 1UL,    1UL, 512 )>]   // The BAT entry located in the second 4K sector is updated.
+    [<InlineData( 2097151UL, 1UL,    1UL, 1023 )>]  // end
+    [<InlineData( 0UL,       2048UL, 0UL, 0 )>]     // The entire initial payload block
+    [<InlineData( 2095104UL, 2048UL, 1UL, 1023 )>]  // The entire payload block at the end
+    member _.AllocatePayloadBlock_003 ( lba : uint64 ) ( cnt : uint64 ) ( sec4k : uint64 ) ( bati : int ) =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512
+        let freeSpace = str.BAT.Payloads.[ bati ].FileOffset
+        str.BAT.Payloads.[ bati ] <- {
+            str.BAT.Payloads.[ bati ] with
+                State = BatEntryStatePB.PayloadNotPresent;
+                FileOffset = 0UL;
+        }
+        let struct( d, r ) =
+            VhdxWriter.AllocatePayloadBlock str ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 cnt )
+        let bat4ksec = ( str.BAT.BATRegionOffset / 4096UL + sec4k )|> sec4k_me.ofUInt64
+        Assert.StrictEqual( 1, d.Count )
+        Assert.True( d.Contains bat4ksec )
+        Assert.StrictEqual( str.LastFileSize, r )
+        Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[ bati ].State )
+        Assert.StrictEqual( freeSpace, str.BAT.Payloads.[ bati ].FileOffset )
+
+    // Allocate two consecutive logical blocks that span two payload blocks.
+    [<Theory>]
+    [<InlineData( 2047UL, 0, 1, 1 )>]           // Two BAT entries reside within the same 4K sector.
+    [<InlineData( 0xFFFFFUL, 511, 512, 2 )>]    // Two BAT entries reside within different 4K sectors.
+    member _.AllocatePayloadBlock_004 ( lba : uint64 ) ( bat0 : int ) ( bat1 : int ) ( sec4kcnt : int ) =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512
+        let freeSpace0 = str.BAT.Payloads.[ bat0 ].FileOffset
+        let freeSpace1 = str.BAT.Payloads.[ bat1 ].FileOffset
+        str.BAT.Payloads.[ bat0 ] <- {
+            str.BAT.Payloads.[ bat0 ] with
+                State = BatEntryStatePB.PayloadNotPresent;
+                FileOffset = 0UL;
+        }
+        str.BAT.Payloads.[ bat1 ] <- {
+            str.BAT.Payloads.[ bat1 ] with
+                State = BatEntryStatePB.PayloadNotPresent;
+                FileOffset = 0UL;
+        }
+        let struct( d, r ) =
+            VhdxWriter.AllocatePayloadBlock str ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 2UL )
+        let bat4ksec = ( str.BAT.BATRegionOffset / 4096UL )|> sec4k_me.ofUInt64
+        Assert.StrictEqual( sec4kcnt, d.Count )
+        Assert.True( d.Contains bat4ksec )
+        if sec4kcnt = 2 then Assert.True( d.Contains ( bat4ksec + ( sec4k_me.ofUInt64 1UL ) ) )
+        Assert.StrictEqual( str.LastFileSize, r )
+        Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[ bat0 ].State )
+        Assert.StrictEqual( freeSpace0, str.BAT.Payloads.[ bat0 ].FileOffset )
+        Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[ bat1 ].State )
+        Assert.StrictEqual( freeSpace1, str.BAT.Payloads.[ bat1 ].FileOffset )
+
+    // Allocate the entire disk as new
+    [<Fact>]
+    member _.AllocatePayloadBlock_005 () =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512
+        let freeSpace = str.BAT.Payloads |> Array.map _.FileOffset
+        Array.iteri ( fun idx itr ->
+            str.BAT.Payloads.[ idx ] <- {
+                str.BAT.Payloads.[ idx ] with
+                    State = BatEntryStatePB.PayloadNotPresent;
+                    FileOffset = 0UL;
+            }
+        ) str.BAT.Payloads
+
+        let struct( d, r ) =
+            VhdxWriter.AllocatePayloadBlock str blkcnt_me.zero64 ( blkcnt_me.ofUInt64 0x200000UL )
+        let bat4ksec = ( str.BAT.BATRegionOffset / 4096UL )|> sec4k_me.ofUInt64
+        Assert.StrictEqual( 2, d.Count )
+        Assert.True( d.Contains bat4ksec )
+        Assert.True( d.Contains ( bat4ksec + ( sec4k_me.ofUInt64 1UL ) ) )
+        Assert.StrictEqual( str.LastFileSize, r )
+        Array.iteri ( fun idx itr ->
+            Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, itr.State )
+            Assert.StrictEqual( freeSpace.[idx], itr.FileOffset )
+        ) str.BAT.Payloads
+
+    // A parent disk exists.
+    [<Fact>]
+    member _.AllocatePayloadBlock_006 () =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512
+        let str2 = { str with VDI.HasParent = true; }
+        let freeSpace = str2.BAT.Payloads.[0].FileOffset
+        str2.BAT.Payloads.[0] <- {
+            str2.BAT.Payloads.[0] with
+                State = BatEntryStatePB.PayloadNotPresent;
+                FileOffset = 0UL;
+        }
+        let struct( d, r ) =
+            VhdxWriter.AllocatePayloadBlock str2 blkcnt_me.zero64 ( blkcnt_me.ofUInt64 1UL )
+        let bat4ksec = ( str2.BAT.BATRegionOffset / 4096UL )|> sec4k_me.ofUInt64
+        Assert.StrictEqual( 1, d.Count )
+        Assert.True( d.Contains bat4ksec )
+        Assert.StrictEqual( str2.LastFileSize, r )
+        Assert.StrictEqual( BatEntryStatePB.PayloadPartiallyPresent, str2.BAT.Payloads.[0].State )
+        Assert.StrictEqual( freeSpace, str2.BAT.Payloads.[0].FileOffset )
+
+    // Scenarios in which a file is extended
+    [<Fact>]
+    member _.AllocatePayloadBlock_007 () =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512
+        let freeSpace = str.BAT.Payloads.[1023].FileOffset
+        let str2 = {
+            str with
+                LastFileSize = freeSpace;
+        }
+        str2.BAT.Payloads.[1023] <- {
+            str2.BAT.Payloads.[1023] with
+                State = BatEntryStatePB.PayloadNotPresent;
+                FileOffset = 0UL;
+        }
+        let struct( d, r ) =
+            VhdxWriter.AllocatePayloadBlock str2 ( blkcnt_me.ofUInt64 2095104UL ) ( blkcnt_me.ofUInt64 1UL )
+        Assert.StrictEqual( str2.LastFileSize + uint64 str2.VDI.PayloadBlockSize, r )
+        Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str2.BAT.Payloads.[1023].State )
+        Assert.StrictEqual( freeSpace, str2.BAT.Payloads.[1023].FileOffset )
+
+    // Cases that have already been assigned
+    [<Fact>]
+    member _.AllocatePayloadBlock_008 () =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512
+        let struct( d, r ) =
+            VhdxWriter.AllocatePayloadBlock str blkcnt_me.zero64 ( blkcnt_me.ofUInt64 1UL )
+        Assert.StrictEqual( str.LastFileSize, r )
+        Assert.Empty d
+        Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[0].State )
