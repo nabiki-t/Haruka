@@ -698,3 +698,38 @@ type VhdxWriter_Test () =
         Assert.StrictEqual( str.LastFileSize, r )
         Assert.Empty d
         Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[0].State )
+
+    [<Theory>]
+    [<InlineData( 0x2000000000UL,       0x400000000000UL, 512 )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFFUL, 0x400000000000UL, 512 )>]
+    [<InlineData( 0x8000UL,             0x1000000UL,      512 )>]
+    [<InlineData( 0x400000000UL,        0x400000000000UL, 4096 )>]
+    [<InlineData( 0x1000UL,             0x1000000UL,      4096 )>]
+    member _.UpdateSBForAllocate_Fail_001 ( lba : uint64 ) ( vds : uint64 ) ( argbs : int ) =
+        let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                let h = HashSet<SEC4K_T>()
+                let d = Dictionary< SEC4K_T, ArraySegment<byte> >()
+                VhdxWriter.UpdateSBForAllocate str ( blkcnt_me.ofUInt64 lba ) h d |> ignore
+            )
+        Assert.StartsWith( "Unexpected access range", r.Message )
+
+    [<Theory>]
+    [<InlineData( 0x00UL, 0x400000UL, 512 )>]
+    member _.UpdateSBForAllocate_001 ( lba : uint64 ) ( vds : uint64 ) ( argbs : int ) =
+        let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs
+        str.BAT.SectorBitmap |> Array.iteri ( fun idx itr ->
+            str.BAT.SectorBitmap.[idx] <- {
+                itr with
+                    Bitmap = Array.init 0x100000 ( fun _ -> 0xFFuy )
+            }
+        )
+        let h = HashSet<SEC4K_T>()
+        let d = Dictionary< SEC4K_T, ArraySegment<byte> >()
+        let b = VhdxWriter.UpdateSBForAllocate str ( blkcnt_me.ofUInt64 lba ) h d
+        Assert.Empty h
+        Assert.Empty d
+        Assert.False b
