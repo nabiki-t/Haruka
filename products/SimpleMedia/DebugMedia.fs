@@ -194,13 +194,7 @@ type DebugMedia
                 let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( initiatorTaskTag ), ValueSome( m_LUN ) )
                 if HLogger.IsVerbose then
                     HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "DebugMedia.Read." ) )
-
-                let readBlockCount =
-                    let struct( d, r ) = Math.DivRem( uint64 buffer.Count, m_BlockSize )
-                    if r > 0UL then
-                        d + 1UL
-                    else
-                        d
+                let readBlockCount = Functions.CeilDiv ( uint64 buffer.Count ) m_BlockSize
 
                 // Do debug action
                 let act = m_Action.obj
@@ -233,12 +227,7 @@ type DebugMedia
                     HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "DebugMedia.Write." ) )
 
                 let writeStartLBA = ( blkcnt_me.toUInt64 argLBA ) + ( offset / m_BlockSize )
-                let writeBlockCount = 
-                    let struct( d, r ) = Math.DivRem( uint64 data.Count, m_BlockSize )
-                    if r > 0UL then
-                        d + 1UL
-                    else
-                        d
+                let writeBlockCount = Functions.CeilDiv ( uint64 data.Count ) m_BlockSize
 
                 // Do debug action
                 let act = m_Action.obj

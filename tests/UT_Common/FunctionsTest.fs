@@ -78,6 +78,59 @@ type Functions_Test () =
     member _.CeilUnit_uint32_001 ( v1 : uint32 ) ( v2 : uint32 ) ( v3 : uint32 ) =
         Assert.StrictEqual( v3, Functions.CeilUnit v1 v2 )
 
+    [<Theory>]
+    [<InlineData( 0UL, 512, 0UL )>]
+    [<InlineData( 511UL, 512, 1UL )>]
+    [<InlineData( 512UL, 512, 1UL )>]
+    [<InlineData( 513UL, 512, 2UL )>]
+    [<InlineData( 4095UL, 4096, 1UL )>]
+    [<InlineData( 4096UL, 4096, 1UL )>]
+    [<InlineData( 4097UL, 4096, 2UL )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFFUL, 512, 0x80000000000000UL )>]
+    member _.CalcBlockCount64_001 ( bc : uint64 ) ( bs : int ) ( exp : uint64 ) =
+        let b = if bs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+        let r = Functions.CalcBlockCount64 bc b
+        Assert.StrictEqual( blkcnt_me.ofUInt64 exp, r )
+
+    [<Theory>]
+    [<InlineData( 0u, 512, 0u )>]
+    [<InlineData( 511u, 512, 1u )>]
+    [<InlineData( 512u, 512, 1u )>]
+    [<InlineData( 513u, 512, 2u )>]
+    [<InlineData( 4095u, 4096, 1u )>]
+    [<InlineData( 4096u, 4096, 1u )>]
+    [<InlineData( 4097u, 4096, 2u )>]
+    [<InlineData( 0xFFFFFFFFu, 512, 0x800000u )>]
+    member _.CalcBlockCount32_001 ( bc : uint32 ) ( bs : int ) ( exp : uint32 ) =
+        let b = if bs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+        let r = Functions.CalcBlockCount32 bc b
+        Assert.StrictEqual( blkcnt_me.ofUInt32 exp, r )
+
+    [<Theory>]
+    [<InlineData( 0us, 512, 0us )>]
+    [<InlineData( 511us, 512, 1us )>]
+    [<InlineData( 512us, 512, 1us )>]
+    [<InlineData( 513us, 512, 2us )>]
+    [<InlineData( 4095us, 4096, 1us )>]
+    [<InlineData( 4096us, 4096, 1us )>]
+    [<InlineData( 4097us, 4096, 2us )>]
+    [<InlineData( 0xFFFFus, 512, 0x80us )>]
+    member _.CalcBlockCount16_001 ( bc : uint16 ) ( bs : int ) ( exp : uint16 ) =
+        let b = if bs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+        let r = Functions.CalcBlockCount16 bc b
+        Assert.StrictEqual( blkcnt_me.ofUInt16 exp, r )
+
+    [<Theory>]
+    [<InlineData( 0uy, 512, 0uy )>]
+    [<InlineData( 1uy, 512, 1uy )>]
+    [<InlineData( 0xFFuy, 512, 0x1uy )>]
+    [<InlineData( 1uy, 4096, 1uy )>]
+    [<InlineData( 0xFFuy, 4096, 0x1uy )>]
+    member _.CalcBlockCount8_001 ( bc : uint8 ) ( bs : int ) ( exp : uint8 ) =
+        let b = if bs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+        let r = Functions.CalcBlockCount8 bc b
+        Assert.StrictEqual( blkcnt_me.ofUInt8 exp, r )
+
     [<Fact>]
     member _.CheckBitflag_001() =
         Assert.False( Functions.CheckBitflag 0x00uy 0x01uy )

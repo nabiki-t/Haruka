@@ -164,14 +164,9 @@ type VhdxMerge() =
         ( updateLbaBuf : struct( BLKCNT64_T * BLKCNT32_T )[] )
         : ( uint64 * HashSet<SEC4K_T> * BLKCNT64_T ) =
 
-        let d_PayloadBlockLBACount =
-            ( uint64 dstr.VDI.PayloadBlockSize ) / ( Blocksize.toUInt64 dstr.VDI.LogicalSectorSize )
-            |> blkcnt_me.ofUInt64
-        let m_PayloadBlockLBACount =
-            ( uint64 mstr.VDI.PayloadBlockSize ) / ( Blocksize.toUInt64 mstr.VDI.LogicalSectorSize )
-            |> blkcnt_me.ofUInt64
-        let d_VirtualDiskLBACount =
-            dstr.VDI.VirtualDiskSize / ( Blocksize.toUInt64 dstr.VDI.LogicalSectorSize ) |> blkcnt_me.ofUInt64
+        let d_PayloadBlockLBACount = Functions.CalcBlockCount64 ( uint64 dstr.VDI.PayloadBlockSize ) dstr.VDI.LogicalSectorSize
+        let m_PayloadBlockLBACount = Functions.CalcBlockCount64 ( uint64 mstr.VDI.PayloadBlockSize ) mstr.VDI.LogicalSectorSize
+        let d_VirtualDiskLBACount = Functions.CalcBlockCount64 dstr.VDI.VirtualDiskSize dstr.VDI.LogicalSectorSize
 
         // initialize return buffer
         for i = 0 to updateLbaBuf.Length - 1 do
@@ -267,12 +262,9 @@ type VhdxMerge() =
     static member FillPartiallyPayload ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) : Task<VhdxMutableHeader> =
         task {
             let blocksize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
-            let payloadBlockLBACount =
-                ( uint64 structures.VDI.PayloadBlockSize ) / blocksize
-                |> blkcnt_me.ofUInt64
+            let payloadBlockLBACount = Functions.CalcBlockCount64 ( uint64 structures.VDI.PayloadBlockSize ) structures.VDI.LogicalSectorSize
             let zerobuf = Array.zeroCreate<byte> ( int blocksize )
             let updatedPB4K = HashSet<SEC4K_T>()
-
 
             for pdidx = 0 to structures.BAT.Payloads.Length - 1 do
                 let lbastart = ( uint64 pdidx ) * payloadBlockLBACount
@@ -333,8 +325,7 @@ type VhdxMerge() =
             let ( mfa, mstr ) = structures.[1]
 
             let updateLbaBuf = Array.zeroCreate< struct( BLKCNT64_T * BLKCNT32_T ) > 4096
-            let d_VirtualDiskLBACount =
-                dstr.VDI.VirtualDiskSize / ( Blocksize.toUInt64 dstr.VDI.LogicalSectorSize ) |> blkcnt_me.ofUInt64
+            let d_VirtualDiskLBACount = Functions.CalcBlockCount64 dstr.VDI.VirtualDiskSize dstr.VDI.LogicalSectorSize
 
             // Flash log entries
             let! verhd1 =
@@ -415,14 +406,9 @@ type VhdxMerge() =
         ( updateLbaBuf : struct( BLKCNT64_T * BLKCNT32_T )[] )
         : ( uint64 * HashSet<SEC4K_T> * Dictionary< SEC4K_T, ArraySegment<byte> > * BLKCNT64_T ) =
 
-        let d_PayloadBlockLBACount =
-            ( uint64 dstr.VDI.PayloadBlockSize ) / ( Blocksize.toUInt64 dstr.VDI.LogicalSectorSize )
-            |> blkcnt_me.ofUInt64
-        let m_PayloadBlockLBACount =
-            ( uint64 mstr.VDI.PayloadBlockSize ) / ( Blocksize.toUInt64 mstr.VDI.LogicalSectorSize )
-            |> blkcnt_me.ofUInt64
-        let d_VirtualDiskLBACount =
-            dstr.VDI.VirtualDiskSize / ( Blocksize.toUInt64 dstr.VDI.LogicalSectorSize ) |> blkcnt_me.ofUInt64
+        let d_PayloadBlockLBACount = Functions.CalcBlockCount64 ( uint64 dstr.VDI.PayloadBlockSize ) dstr.VDI.LogicalSectorSize
+        let m_PayloadBlockLBACount = Functions.CalcBlockCount64 ( uint64 mstr.VDI.PayloadBlockSize ) mstr.VDI.LogicalSectorSize
+        let d_VirtualDiskLBACount = Functions.CalcBlockCount64 dstr.VDI.VirtualDiskSize dstr.VDI.LogicalSectorSize
 
         // initialize return buffer
         for i = 0 to updateLbaBuf.Length - 1 do
@@ -531,8 +517,7 @@ type VhdxMerge() =
             let ( mfa, mstr ) = structures.[ delidx + 1 ]
 
             let updateLbaBuf = Array.zeroCreate< struct( BLKCNT64_T * BLKCNT32_T ) > 4096
-            let d_VirtualDiskLBACount =
-                dstr.VDI.VirtualDiskSize / ( Blocksize.toUInt64 dstr.VDI.LogicalSectorSize ) |> blkcnt_me.ofUInt64
+            let d_VirtualDiskLBACount = Functions.CalcBlockCount64 dstr.VDI.VirtualDiskSize dstr.VDI.LogicalSectorSize
 
             // Flash log entries
             let! verhd1 =

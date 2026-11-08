@@ -104,6 +104,72 @@ type Functions() =
     > ( a : 'T ) (  b : 'T ) : 'T =
         ( Functions.CeilDiv a b ) * b
 
+    /// <summary>
+    ///  Calculate the required number of blocks based on the byte count.
+    /// </summary>
+    /// <param name="byteCount">
+    ///  Bytes count.
+    /// </param>
+    /// <param name="bs">
+    ///  Block sizes.
+    /// </param>
+    /// <returns>
+    ///  Calculated number of blocks.
+    /// </returns>
+    static member CalcBlockCount64 ( byteCount : uint64 ) ( bs : Blocksize ) : BLKCNT64_T =
+        let bsp = Blocksize.toUInt64 bs
+        blkcnt_me.ofUInt64 ( Functions.CeilDiv byteCount bsp )
+
+    /// <summary>
+    ///  Calculate the required number of blocks based on the byte count.
+    /// </summary>
+    /// <param name="byteCount">
+    ///  Bytes count.
+    /// </param>
+    /// <param name="bs">
+    ///  Block sizes.
+    /// </param>
+    /// <returns>
+    ///  Calculated number of blocks.
+    /// </returns>
+    static member CalcBlockCount32 ( byteCount : uint32 ) ( bs : Blocksize ) : BLKCNT32_T =
+        let bsp = Blocksize.toUInt32 bs
+        blkcnt_me.ofUInt32 ( Functions.CeilDiv byteCount bsp )
+
+    /// <summary>
+    ///  Calculate the required number of blocks based on the byte count.
+    /// </summary>
+    /// <param name="byteCount">
+    ///  Bytes count.
+    /// </param>
+    /// <param name="bs">
+    ///  Block sizes.
+    /// </param>
+    /// <returns>
+    ///  Calculated number of blocks.
+    /// </returns>
+    static member CalcBlockCount16 ( byteCount : uint16 ) ( bs : Blocksize ) : BLKCNT16_T =
+        let bsp = Blocksize.toUInt16 bs
+        blkcnt_me.ofUInt16 ( Functions.CeilDiv byteCount bsp )
+
+    /// <summary>
+    ///  Calculate the required number of blocks based on the byte count.
+    /// </summary>
+    /// <param name="byteCount">
+    ///  Bytes count.
+    /// </param>
+    /// <param name="bs">
+    ///  Block sizes.
+    /// </param>
+    /// <returns>
+    ///  Calculated number of blocks.
+    /// </returns>
+    static member CalcBlockCount8 ( byteCount : uint8 ) ( bs : Blocksize ) : BLKCNT8_T =
+        if byteCount = 0uy then
+            blkcnt_me.zero8
+        else
+            blkcnt_me.ofUInt8 1uy
+
     // ----------------------------------------------------------------------------
     /// <summary>
     ///   Test the first argument byte by a bitmask in second argument.

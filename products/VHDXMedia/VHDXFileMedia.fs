@@ -174,7 +174,7 @@ type VHDXFileMedia
                     let loginfo = struct( m_ObjID, ValueSome source, ValueSome initiatorTaskTag, ValueSome m_LUN )
                     g.Gen1( loginfo, "VHDXFileMedia.ReadCapacity." )
                 )
-            m_VirtualDiskSize / ( Blocksize.toUInt64 m_BlockSize )
+            Functions.CalcBlockCount64 m_VirtualDiskSize m_BlockSize |> uint64
 
         // ------------------------------------------------------------------------
         // Implementation of Read method
@@ -219,8 +219,7 @@ type VHDXFileMedia
 
                     // payload block size and logical sector size for the last (child) file
                     let childPBSize = uint64 curStr.VDI.PayloadBlockSize
-                    let blockSize_u64 = Blocksize.toUInt64 curStr.VDI.LogicalSectorSize
-                    let secCntInPB = childPBSize / blockSize_u64
+                    let secCntInPB = Functions.CeilDiv childPBSize blockSize_u64
 
                     let ps = PseudoSeqCond< uint64 >( 0UL, ( fun v -> v < totalSectors ) )
                     for sectorsRead in ps do
@@ -401,7 +400,8 @@ type VHDXFileMedia
 
         // ------------------------------------------------------------------------
         // Get block count
-        override _.BlockCount = m_VirtualDiskSize / ( Blocksize.toUInt64 m_BlockSize )
+        override _.BlockCount =
+            Functions.CalcBlockCount64 m_VirtualDiskSize m_BlockSize |> uint64
 
         // ------------------------------------------------------------------------
         // Get block size

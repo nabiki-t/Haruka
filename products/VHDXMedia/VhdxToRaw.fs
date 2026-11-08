@@ -172,14 +172,14 @@ type VhdxToRaw() =
 
             use fs2 = File.OpenRead fname2
             try
-                let sectorSize = metadatas.[0].VDI.LogicalSectorSize |> Blocksize.toUInt64
+                let sectorSize = metadatas.[0].VDI.LogicalSectorSize |> Blocksize.toUInt64 |> int32
                 let virtualDiskSize = metadatas.[0].VDI.VirtualDiskSize
-                let sectorCount = virtualDiskSize / sectorSize |> blkcnt_me.ofUInt64
+                let sectorCount = Functions.CalcBlockCount64 virtualDiskSize metadatas.[0].VDI.LogicalSectorSize
                 if fs2.Length <> int64 virtualDiskSize then
                     return false
                 else
-                    let buf1 = Array.zeroCreate<byte>( int32 sectorSize )
-                    let buf2 = Array.zeroCreate<byte>( int32 sectorSize )
+                    let buf1 = Array.zeroCreate<byte> sectorSize
+                    let buf2 = Array.zeroCreate<byte> sectorSize
 
                     let ps = PseudoSeq< BLKCNT64_T >( blkcnt_me.zero64 )
                     for cnt in ps do
@@ -189,7 +189,7 @@ type VhdxToRaw() =
                             | ValueSome ( struct( fileidx, offset ) ) ->
                                 do! vfiles.[ fileidx ].ReadWithPseudoLimit metadatas.[ fileidx ].LastFileSize offset ( ArraySegment buf1 )
                             | ValueNone ->
-                                Array.fill buf1 0 ( int32 sectorSize ) 0uy
+                                Array.fill buf1 0 sectorSize 0uy
                             if buf1 <> buf2 then
                                 ps.Break cnt
                             else
@@ -225,18 +225,18 @@ type VhdxToRaw() =
             let vfiles2, metadatas2 = allVHDXMetadata2 |> Array.unzip
 
             try
-                let sectorSize1 = metadatas1.[0].VDI.LogicalSectorSize |> Blocksize.toUInt64
+                let sectorSize1 = metadatas1.[0].VDI.LogicalSectorSize |> Blocksize.toUInt64 |> int32
                 let virtualDiskSize1 = metadatas1.[0].VDI.VirtualDiskSize
-                let sectorSize2 = metadatas2.[0].VDI.LogicalSectorSize |> Blocksize.toUInt64
+                let sectorSize2 = metadatas2.[0].VDI.LogicalSectorSize |> Blocksize.toUInt64 |> int32
                 let virtualDiskSize2 = metadatas2.[0].VDI.VirtualDiskSize
-                let sectorCount = virtualDiskSize1 / sectorSize1 |> blkcnt_me.ofUInt64
+                let sectorCount = Functions.CalcBlockCount64 virtualDiskSize1 metadatas1.[0].VDI.LogicalSectorSize
 
                 if sectorSize1 <> sectorSize2 || virtualDiskSize1 <> virtualDiskSize2 then
                     // sector size or disk size mismatch.
                     return false
                 else
-                    let buf1 = Array.zeroCreate<byte>( int32 sectorSize1 )
-                    let buf2 = Array.zeroCreate<byte>( int32 sectorSize1 )
+                    let buf1 = Array.zeroCreate<byte> sectorSize1
+                    let buf2 = Array.zeroCreate<byte> sectorSize1
 
                     let ps = PseudoSeq< BLKCNT64_T >( blkcnt_me.zero64 )
                     for cnt in ps do
@@ -247,14 +247,14 @@ type VhdxToRaw() =
                             | ValueSome ( struct( fileidx1, offset1 ) ) ->
                                 do! vfiles1.[ fileidx1 ].ReadWithPseudoLimit metadatas1.[ fileidx1 ].LastFileSize offset1 ( ArraySegment buf1 )
                             | ValueNone ->
-                                Array.fill buf1 0 ( int32 sectorSize1 ) 0uy
+                                Array.fill buf1 0 sectorSize1 0uy
 
                             // read file2
                             match VhdxCommons.ResolvLBA cnt metadatas2 with
                             | ValueSome ( struct( fileidx2, offset2 ) ) ->
                                 do! vfiles2.[ fileidx2 ].ReadWithPseudoLimit metadatas1.[ fileidx2 ].LastFileSize offset2 ( ArraySegment buf1 )
                             | ValueNone ->
-                                Array.fill buf2 0 ( int32 sectorSize1 ) 0uy
+                                Array.fill buf2 0 sectorSize1 0uy
 
                             if buf1 <> buf2 then
                                 ps.Break cnt

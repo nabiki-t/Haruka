@@ -154,8 +154,7 @@ type VhdxWriter() =
     /// </returns>
     static member AllocatePayloadBlock ( structures : VhdxStructures ) ( lba : BLKCNT64_T ) ( cnt : BLKCNT64_T ) : struct ( HashSet<SEC4K_T> * uint64 ) =
 
-        let blkSize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
-        let mediaBlkCnt = blkcnt_me.ofUInt64 ( Functions.CeilDiv structures.VDI.VirtualDiskSize blkSize )
+        let mediaBlkCnt = Functions.CalcBlockCount64 structures.VDI.VirtualDiskSize structures.VDI.LogicalSectorSize
         if not <| Functions.CheckAccessRangeBlock lba cnt mediaBlkCnt then
             raise <| VhdxMediaException( "Unexpected access range." )
 
@@ -172,8 +171,8 @@ type VhdxWriter() =
                     PayloadFullyPresent;
             let updated4KSecs = HashSet<SEC4K_T>()
             let maxRequirePBCnt =
-                let w = pbSize / Blocksize.toUInt64 structures.VDI.LogicalSectorSize
-                ( Functions.CeilDiv ( uint64 cnt ) w ) + 1UL
+                let w = Functions.CalcBlockCount64 pbSize structures.VDI.LogicalSectorSize
+                ( Functions.CeilDiv ( uint64 cnt ) ( uint64 w ) ) + 1UL
 
             // build free list
             use enumFreeList =
@@ -224,8 +223,7 @@ type VhdxWriter() =
         ( updated4KSecs : HashSet<SEC4K_T> )
         : uint64 =
 
-        let blkSize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
-        let mediaBlkCnt = blkcnt_me.ofUInt64 ( Functions.CeilDiv structures.VDI.VirtualDiskSize blkSize )
+        let mediaBlkCnt = Functions.CalcBlockCount64 structures.VDI.VirtualDiskSize structures.VDI.LogicalSectorSize
         if not <| Functions.CheckAccessRangeBlock lba ( blkcnt_me.ofUInt64 1UL ) mediaBlkCnt then
             raise <| VhdxMediaException( "Unexpected access range." )
 
@@ -294,8 +292,7 @@ type VhdxWriter() =
         ( cnt : BLKCNT64_T )
         : Dictionary< SEC4K_T, ArraySegment<byte> > =
 
-        let blkSize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
-        let mediaBlkCnt = blkcnt_me.ofUInt64 ( Functions.CeilDiv structures.VDI.VirtualDiskSize blkSize )
+        let mediaBlkCnt = Functions.CalcBlockCount64 structures.VDI.VirtualDiskSize structures.VDI.LogicalSectorSize
         if not <| Functions.CheckAccessRangeBlock lba cnt mediaBlkCnt then
             raise <| VhdxMediaException( "Unexpected access range." )
 
@@ -328,8 +325,7 @@ type VhdxWriter() =
     /// </returns>
     static member UpdateSBForAllocate ( structures : VhdxStructures ) ( lba : BLKCNT64_T ) ( updatedPB4K : HashSet<SEC4K_T> ) ( updatedSB4K : Dictionary< SEC4K_T, ArraySegment<byte> > ) : bool =
 
-        let blkSize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
-        let mediaBlkCnt = blkcnt_me.ofUInt64 ( Functions.CeilDiv structures.VDI.VirtualDiskSize blkSize )
+        let mediaBlkCnt = Functions.CalcBlockCount64 structures.VDI.VirtualDiskSize structures.VDI.LogicalSectorSize
         if not <| Functions.CheckAccessRangeBlock lba ( blkcnt_me.ofUInt64 1UL ) mediaBlkCnt then
             raise <| VhdxMediaException( "Unexpected access range." )
 
@@ -611,7 +607,7 @@ type VhdxWriter() =
     static member OutputRawData ( rawfs : FileStream ) ( vhdxfs : FileAccessor ) ( lba : BLKCNT64_T ) ( structures : VhdxStructures ) : Task =
         task {
             let sectorSize = structures.VDI.LogicalSectorSize |> Blocksize.toUInt64
-            let rawDataSec = uint64 rawfs.Length / sectorSize
+            let rawDataSec = Functions.CalcBlockCount64 ( uint64 rawfs.Length ) structures.VDI.LogicalSectorSize |> uint64
             let buffer = Array.zeroCreate< byte >( int32 sectorSize )
             rawfs.Seek( 0L, SeekOrigin.Begin ) |> ignore
 
@@ -640,11 +636,10 @@ type VhdxWriter() =
         task {
             let! structures = VhdxReader.ReadVhdx vhdxFile
             let sectorSize = structures.VDI.LogicalSectorSize |> Blocksize.toUInt64
-            let vdsb = structures.VDI.VirtualDiskSize
-            let vdss = vdsb / uint64 sectorSize |> blkcnt_me.ofUInt64
+            let vdss = Functions.CalcBlockCount64 structures.VDI.VirtualDiskSize structures.VDI.LogicalSectorSize
             use rawfs = new FileStream( rawFileName, FileMode.Open, FileAccess.Read, FileShare.None )
             let rawDataLength = rawfs.Length |> uint64
-            let rawDataSec = rawDataLength / uint64 sectorSize |> blkcnt_me.ofUInt64
+            let rawDataSec = Functions.CalcBlockCount64 rawDataLength structures.VDI.LogicalSectorSize
 
             if ( blkcnt_me.toUInt64 rawDataSec * uint64 sectorSize ) <> rawDataLength then
                 raise <| VhdxMediaException( rawFileName, "RAW data length must be multiple of sector size." )
