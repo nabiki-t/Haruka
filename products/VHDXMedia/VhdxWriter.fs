@@ -329,9 +329,18 @@ type VhdxWriter() =
         if not <| Functions.CheckAccessRangeBlock lba ( blkcnt_me.ofUInt64 1UL ) mediaBlkCnt then
             raise <| VhdxMediaException( "Unexpected access range." )
 
+        if not structures.VDI.HasParent then
+            raise <| VhdxMediaException( "The sector bitmap cannot be updated unless it is a differencing VHDX file." )
+
         let bat = structures.BAT
         let struct( sbIdx, bytePos, bitPos ) = VhdxCommons.LBAtoSectorBitmapIndex lba structures
+        if sbIdx >= uint32 bat.SectorBitmap.Length then
+            raise <| VhdxMediaException( "An unexpected lack of sector bitmaps has occurred." )
+
         let sbEntry = bat.SectorBitmap.[ int32 sbIdx ]
+        if sbEntry.SBState <> BatEntryStateSB.SectorBitmapPresent || sbEntry.Bitmap.Length <> 0x100000 then
+            raise <| VhdxMediaException( "Invalid sector bitmap allocation." )
+
         let sb = sbEntry.Bitmap
         let sbFileOffset = sbEntry.FileOffset
         let bitValue = ( sb.[ int32 bytePos ] >>> ( int32 bitPos ) ) &&& 1uy
