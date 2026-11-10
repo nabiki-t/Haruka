@@ -353,8 +353,9 @@ type VhdxWriter() =
             sb.[ int32 bytePos ] <- sb.[ int32 bytePos ] ||| ( 1uy <<< ( int32 bitPos ) )
 
             // Record information on updated 4K sectors.
-            let s = ( sbFileOffset + ( uint64 bytePos ) ) / 4096UL |> sec4k_me.ofUInt64
-            updatedSB4K.TryAdd( s, ArraySegment( sb, 0, 4096 ) ) |> ignore
+            let sec4k = ( sbFileOffset + ( uint64 bytePos ) ) / 4096UL
+            let asoffset = sec4k * 4096UL - sbFileOffset |> int
+            updatedSB4K.TryAdd( sec4k_me.ofUInt64 sec4k, ArraySegment( sb, asoffset, 4096 ) ) |> ignore
 
             if sb.[ int32 bytePos ] <> 0xFFuy then
                 () // Unless the current byte is 0xFF, the payload BAT entry will not become PayloadFullyPresent.

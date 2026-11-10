@@ -113,7 +113,7 @@ type VhdxWriter_Test () =
                             yield {
                                 BatEntryIndex = ( i + 1UL ) * chunkRate + i;
                                 SBState = BatEntryStateSB.SectorBitmapPresent;
-                                FileOffset = 0UL;
+                                FileOffset = batRegionStartPos + batRegionSize + ( uint64 payloadBlockSize ) * payloadBlockCount + 0x100000UL * i;
                                 Bitmap = Array.zeroCreate<byte> 0x100000;
                             }
                         else
@@ -785,3 +785,99 @@ type VhdxWriter_Test () =
         Assert.Empty h
         Assert.Empty d
         Assert.False b
+
+    [<Theory>]
+    [<InlineData( 0x00UL,     0, 0UL,   0,       0,       0x01uy )>]
+    [<InlineData( 0x7FFFUL,   0, 0UL,   0,       4095,    0x80uy )>]
+    [<InlineData( 0x8000UL,   0, 1UL,   4096,    4096,    0x01uy )>]
+    [<InlineData( 0xFFFFUL,   0, 1UL,   4096,    8191,    0x80uy )>]
+    [<InlineData( 0x7FFFFFUL, 0, 255UL, 0xFF000, 0xFFFFF, 0x80uy )>]
+    [<InlineData( 0x800000UL, 1, 0UL,   0,       0,       0x01uy )>]
+    [<InlineData( 0xFFFFFFUL, 1, 255UL, 0xFF000, 0xFFFFF, 0x80uy )>]
+    member _.UpdateSBForAllocate_002 ( lba : uint64 ) ( sbidx : int ) ( sec : uint64 ) ( off : int ) ( bidx : int ) ( expb : byte ) =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
+
+        let h = HashSet<SEC4K_T>()
+        let d = Dictionary< SEC4K_T, ArraySegment<byte> >()
+        let b = VhdxWriter.UpdateSBForAllocate str ( blkcnt_me.ofUInt64 lba ) h d
+
+        Assert.Empty h
+        Assert.StrictEqual( 1, d.Count )
+        let bmp4k = sec4k_me.ofUInt64 ( str.BAT.SectorBitmap.[sbidx].FileOffset / 4096UL + sec )
+        Assert.StrictEqual( off, d.[ bmp4k ].Offset )
+        Assert.StrictEqual( 4096, d.[ bmp4k ].Count )
+        Assert.True( Functions.IsSame d.[ bmp4k ].Array str.BAT.SectorBitmap.[sbidx].Bitmap )
+        Assert.StrictEqual( expb, str.BAT.SectorBitmap.[sbidx].Bitmap.[bidx] )
+        Assert.True b
+
+    [<Theory>]
+    [<InlineData( 0x00UL,     0, 0UL,   0,       0,       0x01uy )>]
+    [<InlineData( 0xFFFFFFUL, 1, 255UL, 0xFF000, 0xFFFFF, 0x80uy )>]
+    member _.UpdateSBForAllocate_003 ( lba : uint64 ) ( sbidx : int ) ( sec : uint64 ) ( off : int ) ( bidx : int ) ( expb : byte ) =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
+        str.BAT.SectorBitmap.[sbidx].Bitmap.[bidx] <- ~~~ expb
+
+        let h = HashSet<SEC4K_T>()
+        let d = Dictionary< SEC4K_T, ArraySegment<byte> >()
+        let b = VhdxWriter.UpdateSBForAllocate str ( blkcnt_me.ofUInt64 lba ) h d
+
+        Assert.Empty h
+        Assert.StrictEqual( 1, d.Count )
+        let bmp4k = sec4k_me.ofUInt64 ( str.BAT.SectorBitmap.[sbidx].FileOffset / 4096UL + sec )
+        Assert.StrictEqual( off, d.[ bmp4k ].Offset )
+        Assert.StrictEqual( 4096, d.[ bmp4k ].Count )
+        Assert.True( Functions.IsSame d.[ bmp4k ].Array str.BAT.SectorBitmap.[sbidx].Bitmap )
+        Assert.StrictEqual( 0xFFuy, str.BAT.SectorBitmap.[sbidx].Bitmap.[bidx] )
+        Assert.True b
+
+    [<Theory>]
+    [<InlineData( 0x00UL,     0, 0,       0x01uy, 0    )>]
+    [<InlineData( 0xFFFFFFUL, 1, 0xFFFFF, 0x80uy, 8191 )>]
+    member _.UpdateSBForAllocate_004 ( lba : uint64 ) ( sbidx : int ) ( bidx : int ) ( expb : byte ) ( pbidx : int ) =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
+        for i = 0 to 1048575 do
+            str.BAT.SectorBitmap.[sbidx].Bitmap.[i] <- 0xFFuy
+        str.BAT.SectorBitmap.[sbidx].Bitmap.[bidx] <- ~~~ expb
+        str.BAT.Payloads.[pbidx] <- {
+            str.BAT.Payloads.[pbidx] with
+                State = BatEntryStatePB.PayloadPartiallyPresent;
+        }
+
+        let h = HashSet<SEC4K_T>()
+        let d = Dictionary< SEC4K_T, ArraySegment<byte> >()
+        let b = VhdxWriter.UpdateSBForAllocate str ( blkcnt_me.ofUInt64 lba ) h d
+
+        Assert.StrictEqual( 1, h.Count )
+        let bat4k = sec4k_me.ofUInt64 ( ( str.BAT.BATRegionOffset + str.BAT.Payloads.[pbidx].BatEntryIndex * 8UL ) / 4096UL )
+        Assert.True( h.Contains bat4k )
+        Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[pbidx].State )
+        Assert.True b
+
+    [<Theory>]
+    [<InlineData( 0x2000000000UL,       0x01UL,               0x400000000000UL, 512 )>]
+    [<InlineData( 0x00UL,               0x2000000001UL,       0x400000000000UL, 512 )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFFUL, 0x00UL,               0x400000000000UL, 512 )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFFUL, 0xFFUL,               0x400000000000UL, 512 )>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFFUL, 0xFFFFFFFFFFFFFFFFUL, 0x400000000000UL, 512 )>]
+    [<InlineData( 0x00UL,               0xFFFFFFFFFFFFFFFFUL, 0x400000000000UL, 512 )>]
+    [<InlineData( 0x400000000UL,        0x01UL,               0x400000000000UL, 4096 )>]
+    [<InlineData( 0x800UL,              0x801UL,              0x1000000UL,      4096 )>]
+    member _.UpdateSectorBitmap_Fail_001 ( lba : uint64 ) ( cnt : uint64 ) ( vds : uint64 ) ( argbs : int ) =
+        let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs false
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxWriter.UpdateSectorBitmap str ( HashSet<SEC4K_T>() ) ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 cnt ) |> ignore
+            )
+        Assert.StartsWith( "Unexpected access range", r.Message )
+
+    [<Theory>]
+    [<InlineData( 0x2000000000UL,       0x400000000000UL, 512 )>]
+    [<InlineData( 0x00UL,               0x400000000000UL, 512 )>]
+    [<InlineData( 0x400000000UL,        0x400000000000UL, 4096 )>]
+    member _.UpdateSectorBitmap_001 ( lba : uint64 ) ( vds : uint64 ) ( argbs : int ) =
+        let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs false
+        let r = VhdxWriter.UpdateSectorBitmap str ( HashSet<SEC4K_T>() ) ( blkcnt_me.ofUInt64 lba ) blkcnt_me.zero64
+        Assert.Empty r
+
