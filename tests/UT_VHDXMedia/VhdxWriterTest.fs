@@ -930,10 +930,97 @@ type VhdxWriter_Test () =
             Assert.True( Functions.IsSame d.[ bmp4k ].Array str.BAT.SectorBitmap.[sbidx].Bitmap )
             Assert.True(( expb = str.BAT.SectorBitmap.[sbidx].Bitmap.[ expidx .. expidx + expb.Length - 1 ] ))
 
-    [<Theory>]
+    [<Fact>]
     member _.UpdateSectorBitmap_003 () =
         let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
         let h = HashSet<SEC4K_T>( [| for i in 0UL .. 9UL do sec4k_me.ofUInt64 i |] )
         let d = VhdxWriter.UpdateSectorBitmap str h blkcnt_me.zero64 ( blkcnt_me.ofUInt64 1UL )
         Assert.StrictEqual( 10, h.Count )
 
+    [<Fact>]
+    member _.UpdateSectorBitmap_004 () =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
+        for i = 0 to 1 do
+            str.BAT.Payloads.[i] <- {
+                str.BAT.Payloads.[i] with
+                    State = BatEntryStatePB.PayloadPartiallyPresent;
+            }
+        for i = 0 to 511 do
+            str.BAT.SectorBitmap.[0].Bitmap.[i] <- 0xFFuy;
+        str.BAT.SectorBitmap.[0].Bitmap.[255] <- 0x7Fuy;
+        str.BAT.SectorBitmap.[0].Bitmap.[256] <- 0xFEuy;
+
+        let h = HashSet<SEC4K_T>()
+        let d = VhdxWriter.UpdateSectorBitmap str h ( blkcnt_me.ofUInt64 2047UL ) ( blkcnt_me.ofUInt64 2UL )
+        Assert.StrictEqual( 1, h.Count )
+        Assert.True( h.Contains ( sec4k_me.ofUInt64 ( str.BAT.BATRegionOffset / 4096UL ) ) )
+        for i = 0 to 1 do
+            Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[i].State )
+
+    static member m_PayloadBlockEntryToBytes_001_data : obj[][] = [|
+        [| 0x123456789ABCDEF1UL; BatEntryStatePB.PayloadNotPresent;       [| 0x00uy; 0x00uy; 0xB0uy; 0x9Auy; 0x78uy; 0x56uy; 0x34uy; 0x12uy;|]; |]
+        [| 0x123456789ABCDEF1UL; BatEntryStatePB.PayloadUndefined;        [| 0x01uy; 0x00uy; 0xB0uy; 0x9Auy; 0x78uy; 0x56uy; 0x34uy; 0x12uy;|]; |]
+        [| 0x123456789ABCDEF1UL; BatEntryStatePB.PayloadZero;             [| 0x02uy; 0x00uy; 0xB0uy; 0x9Auy; 0x78uy; 0x56uy; 0x34uy; 0x12uy;|]; |]
+        [| 0x123456789ABCDEF1UL; BatEntryStatePB.PayloadUnapped;          [| 0x03uy; 0x00uy; 0xB0uy; 0x9Auy; 0x78uy; 0x56uy; 0x34uy; 0x12uy;|]; |]
+        [| 0x123456789ABCDEF1UL; BatEntryStatePB.PayloadFullyPresent;     [| 0x06uy; 0x00uy; 0xB0uy; 0x9Auy; 0x78uy; 0x56uy; 0x34uy; 0x12uy;|]; |]
+        [| 0x123456789ABCDEF1UL; BatEntryStatePB.PayloadPartiallyPresent; [| 0x07uy; 0x00uy; 0xB0uy; 0x9Auy; 0x78uy; 0x56uy; 0x34uy; 0x12uy;|]; |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_PayloadBlockEntryToBytes_001_data" )>]
+    member _.PayloadBlockEntryToBytes_001 ( fileOffset : uint64 ) ( state : BatEntryStatePB ) ( exp : byte[] ) =
+        let buf = Array.zeroCreate<byte> 8
+        let e = {
+            BatEntryIndex = 0UL;
+            State = state;
+            FileOffset = fileOffset;
+        }
+        VhdxWriter.PayloadBlockEntryToBytes buf 0u e
+        Assert.True(( exp = buf ))
+
+    [<Theory>]
+    [<InlineData( 0, 0u )>]
+    [<InlineData( 8, 1u )>]
+    member _.PayloadBlockEntryToBytes_Fail_001 ( buflen : int ) ( offset : uint32 ) =
+        let buf = Array.zeroCreate<byte> buflen
+        let e = {
+            BatEntryIndex = 0UL;
+            State = BatEntryStatePB.PayloadPartiallyPresent;
+            FileOffset = 0UL;
+        }
+        Assert.ThrowsAny<Exception> ( fun _ ->
+            VhdxWriter.PayloadBlockEntryToBytes buf offset e
+        ) |> ignore
+
+    static member m_SectorBitmapEntryToBytes_001_data : obj[][] = [|
+        [| 0x123456789ABCDEF1UL; BatEntryStateSB.SectorBitmapNotPresent; [| 0x00uy; 0x00uy; 0xB0uy; 0x9Auy; 0x78uy; 0x56uy; 0x34uy; 0x12uy;|]; |]
+        [| 0x123456789ABCDEF1UL; BatEntryStateSB.SectorBitmapPresent;    [| 0x06uy; 0x00uy; 0xB0uy; 0x9Auy; 0x78uy; 0x56uy; 0x34uy; 0x12uy;|]; |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SectorBitmapEntryToBytes_001_data" )>]
+    member _.SectorBitmapEntryToBytes_001 ( fileOffset : uint64 ) ( state : BatEntryStateSB ) ( exp : byte[] ) =
+        let buf = Array.zeroCreate<byte> 8
+        let e = {
+            BatEntryIndex = 0UL;
+            SBState = state;
+            FileOffset = fileOffset;
+            Bitmap = [||];
+        }
+        VhdxWriter.SectorBitmapEntryToBytes buf 0u e
+        Assert.True(( exp = buf ))
+
+    [<Theory>]
+    [<InlineData( 0, 0u )>]
+    [<InlineData( 8, 1u )>]
+    member _.SectorBitmapEntryToBytes_Fail_001 ( buflen : int ) ( offset : uint32 ) =
+        let buf = Array.zeroCreate<byte> buflen
+        let e = {
+            BatEntryIndex = 0UL;
+            SBState = BatEntryStateSB.SectorBitmapPresent;
+            FileOffset = 0UL;
+            Bitmap = [||];
+        }
+        Assert.ThrowsAny<Exception> ( fun _ ->
+            VhdxWriter.SectorBitmapEntryToBytes buf offset e
+        ) |> ignore

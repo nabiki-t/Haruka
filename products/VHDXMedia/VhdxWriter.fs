@@ -412,7 +412,7 @@ type VhdxWriter() =
                 6UL
             | PayloadPartiallyPresent ->
                 7UL
-        let d = e.FileOffset ||| a
+        let d = ( e.FileOffset &&& 0xFFFFFFFFFFF00000UL ) ||| a
         ByteFunc.WriteU64LE buf offset d
 
     /// <summary>
@@ -434,7 +434,7 @@ type VhdxWriter() =
                 0UL
             | BatEntryStateSB.SectorBitmapPresent ->
                 6UL
-        let d = e.FileOffset ||| a
+        let d = ( e.FileOffset &&& 0xFFFFFFFFFFF00000UL ) ||| a
         ByteFunc.WriteU64LE buf offset d
 
     /// <summary>
