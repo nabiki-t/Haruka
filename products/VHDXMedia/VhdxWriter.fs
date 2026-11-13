@@ -457,7 +457,7 @@ type VhdxWriter() =
         let count = 4096UL / 8UL
 
         // Index of the BAT entry that will be the starting position of the output
-        let sBATIdx = ( uint64 secnum - ( bat.BATRegionOffset / 4096UL ) ) * count
+        let sBATIdx = ( uint64 secnum ) * count
 
         // Number of BAT entries to be output
         let count2 = ( min ( sBATIdx + count ) bat.BatEntryCount ) - sBATIdx

@@ -1024,3 +1024,56 @@ type VhdxWriter_Test () =
         Assert.ThrowsAny<Exception> ( fun _ ->
             VhdxWriter.SectorBitmapEntryToBytes buf offset e
         ) |> ignore
+
+    [<Fact>]
+    member _.CreateBATEntryTableFrom4KSectorNumber_001 () =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
+        let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 0UL )
+        Assert.StrictEqual( 4096, r.Length )
+
+        let wbuf = Array.zeroCreate<byte> 8
+        VhdxWriter.PayloadBlockEntryToBytes wbuf 0u str.BAT.Payloads.[0]
+        Assert.True(( r.[ 0 .. 7 ] = wbuf ))
+
+        VhdxWriter.PayloadBlockEntryToBytes wbuf 0u str.BAT.Payloads.[511]
+        Assert.True(( r.[ 4088 .. 4095 ] = wbuf ))
+
+    [<Fact>]
+    member _.CreateBATEntryTableFrom4KSectorNumber_002 () =
+        // Chunk Rate = 16, Payload Block Count = 2048, Sector Bitmap Count = 128
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x10000000u 0x8000000000UL Blocksize.BS_512 true
+        let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 0UL )
+        Assert.StrictEqual( 4096, r.Length )
+
+        let wbuf = Array.zeroCreate<byte> 8
+        VhdxWriter.PayloadBlockEntryToBytes wbuf 0u str.BAT.Payloads.[0]
+        Assert.True(( r.[ 0 .. 7 ] = wbuf ))
+
+        VhdxWriter.SectorBitmapEntryToBytes wbuf 0u str.BAT.SectorBitmap.[29]
+        Assert.True(( r.[ 4072 .. 4079 ] = wbuf ))
+
+        VhdxWriter.PayloadBlockEntryToBytes wbuf 0u str.BAT.Payloads.[481]
+        Assert.True(( r.[ 4088 .. 4095 ] = wbuf ))
+
+    [<Fact>]
+    member _.CreateBATEntryTableFrom4KSectorNumber_003 () =
+        // Chunk Rate = 16, Payload Block Count = 2048, Sector Bitmap Count = 128
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x10000000u 0x8000000000UL Blocksize.BS_512 true
+        let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 4UL )
+        Assert.StrictEqual( 4096, r.Length )
+
+        let wbuf = Array.zeroCreate<byte> 8
+        VhdxWriter.PayloadBlockEntryToBytes wbuf 0u str.BAT.Payloads.[1928]
+        Assert.True(( r.[ 0 .. 7 ] = wbuf ))
+
+        VhdxWriter.SectorBitmapEntryToBytes wbuf 0u str.BAT.SectorBitmap.[126]
+        Assert.True(( r.[ 880 .. 887 ] = wbuf ))
+
+        VhdxWriter.PayloadBlockEntryToBytes wbuf 0u str.BAT.Payloads.[2047]
+        Assert.True(( r.[ 1008 .. 1015 ] = wbuf ))
+
+        Array.fill wbuf 0 8 0uy
+        Assert.True(( r.[ 1016 .. 1023 ] = wbuf ))
+        Assert.True(( r.[ 4088 .. 4095 ] = wbuf ))
+
+
