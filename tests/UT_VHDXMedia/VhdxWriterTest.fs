@@ -1108,6 +1108,7 @@ type VhdxWriter_Test () =
             do! fa.SetFileSize 0x500000UL
             let! r = VhdxWriter.WriteUpdatedBAT fa str str.LoadedVarHeader [||] 0x500000UL
             Assert.StrictEqual(( str.LoadedVarHeader, r ))
+            GlbFunc.DeleteFile fname
         }
 
     [<Fact>]
@@ -1124,6 +1125,7 @@ type VhdxWriter_Test () =
                     ()
                 } )
             Assert.StartsWith( "Unexpected log area size", r.Message )
+            GlbFunc.DeleteFile fname
         }
 
     [<Fact>]
@@ -1139,4 +1141,127 @@ type VhdxWriter_Test () =
                     ()
                 } )
             Assert.StartsWith( "File opened read-only", r.Message )
+            GlbFunc.DeleteFile fname
+        }
+
+    [<Fact>]
+    member _.WriteUpdatedBAT_002 () =
+        task {
+            // Create temp VHDX file
+            let fname = Path.GetTempFileName()
+            let fa1 = FileAccessor( fname, 1u, false )
+            do! VhdxCreator.Create None fa1 0x100000u 0x100000u true 0x200000UL Blocksize.BS_512
+            let! str = VhdxReader.ReadVhdx fa1
+            fa1.Close()
+
+            // Open the VHDX file in a way that causes the second header update to fail.
+            let mutable cnt = 0
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                let tmpfile = File.Open( fname, FileMode.Open, FileAccess.ReadWrite, FileShare.None )
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> tmpfile.Length ),
+                    p_SetLength = ( fun s -> tmpfile.SetLength s ),
+                    p_Seek = ( fun ( s, o ) ->
+                        if s = 0x10000L || s = 0x20000L then
+                            cnt <- cnt + 1
+                            if cnt = 3 then raise <| Exception( "xxx" )
+                        tmpfile.Seek( s, o )
+                    ),
+                    p_WriteAsync = tmpfile.WriteAsync,
+                    p_ReadAsync = tmpfile.ReadAsync,
+                    p_FlushAsync = tmpfile.FlushAsync,
+                    p_Close = tmpfile.Close
+                )
+            let fa2 = FileAccessor( fname, 1u, false, fc, fun _ -> true )
+            let bat4k = str.BAT.BATRegionOffset / 4096UL |> sec4k_me.ofUInt64
+
+            let! r =
+                Assert.ThrowsAsync<Exception> ( fun () -> task {
+                    let! _ = VhdxWriter.WriteUpdatedBAT fa2 str str.LoadedVarHeader [| bat4k |] str.LastFileSize
+                    ()
+                })
+            Assert.StrictEqual( "xxx", r.Message )
+
+            let expbat = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT bat4k
+
+            let! str2 = VhdxReader.ReadVhdx fa2
+            Assert.StrictEqual( 1, str2.Log.Length )
+            Assert.StrictEqual( 1u, str2.Log.[0].DescriptorCount )
+            match str2.Log.[0].Descriptors.[0] with
+            | LogDescriptor.Data( dd ) ->
+                Assert.StrictEqual( str.BAT.BATRegionOffset, dd.FileOffset )
+                Assert.True(( dd.LeadingBytes = expbat.[ 0 .. 7 ] ))
+                Assert.True(( dd.TrailingBytes = expbat.[ 4092 .. ] ))
+            | _ ->
+                Assert.Fail __LINE__
+
+            fa2.Close()
+            GlbFunc.DeleteFile fname
+        }
+
+    [<Theory>]
+    [<InlineData( -1, 4 )>]
+    [<InlineData( 0, 4 )>]
+    [<InlineData( 1, 8 )>]
+    member _.WriteUpdatedBAT_003 ( sd : int ) ( exp : int ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa1 = FileAccessor( fname, 1u, false )
+            do! VhdxCreator.Create None fa1 0x100000u 0x100000u true 0x200000UL Blocksize.BS_512
+            let! str = VhdxReader.ReadVhdx fa1
+            fa1.Close()
+
+            let mutable cnt = 0
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                let tmpfile = File.Open( fname, FileMode.Open, FileAccess.ReadWrite, FileShare.None )
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> tmpfile.Length ),
+                    p_SetLength = ( fun s -> tmpfile.SetLength s ),
+                    p_Seek = ( fun ( s, o ) ->
+                        // Count the number of times the header is written
+                        if s = 0x10000L || s = 0x20000L then
+                            cnt <- cnt + 1
+                        tmpfile.Seek( s, o )
+                    ),
+                    p_WriteAsync = tmpfile.WriteAsync,
+                    p_ReadAsync = tmpfile.ReadAsync,
+                    p_FlushAsync = tmpfile.FlushAsync,
+                    p_Close = tmpfile.Close
+                )
+            let fa2 = FileAccessor( fname, 1u, false, fc, fun _ -> true )
+            let bat4k = str.BAT.BATRegionOffset / 4096UL |> sec4k_me.ofUInt64
+
+            let wseccnt = VhdxCorrupter.Max4KSectorCountFromLogCapacity 0x100000u |> int
+            let vsec = Array.init ( wseccnt + sd ) ( fun _ -> bat4k )
+            let! r = VhdxWriter.WriteUpdatedBAT fa2 str str.LoadedVarHeader vsec str.LastFileSize
+            Assert.StrictEqual( exp, cnt )
+            Assert.StrictEqual( Guid(), r.LogGuid )
+            Assert.StrictEqual( str.LoadedVarHeader.SequenceNumber + uint64 exp, r.SequenceNumber )
+
+            fa2.Close()
+            GlbFunc.DeleteFile fname
+        }
+
+    [<Fact>]
+    member _.WriteUpdatedBAT_004 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa1 = FileAccessor( fname, 1u, false )
+            do! VhdxCreator.Create None fa1 0x100000u 0x100000u true 0x200000UL Blocksize.BS_512
+            let! str = VhdxReader.ReadVhdx fa1
+            let bat4k = str.BAT.BATRegionOffset / 4096UL |> sec4k_me.ofUInt64
+
+            str.BAT.Payloads.[0] <- {
+                str.BAT.Payloads.[0] with
+                    State = BatEntryStatePB.PayloadUndefined;
+            }
+            let! r = VhdxWriter.WriteUpdatedBAT fa1 str str.LoadedVarHeader [| bat4k |] str.LastFileSize
+            Assert.StrictEqual( Guid(), r.LogGuid )
+
+            let! str2 = VhdxReader.ReadVhdx fa1
+            Assert.Empty str2.Log
+            Assert.StrictEqual( BatEntryStatePB.PayloadUndefined, str2.BAT.Payloads.[0].State )
+
+            fa1.Close()
+            GlbFunc.DeleteFile fname
         }

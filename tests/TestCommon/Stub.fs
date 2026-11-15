@@ -12,8 +12,10 @@ namespace Haruka.Test
 // Import declaration
 
 open System
+open System.Threading
 open System.Threading.Tasks
 open System.Net
+open System.IO
 
 open Haruka.Constants
 open Haruka.Commons
@@ -923,3 +925,91 @@ type public CBlockDeviceTask_Stub() =
         override _.NotifyTerminate ( v : bool ) : unit = f_NotifyTerminate.Value( v )
         override _.ACANoncompliant : bool = f_GetACANoncompliant.Value()
         override _.ReleasePooledBuffer() : unit = f_ReleasePooledBuffer.Value()
+
+
+type public Stream_Stub() =
+    inherit Stream() with
+        let mutable f_get_CanRead : ( unit -> bool ) option = None
+        let mutable f_get_CanSeek : ( unit -> bool ) option = None
+        let mutable f_get_CanTimeout : ( unit -> bool ) option = None
+        let mutable f_get_CanWrite : ( unit -> bool ) option = None
+        let mutable f_get_Length : ( unit -> int64 ) option = None
+        let mutable f_get_Position : ( unit -> int64 ) option = None
+        let mutable f_set_Position : ( int64 -> unit ) option = None
+        let mutable f_get_ReadTimeout : ( unit -> int32 ) option = None
+        let mutable f_set_ReadTimeout : ( int32 -> unit ) option = None
+        let mutable f_get_WriteTimeout : ( unit -> int32 ) option = None
+        let mutable f_set_WriteTimeout : ( int32 -> unit ) option = None
+        let mutable f_Close  : ( unit -> unit ) option = None
+        let mutable f_Flush  : ( unit -> unit ) option = None
+        let mutable f_FlushAsync  : ( CancellationToken -> Task ) option = None
+        let mutable f_ReadAsync  : ( ( byte[] * int32 * int32 * CancellationToken ) -> Task<int32> ) option = None
+        let mutable f_Read  : ( ( byte[] * int32 * int32 ) -> int32 ) option = None
+        let mutable f_Seek : ( ( int64 * SeekOrigin ) -> int64 ) option = None
+        let mutable f_SetLength  : ( int64 -> unit ) option = None
+        let mutable f_Write  : ( byte[] * int32 * int32 -> unit ) option = None
+        let mutable f_WriteAsync  : ( byte[] * int32 * int32 * CancellationToken -> Task ) option = None
+    
+        member _.p_get_CanRead with set v = f_get_CanRead <- Some( v )
+        member _.p_get_CanSeek with set v = f_get_CanSeek <- Some( v )
+        member _.p_get_CanTimeout with set v = f_get_CanTimeout <- Some( v )
+        member _.p_get_CanWrite with set v = f_get_CanWrite <- Some( v )
+        member _.p_get_Length with set v = f_get_Length <- Some( v )
+        member _.p_get_Position with set v = f_get_Position <- Some( v )
+        member _.p_set_Position with set v = f_set_Position <- Some( v )
+        member _.p_get_ReadTimeout with set v = f_get_ReadTimeout <- Some( v )
+        member _.p_set_ReadTimeout with set v = f_set_ReadTimeout <- Some( v )
+        member _.p_get_WriteTimeout with set v = f_get_WriteTimeout <- Some( v )
+        member _.p_set_WriteTimeout with set v = f_set_WriteTimeout <- Some( v )
+        member _.p_Close with set v = f_Close <- Some( v )
+        member _.p_Flush with set v = f_Flush <- Some( v )
+        member _.p_FlushAsync with set v = f_FlushAsync <- Some( v )
+        member _.p_Read with set v = f_Read <- Some( v )
+        member _.p_ReadAsync with set v = f_ReadAsync <- Some( v )
+        member _.p_Seek with set v = f_Seek <- Some( v )
+        member _.p_SetLength with set v = f_SetLength <- Some( v )
+        member _.p_Write with set v = f_Write <- Some( v )
+        member _.p_WriteAsync with set v = f_WriteAsync <- Some( v )
+
+        override _.CanRead with get() =
+            match f_get_CanRead with
+            | Some x -> x()
+            | None -> true
+        override _.CanSeek with get() =
+            match f_get_CanSeek with
+            | Some x -> x()
+            | None -> true
+        override _.CanTimeout with get() =
+            match f_get_CanTimeout with
+            | Some x -> x()
+            | None -> true
+        override _.CanWrite with get() =
+            match f_get_CanWrite with
+            | Some x -> x()
+            | None -> true
+        override _.Length with get() = f_get_Length.Value()
+        override _.Position with get() = f_get_Position.Value()
+                            and  set v = f_set_Position.Value v
+        override _.ReadTimeout with get() = f_get_ReadTimeout.Value()
+                               and  set v = f_set_ReadTimeout.Value v
+        override _.WriteTimeout with get() = f_get_WriteTimeout.Value()
+                                and  set v = f_set_WriteTimeout.Value v
+
+        override _.Close() : unit =
+            f_Close.Value()
+        override _.Flush() : unit =
+            f_Flush.Value()
+        override _.FlushAsync( c : CancellationToken ) : Task =
+            f_FlushAsync.Value( c )
+        override _.Read ( buffer : byte[], offset : int32, count : int32 ) : int32 =
+            f_Read.Value( buffer, offset, count )
+        override _.ReadAsync ( buffer : byte[], offset : int32, count : int32, c : CancellationToken ) : Task<int32> =
+            f_ReadAsync.Value( buffer, offset, count, c )
+        override _.Seek( offset : int64, origin : SeekOrigin ) : int64 =
+            f_Seek.Value( offset, origin )
+        override _.SetLength( value : int64 ) : unit =
+            f_SetLength.Value( value )
+        override _.Write ( buffer : byte[], offset : int32, count : int32 ) : unit =
+            f_Write.Value( buffer, offset, count )
+        override _.WriteAsync ( buffer : byte[], offset : int32, count : int32, c : CancellationToken ) : Task =
+            f_WriteAsync.Value( buffer, offset, count, c )

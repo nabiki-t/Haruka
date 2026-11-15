@@ -536,7 +536,7 @@ type VhdxWriter() =
                     do! VhdxCorrupter.WriteLogEntry fa structures.ImmHeader 0u List.empty logEntries
 
                     // Update header( Update LogGuid )
-                    let! wverhd1 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd with LogGuid = Guid.NewGuid() }
+                    let! wverhd1 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd with LogGuid = newLogGuid }
 
                     // Set file size
                     if currentFileSize < reqFileSize then
