@@ -1028,7 +1028,8 @@ type VhdxWriter_Test () =
     [<Fact>]
     member _.CreateBATEntryTableFrom4KSectorNumber_001 () =
         let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
-        let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 0UL )
+        let bat4k = str.BAT.BATRegionOffset / 4096UL
+        let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 bat4k )
         Assert.StrictEqual( 4096, r.Length )
 
         let wbuf = Array.zeroCreate<byte> 8
@@ -1042,7 +1043,8 @@ type VhdxWriter_Test () =
     member _.CreateBATEntryTableFrom4KSectorNumber_002 () =
         // Chunk Rate = 16, Payload Block Count = 2048, Sector Bitmap Count = 128
         let str = VhdxWriter_Test.GenStructures 0x100000u 0x10000000u 0x8000000000UL Blocksize.BS_512 true
-        let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 0UL )
+        let bat4k = str.BAT.BATRegionOffset / 4096UL
+        let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 bat4k )
         Assert.StrictEqual( 4096, r.Length )
 
         let wbuf = Array.zeroCreate<byte> 8
@@ -1059,7 +1061,8 @@ type VhdxWriter_Test () =
     member _.CreateBATEntryTableFrom4KSectorNumber_003 () =
         // Chunk Rate = 16, Payload Block Count = 2048, Sector Bitmap Count = 128
         let str = VhdxWriter_Test.GenStructures 0x100000u 0x10000000u 0x8000000000UL Blocksize.BS_512 true
-        let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 4UL )
+        let bat4k = str.BAT.BATRegionOffset / 4096UL
+        let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 ( bat4k + 4UL ) )
         Assert.StrictEqual( 4096, r.Length )
 
         let wbuf = Array.zeroCreate<byte> 8
@@ -1076,4 +1079,64 @@ type VhdxWriter_Test () =
         Assert.True(( r.[ 1016 .. 1023 ] = wbuf ))
         Assert.True(( r.[ 4088 .. 4095 ] = wbuf ))
 
+    [<Fact>]
+    member _.CreateBATEntryTableFrom4KSectorNumber_004 () =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        let bat4k = str.BAT.BATRegionOffset / 4096UL
+        let bat4kcnt = str.BAT.BATRegionLength / 4096u |> uint64
+        let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 ( bat4k + bat4kcnt - 1UL ) )
+        Assert.StrictEqual( 4096, r.Length )
 
+    [<Theory>]
+    [<InlineData( 0xFFFFFFFFFFFFFFFFUL )>]  // -1
+    [<InlineData( 256UL )>]
+    member _.CreateBATEntryTableFrom4KSectorNumber_Fail_001 ( a : uint64 ) =
+        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        let bat4k = str.BAT.BATRegionOffset / 4096UL
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 ( bat4k + a ) ) |> ignore
+            )
+        Assert.StartsWith( "Out of range 4K sector number", r.Message )
+
+    [<Fact>]
+    member _.WriteUpdatedBAT_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 true
+            do! fa.SetFileSize 0x500000UL
+            let! r = VhdxWriter.WriteUpdatedBAT fa str str.LoadedVarHeader [||] 0x500000UL
+            Assert.StrictEqual(( str.LoadedVarHeader, r ))
+        }
+
+    [<Fact>]
+    member _.WriteUpdatedBAT_Fail_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 true
+            let str2 = { str with ImmHeader.LogLength = 0u }
+            do! fa.SetFileSize 0x500000UL
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxWriter.WriteUpdatedBAT fa str2 str.LoadedVarHeader [||] 0x500000UL
+                    ()
+                } )
+            Assert.StartsWith( "Unexpected log area size", r.Message )
+        }
+
+    [<Fact>]
+    member _.WriteUpdatedBAT_Fail_002 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, true )
+            let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 true
+            let bat4k = str.BAT.BATRegionOffset / 4096UL |> sec4k_me.ofUInt64
+            let! r =
+                Assert.ThrowsAsync<InvalidOperationException>( fun () -> task {
+                    let! _ = VhdxWriter.WriteUpdatedBAT fa str str.LoadedVarHeader [| bat4k |] 0x500000UL
+                    ()
+                } )
+            Assert.StartsWith( "File opened read-only", r.Message )
+        }

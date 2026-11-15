@@ -450,6 +450,13 @@ type VhdxWriter() =
     ///  BAT entrie data that will be write to the file.
     /// </returns>
     static member CreateBATEntryTableFrom4KSectorNumber ( bat : BatEntries ) ( secnum : SEC4K_T ) : byte[] =
+
+        let bat4k = bat.BATRegionOffset / 4096UL
+        let bat4kcnt = bat.BATRegionLength / 4096u |> uint64
+        let secnum_u64 = uint64 secnum
+        if secnum_u64 < bat4k || bat4k + bat4kcnt <= secnum_u64 then
+            raise <| VhdxMediaException( "Out of range 4K sector number." )
+
         let chunkRatio = bat.ChunkRatio
         let buffer = Array.zeroCreate<byte> 4096
 
@@ -457,25 +464,26 @@ type VhdxWriter() =
         let count = 4096UL / 8UL
 
         // Index of the BAT entry that will be the starting position of the output
-        let sBATIdx = ( uint64 secnum ) * count
+        let sBATIdx = ( uint64 secnum - bat4k ) * count
 
         // Number of BAT entries to be output
-        let count2 = ( min ( sBATIdx + count ) bat.BatEntryCount ) - sBATIdx
-
-        for i in 0UL .. count2 - 1UL do
-            let idx = sBATIdx + i
-            if ( idx + 1UL ) % ( chunkRatio + 1UL ) = 0UL then
-                let sbidx = idx / ( chunkRatio + 1UL )
-                VhdxWriter.SectorBitmapEntryToBytes buffer ( uint32 i * 8u ) bat.SectorBitmap.[ int32 sbidx ]
-            else
-                let pbidx =
-                    let w = idx / ( chunkRatio + 1UL )
-                    let w2 = w * chunkRatio
-                    let w3 = idx % ( chunkRatio + 1UL )
-                    w2 + w3
-                    |> int32
-                if pbidx < bat.Payloads.Length then
-                    VhdxWriter.PayloadBlockEntryToBytes buffer ( uint32 i * 8u ) bat.Payloads.[ pbidx ]
+        let count2 = ( min ( sBATIdx + count ) bat.BatEntryCount )
+        if count2 > sBATIdx then
+            let count3 = count2 - sBATIdx
+            for i in 0UL .. count3 - 1UL do
+                let idx = sBATIdx + i
+                if ( idx + 1UL ) % ( chunkRatio + 1UL ) = 0UL then
+                    let sbidx = idx / ( chunkRatio + 1UL )
+                    VhdxWriter.SectorBitmapEntryToBytes buffer ( uint32 i * 8u ) bat.SectorBitmap.[ int32 sbidx ]
+                else
+                    let pbidx =
+                        let w = idx / ( chunkRatio + 1UL )
+                        let w2 = w * chunkRatio
+                        let w3 = idx % ( chunkRatio + 1UL )
+                        w2 + w3
+                        |> int32
+                    if pbidx < bat.Payloads.Length then
+                        VhdxWriter.PayloadBlockEntryToBytes buffer ( uint32 i * 8u ) bat.Payloads.[ pbidx ]
         buffer
 
     /// <summary>
@@ -501,7 +509,11 @@ type VhdxWriter() =
     /// </returns>
     static member WriteUpdatedBAT ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) ( sec4Ks : SEC4K_T[] ) ( reqFileSize : uint64 ) : Task<VhdxMutableHeader> =
         task {
-            let logEntryUnit = VhdxCorrupter.Max4KSectorCountFromLogCapacity structures.ImmHeader.LogLength |> int
+            let logLength = structures.ImmHeader.LogLength
+            if logLength = 0u then
+                raise <| VhdxMediaException( "Unexpected log area size." )
+
+            let logEntryUnit = VhdxCorrupter.Max4KSectorCountFromLogCapacity logLength |> int
             let cycleCount = Functions.CeilDiv sec4Ks.Length logEntryUnit
 
             let ps = PseudoSeqStat< struct( int32 * VhdxMutableHeader ), VhdxMutableHeader >( struct( 0, verhd ) )
@@ -514,7 +526,7 @@ type VhdxWriter() =
 
                     // Write log entry
                     let listSec4K_BatData =
-                        List.init wcnt ( fun j ->
+                        Array.init wcnt ( fun j ->
                             let sector4KNumber = sec4Ks.[ widx + j ]
                             let data = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber structures.BAT sector4KNumber
                             struct ( sector4KNumber, data )
