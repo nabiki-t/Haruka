@@ -848,3 +848,118 @@ type VhdxTestFunc() =
         Crc32C.Compute v
         |> ByteFunc.WriteU32LE v 4u
         v
+
+    /// <summary>
+    ///  Generate test data for VhdxStructures.
+    /// </summary>
+    /// <param name="logLength">
+    ///  Specify the log area length.
+    /// </param>
+    /// <param name="payloadBlockSize">
+    ///  Specify the payload block length.
+    /// </param>
+    /// <param name="virtualDiskSize">
+    ///  Specify the virtual disk size
+    /// </param>
+    /// <param name="sectorSize">
+    ///  Specify the sector size
+    /// </param>
+    /// <param name="hasParent">
+    ///  Specify whether a parent disk exists.
+    /// </param>
+    /// <returns>
+    ///  Generated test data for VhdxStructures
+    /// </returns>
+    static member GenStructures ( logLength : uint32 ) ( payloadBlockSize : uint32 ) ( virtualDiskSize : uint64 ) ( sectorSize : Blocksize ) ( hasParent : bool ) : VhdxStructures =
+        let chunkSize = Blocksize.toUInt64 sectorSize * 8388608UL
+        let chunkRate = chunkSize / uint64 payloadBlockSize
+        let payloadBlockCount = Functions.CeilDiv virtualDiskSize ( uint64 payloadBlockSize )
+        let sectorBitmapCount = Functions.CeilDiv payloadBlockCount chunkRate
+        let batEntryCount = payloadBlockCount + ( payloadBlockCount - 1UL ) / chunkRate
+        let batRegionSize = Functions.CeilUnit ( batEntryCount * 8UL ) 0x100000UL
+        let metadataStartPos = 0x100000UL + uint64 logLength
+        let batRegionStartPos = metadataStartPos + 0x100000UL
+        {
+            Creator = "";
+            ImmHeader = {
+                Signature = 0u;
+                Checksum = 0u;
+                LogVersion = 0us;
+                Version = 1us;
+                LogLength = logLength;
+                LogOffset = 0x100000UL;
+                Offset = 0x10000UL;
+                Index = 0;
+            };
+            LoadedVarHeader = {
+                SequenceNumber = 1UL;
+                FileWriteGuid = Guid.NewGuid();
+                DataWriteGuid = Guid.NewGuid();
+                LogGuid = Guid();
+            };
+            Log = [];
+            LastFileSize = virtualDiskSize + batRegionStartPos + sectorBitmapCount * 1048576UL;
+            Region = {
+                Signature = 0u;
+                Checksum = 0u;
+                EntryCount = 0u;
+                Entries = [
+                    {
+                        Guid = VhdxCommons.REGENT_TYPE_METADATA;
+                        FileOffset = metadataStartPos;
+                        Length = 0x100000u;
+                        Required = true;
+                    };
+                    {
+                        Guid = VhdxCommons.REGENT_TYPE_BAT;
+                        FileOffset = batRegionStartPos;
+                        Length = uint32 batRegionSize;
+                        Required = true;
+                    };
+                ];
+            };
+            VDI = {
+                PayloadBlockSize = payloadBlockSize;
+                LeaveBlockAllocated = false;
+                HasParent = hasParent;
+                VirtualDiskSize = virtualDiskSize;
+                VirtualDiskId = Guid();
+                LogicalSectorSize = sectorSize;
+                PhysicalSectorSize = sectorSize;
+                ParentLocator = [] |> Map<string,string>;
+            };
+            BAT = {
+                BATRegionOffset = batRegionStartPos;
+                BATRegionLength = uint32 batRegionSize;
+                ChunkSize = chunkSize;
+                ChunkRatio = chunkRate;
+                PayloadBlockCount = payloadBlockCount;
+                SectorBitmapBlockCount = sectorBitmapCount;
+                BatEntryCount = batEntryCount;
+                Payloads = [|
+                    for i in 0UL .. payloadBlockCount - 1UL do
+                        yield {
+                            BatEntryIndex = i + ( i / chunkRate );
+                            State = BatEntryStatePB.PayloadFullyPresent;
+                            FileOffset = batRegionStartPos + batRegionSize + ( uint64 payloadBlockSize ) * i;
+                        }
+                |];
+                SectorBitmap = [|
+                    for i in 0UL .. sectorBitmapCount - 1UL do
+                        if hasParent then
+                            yield {
+                                BatEntryIndex = ( i + 1UL ) * chunkRate + i;
+                                SBState = BatEntryStateSB.SectorBitmapPresent;
+                                FileOffset = batRegionStartPos + batRegionSize + ( uint64 payloadBlockSize ) * payloadBlockCount + 0x100000UL * i;
+                                Bitmap = Array.zeroCreate<byte> 0x100000;
+                            }
+                        else
+                            yield {
+                                BatEntryIndex = ( i + 1UL ) * chunkRate + i;
+                                SBState = BatEntryStateSB.SectorBitmapNotPresent;
+                                FileOffset = 0UL;
+                                Bitmap = Array.empty;
+                            }
+                |];
+            }
+        }

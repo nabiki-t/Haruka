@@ -33,103 +33,9 @@ open Haruka.Test
 
 type VhdxWriter_Test () =
 
-    static member GenStructures ( logLength : uint32 ) ( payloadBlockSize : uint32 ) ( virtualDiskSize : uint64 ) ( sectorSize : Blocksize ) ( hasParent : bool ) : VhdxStructures =
-        let chunkSize = Blocksize.toUInt64 sectorSize * 8388608UL
-        let chunkRate = chunkSize / uint64 payloadBlockSize
-        let payloadBlockCount = Functions.CeilDiv virtualDiskSize ( uint64 payloadBlockSize )
-        let sectorBitmapCount = Functions.CeilDiv payloadBlockCount chunkRate
-        let batEntryCount = payloadBlockCount + ( payloadBlockCount - 1UL ) / chunkRate
-        let batRegionSize = Functions.CeilUnit ( batEntryCount * 8UL ) 0x100000UL
-        let metadataStartPos = 0x100000UL + uint64 logLength
-        let batRegionStartPos = metadataStartPos + 0x100000UL
-        {
-            Creator = "";
-            ImmHeader = {
-                Signature = 0u;
-                Checksum = 0u;
-                LogVersion = 0us;
-                Version = 1us;
-                LogLength = logLength;
-                LogOffset = 0x100000UL;
-                Offset = 0x10000UL;
-                Index = 0;
-            };
-            LoadedVarHeader = {
-                SequenceNumber = 1UL;
-                FileWriteGuid = Guid.NewGuid();
-                DataWriteGuid = Guid.NewGuid();
-                LogGuid = Guid();
-            };
-            Log = [];
-            LastFileSize = virtualDiskSize + batRegionStartPos + sectorBitmapCount * 1048576UL;
-            Region = {
-                Signature = 0u;
-                Checksum = 0u;
-                EntryCount = 0u;
-                Entries = [
-                    {
-                        Guid = VhdxCommons.REGENT_TYPE_METADATA;
-                        FileOffset = metadataStartPos;
-                        Length = 0x100000u;
-                        Required = true;
-                    };
-                    {
-                        Guid = VhdxCommons.REGENT_TYPE_BAT;
-                        FileOffset = batRegionStartPos;
-                        Length = uint32 batRegionSize;
-                        Required = true;
-                    };
-                ];
-            };
-            VDI = {
-                PayloadBlockSize = payloadBlockSize;
-                LeaveBlockAllocated = false;
-                HasParent = hasParent;
-                VirtualDiskSize = virtualDiskSize;
-                VirtualDiskId = Guid();
-                LogicalSectorSize = sectorSize;
-                PhysicalSectorSize = sectorSize;
-                ParentLocator = [] |> Map<string,string>;
-            };
-            BAT = {
-                BATRegionOffset = batRegionStartPos;
-                BATRegionLength = uint32 batRegionSize;
-                ChunkSize = chunkSize;
-                ChunkRatio = chunkRate;
-                PayloadBlockCount = payloadBlockCount;
-                SectorBitmapBlockCount = sectorBitmapCount;
-                BatEntryCount = batEntryCount;
-                Payloads = [|
-                    for i in 0UL .. payloadBlockCount - 1UL do
-                        yield {
-                            BatEntryIndex = i + ( i / chunkRate );
-                            State = BatEntryStatePB.PayloadFullyPresent;
-                            FileOffset = batRegionStartPos + batRegionSize + ( uint64 payloadBlockSize ) * i;
-                        }
-                |];
-                SectorBitmap = [|
-                    for i in 0UL .. sectorBitmapCount - 1UL do
-                        if hasParent then
-                            yield {
-                                BatEntryIndex = ( i + 1UL ) * chunkRate + i;
-                                SBState = BatEntryStateSB.SectorBitmapPresent;
-                                FileOffset = batRegionStartPos + batRegionSize + ( uint64 payloadBlockSize ) * payloadBlockCount + 0x100000UL * i;
-                                Bitmap = Array.zeroCreate<byte> 0x100000;
-                            }
-                        else
-                            yield {
-                                BatEntryIndex = ( i + 1UL ) * chunkRate + i;
-                                SBState = BatEntryStateSB.SectorBitmapNotPresent;
-                                FileOffset = 0UL;
-                                Bitmap = Array.empty;
-                            }
-                |];
-            }
-        }
-
     [<Fact>]
     member _.BuildFreeList_Fail_001() =
-        let wstr = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let wstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
         let str = {
             wstr with
                 VDI.PayloadBlockSize = 0u;
@@ -141,7 +47,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.BuildFreeList_Fail_002() =
-        let wstr = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let wstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
         let str = {
             wstr with
                 LastFileSize = 18014398501093377UL;
@@ -154,7 +60,7 @@ type VhdxWriter_Test () =
     [<Theory>]
     [<InlineData( 0xFFFFFFFFFFF00000UL, 0x100000u )>]
     member _.BuildFreeList_Fail_003 ( offset : uint64 ) ( length : uint32 ) =
-        let wstr = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let wstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
         let str = {
             wstr with
                 ImmHeader.LogOffset = offset;
@@ -167,7 +73,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.BuildFreeList_Fail_004() =
-        let wstr = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let wstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
         let str = {
             wstr with
                 Region.Entries =
@@ -181,7 +87,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.BuildFreeList_Fail_005() =
-        let wstr = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let wstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
         let str = {
             wstr with
                 BAT.SectorBitmap = [|
@@ -200,7 +106,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.BuildFreeList_Fail_006() =
-        let wstr = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let wstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
         let str = {
             wstr with
                 BAT.Payloads = [|
@@ -218,7 +124,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.BuildFreeList_PayloadNotPresent_001() =
-        let wstr = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xF00000UL Blocksize.BS_512 false
+        let wstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0xF00000UL Blocksize.BS_512 false
         let str = {
             wstr with
                 BAT.Payloads = [|
@@ -247,7 +153,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.BuildFreeList_SectorBitmapNotPresent_001() =
-        let wstr = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x800000UL Blocksize.BS_512 false
+        let wstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x800000UL Blocksize.BS_512 false
         let str = {
             wstr with
                 BAT.SectorBitmap = [|
@@ -326,7 +232,7 @@ type VhdxWriter_Test () =
     [<Theory>]
     [<MemberData( "m_BuildFreeList_001_data" )>]
     member _.BuildFreeList_PayloadBlock_001 ( interval : uint64[] ) ( fsize : uint64 ) ( maxcnt : uint64 ) ( rxpr : uint64 [] ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
         let str2 = {
             str with
                 BAT.Payloads = [|
@@ -345,7 +251,7 @@ type VhdxWriter_Test () =
     [<Theory>]
     [<MemberData( "m_BuildFreeList_001_data" )>]
     member _.BuildFreeList_SectorBitmap_001 ( interval : uint64[] ) ( fsize : uint64 ) ( maxcnt : uint64 ) ( rxpr : uint64 [] ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
         let str2 = {
             str with
                 BAT.Payloads = [|
@@ -394,7 +300,7 @@ type VhdxWriter_Test () =
     [<Theory>]
     [<MemberData( "m_BuildFreeList_DifferentBlockSize_001_data" )>]
     member _.BuildFreeList_DifferentBlockSize_001 ( payloadBlockSize : uint32 ) ( virtualDiskSize : uint64 ) ( interval : uint64[] ) ( fsize : uint64 ) ( maxcnt : uint64 ) ( rxpr : uint64 [] ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u payloadBlockSize virtualDiskSize Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u payloadBlockSize virtualDiskSize Blocksize.BS_512 false
         let str2 = {
             str with
                 BAT.Payloads = [|
@@ -418,7 +324,7 @@ type VhdxWriter_Test () =
     [<Theory>]
     [<MemberData( "m_UpdatePBForAllocate_001_data" )>]
     member _.UpdatePBForAllocate_001 ( stat : BatEntryStatePB ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
         str.BAT.Payloads.[0] <- {
             str.BAT.Payloads.[0] with
                 State = stat;
@@ -439,7 +345,7 @@ type VhdxWriter_Test () =
     [<Theory>]
     [<MemberData( "m_UpdatePBForAllocate_002_data" )>]
     member _.UpdatePBForAllocate_002 ( stat : BatEntryStatePB ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
         str.BAT.Payloads.[0] <- {
             str.BAT.Payloads.[0] with
                 State = stat;
@@ -460,7 +366,7 @@ type VhdxWriter_Test () =
     [<Theory>]
     [<MemberData( "m_UpdatePBForAllocate_002_data" )>]
     member _.UpdatePBForAllocate_003 ( stat : BatEntryStatePB ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
         str.BAT.Payloads.[0] <- {
             str.BAT.Payloads.[0] with
                 State = stat;
@@ -479,7 +385,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.UpdatePBForAllocate_004 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 true
         str.BAT.Payloads.[0] <- {
             str.BAT.Payloads.[0] with
                 State = BatEntryStatePB.PayloadNotPresent;
@@ -498,7 +404,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.UpdatePBForAllocate_005 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u 0x400000000000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x4000000u 0x400000000000UL Blocksize.BS_512 false
         str.BAT.Payloads.[1048575] <- {
             str.BAT.Payloads.[1048575] with
                 State = BatEntryStatePB.PayloadNotPresent;
@@ -523,7 +429,7 @@ type VhdxWriter_Test () =
     [<InlineData( 0x1000UL,             0x1000000UL,      4096 )>]
     member _.UpdatePBForAllocate_Fail_001 ( lba : uint64 ) ( vds : uint64 ) ( argbs : int ) =
         let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x4000000u vds bs false
         use e = [||] |> Array.toSeq |> _.GetEnumerator()
         let updated4KSecs = HashSet<SEC4K_T>()
         let r =
@@ -543,7 +449,7 @@ type VhdxWriter_Test () =
     [<InlineData( 0x800UL,              0x801UL,               0x1000000UL,      4096 )>]
     member _.AllocatePayloadBlock_Fail_001 ( lba : uint64 ) ( cnt : uint64 ) ( vds : uint64 ) ( argbs : int ) =
         let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x4000000u vds bs false
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
                 VhdxWriter.AllocatePayloadBlock str ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 cnt ) |> ignore
@@ -552,7 +458,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.AllocatePayloadBlock_Fail_002 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
         let str2 = { str with VDI.PayloadBlockSize = 0u; }
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
@@ -567,7 +473,7 @@ type VhdxWriter_Test () =
     [<InlineData( 0x00UL,               0x1000000UL,      4096 )>]
     member _.AllocatePayloadBlock_002 ( lba : uint64 ) ( vds : uint64 ) ( argbs : int ) =
         let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x4000000u vds bs false
         let struct( h, g ) = VhdxWriter.AllocatePayloadBlock str ( blkcnt_me.ofUInt64 lba ) blkcnt_me.zero64
         Assert.Empty h
         Assert.StrictEqual( str.LastFileSize, g )
@@ -582,7 +488,7 @@ type VhdxWriter_Test () =
     [<InlineData( 0UL,       2048UL, 0UL, 0 )>]     // The entire initial payload block
     [<InlineData( 2095104UL, 2048UL, 1UL, 1023 )>]  // The entire payload block at the end
     member _.AllocatePayloadBlock_003 ( lba : uint64 ) ( cnt : uint64 ) ( sec4k : uint64 ) ( bati : int ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512 false
         let freeSpace = str.BAT.Payloads.[ bati ].FileOffset
         str.BAT.Payloads.[ bati ] <- {
             str.BAT.Payloads.[ bati ] with
@@ -603,7 +509,7 @@ type VhdxWriter_Test () =
     [<InlineData( 2047UL, 0, 1, 1 )>]           // Two BAT entries reside within the same 4K sector.
     [<InlineData( 0xFFFFFUL, 511, 512, 2 )>]    // Two BAT entries reside within different 4K sectors.
     member _.AllocatePayloadBlock_004 ( lba : uint64 ) ( bat0 : int ) ( bat1 : int ) ( sec4kcnt : int ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512 false
         let freeSpace0 = str.BAT.Payloads.[ bat0 ].FileOffset
         let freeSpace1 = str.BAT.Payloads.[ bat1 ].FileOffset
         str.BAT.Payloads.[ bat0 ] <- {
@@ -631,7 +537,7 @@ type VhdxWriter_Test () =
     // Allocate the entire disk as new
     [<Fact>]
     member _.AllocatePayloadBlock_005 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512 false
         let freeSpace = str.BAT.Payloads |> Array.map _.FileOffset
         Array.iteri ( fun idx itr ->
             str.BAT.Payloads.[ idx ] <- {
@@ -656,7 +562,7 @@ type VhdxWriter_Test () =
     // A parent disk exists.
     [<Fact>]
     member _.AllocatePayloadBlock_006 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512 true
         let freeSpace = str.BAT.Payloads.[0].FileOffset
         str.BAT.Payloads.[0] <- {
             str.BAT.Payloads.[0] with
@@ -675,7 +581,7 @@ type VhdxWriter_Test () =
     // Scenarios in which a file is extended
     [<Fact>]
     member _.AllocatePayloadBlock_007 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x40000000UL Blocksize.BS_512 false
         let freeSpace = str.BAT.Payloads.[1023].FileOffset
         let str2 = {
             str with
@@ -695,7 +601,7 @@ type VhdxWriter_Test () =
     // Cases that have already been assigned
     [<Fact>]
     member _.AllocatePayloadBlock_008 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
         let struct( d, r ) =
             VhdxWriter.AllocatePayloadBlock str blkcnt_me.zero64 ( blkcnt_me.ofUInt64 1UL )
         Assert.StrictEqual( str.LastFileSize, r )
@@ -710,7 +616,7 @@ type VhdxWriter_Test () =
     [<InlineData( 0x1000UL,             0x1000000UL,      4096 )>]
     member _.UpdateSBForAllocate_Fail_001 ( lba : uint64 ) ( vds : uint64 ) ( argbs : int ) =
         let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x4000000u vds bs true
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
                 let h = HashSet<SEC4K_T>()
@@ -721,7 +627,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.UpdateSBForAllocate_Fail_002 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
                 let d = Dictionary< SEC4K_T, ArraySegment<byte> >()
@@ -731,7 +637,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.UpdateSBForAllocate_Fail_003 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x1000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x1000000UL Blocksize.BS_512 true
         let str2 = { str with BAT.SectorBitmap = [||] }
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
@@ -742,7 +648,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.UpdateSBForAllocate_Fail_004 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x1000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x1000000UL Blocksize.BS_512 true
         str.BAT.SectorBitmap.[0] <- {
             str.BAT.SectorBitmap.[0] with
                 SBState = BatEntryStateSB.SectorBitmapNotPresent;
@@ -756,7 +662,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.UpdateSBForAllocate_Fail_005 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x1000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x1000000UL Blocksize.BS_512 true
         str.BAT.SectorBitmap.[0] <- {
             str.BAT.SectorBitmap.[0] with
                 Bitmap = Array.zeroCreate<byte> 0xFFFFF
@@ -772,7 +678,7 @@ type VhdxWriter_Test () =
     [<InlineData( 0x00UL, 0x400000UL, 512 )>]
     member _.UpdateSBForAllocate_001 ( lba : uint64 ) ( vds : uint64 ) ( argbs : int ) =
         let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x4000000u vds bs true
         str.BAT.SectorBitmap |> Array.iteri ( fun idx itr ->
             str.BAT.SectorBitmap.[idx] <- {
                 itr with
@@ -795,7 +701,7 @@ type VhdxWriter_Test () =
     [<InlineData( 0x800000UL, 1, 0UL,   0,       0,       0x01uy )>]
     [<InlineData( 0xFFFFFFUL, 1, 255UL, 0xFF000, 0xFFFFF, 0x80uy )>]
     member _.UpdateSBForAllocate_002 ( lba : uint64 ) ( sbidx : int ) ( sec : uint64 ) ( off : int ) ( bidx : int ) ( expb : byte ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
 
         let h = HashSet<SEC4K_T>()
         let d = Dictionary< SEC4K_T, ArraySegment<byte> >()
@@ -814,7 +720,7 @@ type VhdxWriter_Test () =
     [<InlineData( 0x00UL,     0, 0UL,   0,       0,       0x01uy )>]
     [<InlineData( 0xFFFFFFUL, 1, 255UL, 0xFF000, 0xFFFFF, 0x80uy )>]
     member _.UpdateSBForAllocate_003 ( lba : uint64 ) ( sbidx : int ) ( sec : uint64 ) ( off : int ) ( bidx : int ) ( expb : byte ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
         str.BAT.SectorBitmap.[sbidx].Bitmap.[bidx] <- ~~~ expb
 
         let h = HashSet<SEC4K_T>()
@@ -834,7 +740,7 @@ type VhdxWriter_Test () =
     [<InlineData( 0x00UL,     0, 0,       0x01uy, 0    )>]
     [<InlineData( 0xFFFFFFUL, 1, 0xFFFFF, 0x80uy, 8191 )>]
     member _.UpdateSBForAllocate_004 ( lba : uint64 ) ( sbidx : int ) ( bidx : int ) ( expb : byte ) ( pbidx : int ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
         for i = 0 to 1048575 do
             str.BAT.SectorBitmap.[sbidx].Bitmap.[i] <- 0xFFuy
         str.BAT.SectorBitmap.[sbidx].Bitmap.[bidx] <- ~~~ expb
@@ -864,7 +770,7 @@ type VhdxWriter_Test () =
     [<InlineData( 0x800UL,              0x801UL,              0x1000000UL,      4096 )>]
     member _.UpdateSectorBitmap_Fail_001 ( lba : uint64 ) ( cnt : uint64 ) ( vds : uint64 ) ( argbs : int ) =
         let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x4000000u vds bs false
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
                 VhdxWriter.UpdateSectorBitmap str ( HashSet<SEC4K_T>() ) ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 cnt ) |> ignore
@@ -877,7 +783,7 @@ type VhdxWriter_Test () =
     [<InlineData( 0x400000000UL,        0x400000000000UL, 4096 )>]
     member _.UpdateSectorBitmap_001 ( lba : uint64 ) ( vds : uint64 ) ( argbs : int ) =
         let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x4000000u vds bs false
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x4000000u vds bs false
         let r = VhdxWriter.UpdateSectorBitmap str ( HashSet<SEC4K_T>() ) ( blkcnt_me.ofUInt64 lba ) blkcnt_me.zero64
         Assert.Empty r
 
@@ -915,7 +821,7 @@ type VhdxWriter_Test () =
     [<Theory>]
     [<MemberData( "m_UpdateSectorBitmap_002_data" )>]
     member _.UpdateSectorBitmap_002 ( lba : uint64 ) ( cnt : uint64 ) ( exp : ( uint64 * int * int * int * byte[] )[] ) ( pb4kcnt : int ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
 
         let h = HashSet<SEC4K_T>()
         let d = VhdxWriter.UpdateSectorBitmap str h ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 cnt )
@@ -932,14 +838,14 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.UpdateSectorBitmap_003 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
         let h = HashSet<SEC4K_T>( [| for i in 0UL .. 9UL do sec4k_me.ofUInt64 i |] )
         let d = VhdxWriter.UpdateSectorBitmap str h blkcnt_me.zero64 ( blkcnt_me.ofUInt64 1UL )
         Assert.StrictEqual( 10, h.Count )
 
     [<Fact>]
     member _.UpdateSectorBitmap_004 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
         for i = 0 to 1 do
             str.BAT.Payloads.[i] <- {
                 str.BAT.Payloads.[i] with
@@ -1027,7 +933,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.CreateBATEntryTableFrom4KSectorNumber_001 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
         let bat4k = str.BAT.BATRegionOffset / 4096UL
         let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 bat4k )
         Assert.StrictEqual( 4096, r.Length )
@@ -1042,7 +948,7 @@ type VhdxWriter_Test () =
     [<Fact>]
     member _.CreateBATEntryTableFrom4KSectorNumber_002 () =
         // Chunk Rate = 16, Payload Block Count = 2048, Sector Bitmap Count = 128
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x10000000u 0x8000000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x10000000u 0x8000000000UL Blocksize.BS_512 true
         let bat4k = str.BAT.BATRegionOffset / 4096UL
         let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 bat4k )
         Assert.StrictEqual( 4096, r.Length )
@@ -1060,7 +966,7 @@ type VhdxWriter_Test () =
     [<Fact>]
     member _.CreateBATEntryTableFrom4KSectorNumber_003 () =
         // Chunk Rate = 16, Payload Block Count = 2048, Sector Bitmap Count = 128
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x10000000u 0x8000000000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x10000000u 0x8000000000UL Blocksize.BS_512 true
         let bat4k = str.BAT.BATRegionOffset / 4096UL
         let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 ( bat4k + 4UL ) )
         Assert.StrictEqual( 4096, r.Length )
@@ -1081,7 +987,7 @@ type VhdxWriter_Test () =
 
     [<Fact>]
     member _.CreateBATEntryTableFrom4KSectorNumber_004 () =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
         let bat4k = str.BAT.BATRegionOffset / 4096UL
         let bat4kcnt = str.BAT.BATRegionLength / 4096u |> uint64
         let r = VhdxWriter.CreateBATEntryTableFrom4KSectorNumber str.BAT ( sec4k_me.ofUInt64 ( bat4k + bat4kcnt - 1UL ) )
@@ -1091,7 +997,7 @@ type VhdxWriter_Test () =
     [<InlineData( 0xFFFFFFFFFFFFFFFFUL )>]  // -1
     [<InlineData( 256UL )>]
     member _.CreateBATEntryTableFrom4KSectorNumber_Fail_001 ( a : uint64 ) =
-        let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
         let bat4k = str.BAT.BATRegionOffset / 4096UL
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
@@ -1104,7 +1010,7 @@ type VhdxWriter_Test () =
         task {
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, 1u, false )
-            let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 true
+            let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 true
             do! fa.SetFileSize 0x500000UL
             let! r = VhdxWriter.WriteUpdatedBAT fa str str.LoadedVarHeader [||] 0x500000UL
             Assert.StrictEqual(( str.LoadedVarHeader, r ))
@@ -1114,18 +1020,15 @@ type VhdxWriter_Test () =
     [<Fact>]
     member _.WriteUpdatedBAT_Fail_001 () =
         task {
-            let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, 1u, false )
-            let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 true
+            let fa = FileAccessor( "a", 1u, false, ( fun _ _ _ _ -> new Stream_Stub( p_get_Length = ( fun _ -> 0L ) ) ), ( fun _ -> true ) )
+            let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 true
             let str2 = { str with ImmHeader.LogLength = 0u }
-            do! fa.SetFileSize 0x500000UL
             let! r =
                 Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
                     let! _ = VhdxWriter.WriteUpdatedBAT fa str2 str.LoadedVarHeader [||] 0x500000UL
                     ()
                 } )
             Assert.StartsWith( "Unexpected log area size", r.Message )
-            GlbFunc.DeleteFile fname
         }
 
     [<Fact>]
@@ -1133,7 +1036,7 @@ type VhdxWriter_Test () =
         task {
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, 1u, true )
-            let str = VhdxWriter_Test.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 true
+            let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 true
             let bat4k = str.BAT.BATRegionOffset / 4096UL |> sec4k_me.ofUInt64
             let! r =
                 Assert.ThrowsAsync<InvalidOperationException>( fun () -> task {
@@ -1261,7 +1164,155 @@ type VhdxWriter_Test () =
             let! str2 = VhdxReader.ReadVhdx fa1
             Assert.Empty str2.Log
             Assert.StrictEqual( BatEntryStatePB.PayloadUndefined, str2.BAT.Payloads.[0].State )
+            Assert.StrictEqual( str.LastFileSize, fa1.FileSize )
 
             fa1.Close()
+            GlbFunc.DeleteFile fname
+        }
+
+    [<Theory>]
+    [<InlineData( 0x800000UL, 0xA00000UL )>]
+    [<InlineData( 0xA00000UL, 0x800000UL )>]
+    member _.WriteUpdatedBAT_005 ( size1 : uint64 ) ( size2 : uint64 ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa1 = FileAccessor( fname, 1u, false )
+            do! VhdxCreator.Create None fa1 0x100000u 0x100000u true 0x200000UL Blocksize.BS_512
+            let! str = VhdxReader.ReadVhdx fa1
+            let bat4k = str.BAT.BATRegionOffset / 4096UL |> sec4k_me.ofUInt64
+            do! fa1.SetFileSize size1
+
+            let! r = VhdxWriter.WriteUpdatedBAT fa1 str str.LoadedVarHeader [| bat4k |] size2
+            Assert.StrictEqual( size2, fa1.FileSize )
+
+            fa1.Close()
+            GlbFunc.DeleteFile fname
+        }
+
+    [<Fact>]
+    member _.WriteUpdatedSB_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 true
+            do! fa.SetFileSize 0x500000UL
+            let! r = VhdxWriter.WriteUpdatedSB fa str str.LoadedVarHeader [||]
+            Assert.StrictEqual(( str.LoadedVarHeader, r ))
+            GlbFunc.DeleteFile fname
+        }        
+
+    [<Fact>]
+    member _.WriteUpdatedSB_Fail_002 () =
+        task {
+            let fa = FileAccessor( "a", 1u, false, ( fun _ _ _ _ -> new Stream_Stub( p_get_Length = ( fun _ -> 0L ) ) ), ( fun _ -> true ) )
+            let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 true
+            let str2 = { str with ImmHeader.LogLength = 0u }
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    let! _ = VhdxWriter.WriteUpdatedSB fa str2 str.LoadedVarHeader [||]
+                    ()
+                } )
+            Assert.StartsWith( "Unexpected log area size", r.Message )
+        }
+
+    [<Fact>]
+    member _.WriteUpdatedSB_002 () =
+        task {
+            // Create temp VHDX file
+            let fname = Path.GetTempFileName()
+            let fa1 = FileAccessor( fname, 1u, false )
+            do! VhdxCreator.Create None fa1 0x100000u 0x100000u true 0x200000UL Blocksize.BS_512
+            let! str = VhdxReader.ReadVhdx fa1
+            do! fa1.SetFileSize 0xA00000UL
+            fa1.Close()
+
+            // Open the VHDX file in a way that causes the second header update to fail.
+            let mutable cnt = 0
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                let tmpfile = File.Open( fname, FileMode.Open, FileAccess.ReadWrite, FileShare.None )
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> tmpfile.Length ),
+                    p_SetLength = ( fun s -> tmpfile.SetLength s ),
+                    p_Seek = ( fun ( s, o ) ->
+                        if s = 0x10000L || s = 0x20000L then
+                            cnt <- cnt + 1
+                            if cnt = 3 then raise <| Exception( "xxx" )
+                        tmpfile.Seek( s, o )
+                    ),
+                    p_WriteAsync = tmpfile.WriteAsync,
+                    p_ReadAsync = tmpfile.ReadAsync,
+                    p_FlushAsync = tmpfile.FlushAsync,
+                    p_Close = tmpfile.Close
+                )
+            let fa2 = FileAccessor( fname, 1u, false, fc, fun _ -> true )
+            let updatePos = 0x900000UL / 4096UL |> sec4k_me.ofUInt64
+            let updateData = Array.init 4096 ( fun _ -> Random.Shared.Next() |> byte )
+
+            let! r =
+                Assert.ThrowsAsync<Exception> ( fun () -> task {
+                    let! _ = VhdxWriter.WriteUpdatedSB fa2 str str.LoadedVarHeader [| struct( updatePos, ArraySegment updateData ) |]
+                    ()
+                })
+            Assert.StrictEqual( "xxx", r.Message )
+
+            let! str2 = VhdxReader.ReadVhdx fa2
+            Assert.StrictEqual( 1, str2.Log.Length )
+            Assert.StrictEqual( 1u, str2.Log.[0].DescriptorCount )
+            match str2.Log.[0].Descriptors.[0] with
+            | LogDescriptor.Data( dd ) ->
+                Assert.StrictEqual( 0x900000UL, dd.FileOffset )
+                Assert.True(( dd.LeadingBytes = updateData.[ 0 .. 7 ] ))
+                Assert.True(( dd.TrailingBytes = updateData.[ 4092 .. ] ))
+            | _ ->
+                Assert.Fail __LINE__
+
+            fa2.Close()
+            GlbFunc.DeleteFile fname
+        }
+
+    [<Theory>]
+    [<InlineData( -1, 4 )>]
+    [<InlineData( 0, 4 )>]
+    [<InlineData( 1, 8 )>]
+    member _.WriteUpdatedSB_003 ( sd : int ) ( exp : int ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa1 = FileAccessor( fname, 1u, false )
+            do! VhdxCreator.Create None fa1 0x100000u 0x100000u true 0x200000UL Blocksize.BS_512
+            let! str = VhdxReader.ReadVhdx fa1
+            do! fa1.SetFileSize 0xA00000UL
+            fa1.Close()
+
+            let mutable cnt = 0
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                let tmpfile = File.Open( fname, FileMode.Open, FileAccess.ReadWrite, FileShare.None )
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> tmpfile.Length ),
+                    p_SetLength = ( fun s -> tmpfile.SetLength s ),
+                    p_Seek = ( fun ( s, o ) ->
+                        // Count the number of times the header is written
+                        if s = 0x10000L || s = 0x20000L then
+                            cnt <- cnt + 1
+                        tmpfile.Seek( s, o )
+                    ),
+                    p_WriteAsync = tmpfile.WriteAsync,
+                    p_ReadAsync = tmpfile.ReadAsync,
+                    p_FlushAsync = tmpfile.FlushAsync,
+                    p_Close = tmpfile.Close
+                )
+            let fa2 = FileAccessor( fname, 1u, false, fc, fun _ -> true )
+
+            let wseccnt = VhdxCorrupter.Max4KSectorCountFromLogCapacity 0x100000u |> int
+            let updatePos = 0x900000UL / 4096UL |> sec4k_me.ofUInt64
+            let updateData = Array.init 4096 ( fun _ -> Random.Shared.Next() |> byte )
+            let vsec = Array.init ( wseccnt + sd ) ( fun _ -> struct( updatePos, ArraySegment updateData ) )
+
+            let! r = VhdxWriter.WriteUpdatedSB fa2 str str.LoadedVarHeader vsec
+
+            Assert.StrictEqual( exp, cnt )
+            Assert.StrictEqual( Guid(), r.LogGuid )
+            Assert.StrictEqual( str.LoadedVarHeader.SequenceNumber + uint64 exp, r.SequenceNumber )
+
+            fa2.Close()
             GlbFunc.DeleteFile fname
         }

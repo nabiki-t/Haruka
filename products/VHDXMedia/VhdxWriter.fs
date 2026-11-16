@@ -539,12 +539,12 @@ type VhdxWriter() =
                     let! wverhd1 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd with LogGuid = newLogGuid }
 
                     // Set file size
-                    if currentFileSize < reqFileSize then
+                    if currentFileSize <> reqFileSize then
                         do! fa.SetFileSize( reqFileSize )
 
                     // Write BAT data to file
                     for struct ( sec4k, batData ) in listSec4K_BatData do
-                        do! fa.Write ( uint64 sec4k * 4096UL ) ( ArraySegment batData )
+                        do! fa.WriteArray ( uint64 sec4k * 4096UL ) batData
 
                     // Update header ( Set LogGuid to zero )
                     let! wverhd2 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd1 with LogGuid = Guid() }
@@ -575,8 +575,12 @@ type VhdxWriter() =
     /// </returns>
     static member WriteUpdatedSB ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) ( sec4Ks : struct( SEC4K_T * ArraySegment<byte> ) [] ) : Task<VhdxMutableHeader> =
         task {
+            let logLength = structures.ImmHeader.LogLength
+            if logLength = 0u then
+                raise <| VhdxMediaException( "Unexpected log area size." )
+
             let logEntryUnit =
-                VhdxCorrupter.Max4KSectorCountFromLogCapacity structures.ImmHeader.LogLength
+                VhdxCorrupter.Max4KSectorCountFromLogCapacity logLength
                 |> int
             let cycleCount = Functions.CeilDiv sec4Ks.Length logEntryUnit
 
@@ -590,21 +594,20 @@ type VhdxWriter() =
 
                     // Write log entry
                     let listSec4K_SBData =
-                            sec4Ks.[ widx .. widx + wcnt - 1 ]
-                            |> Array.map ( fun struct( s, d ) -> struct( s, d.ToArray() ) )
-                            |> Array.toList
+                        sec4Ks.[ widx .. widx + wcnt - 1 ]
+                        |> Array.map ( fun struct( s, d ) -> struct( s, d.ToArray() ) )
                     let logEntries = VhdxCorrupter.CreateLogEntry listSec4K_SBData 0u 1UL newLogGuid currentFileSize currentFileSize
                     do! VhdxCorrupter.WriteLogEntry fa structures.ImmHeader 0u List.empty logEntries
 
                     // Update header( Update LogGuid )
-                    let! wverhd1 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd with LogGuid = Guid.NewGuid() }
+                    let! wverhd1 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd with LogGuid = newLogGuid }
 
                     // Write updated structures data to file
                     for struct ( sec4k, sbData ) in listSec4K_SBData do
-                        do! fa.Write ( uint64 sec4k * 4096UL ) ( ArraySegment sbData )
+                        do! fa.WriteArray ( uint64 sec4k * 4096UL ) sbData
 
                     // Update header ( Set LogGuid to zero )
-                    let! wverhd2 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd1 with LogGuid = Guid.NewGuid() }
+                    let! wverhd2 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd1 with LogGuid = Guid() }
                     ps.Continue( struct( cycle + 1, wverhd2 ) )
                 else
                     ps.Break wverhd
@@ -635,11 +638,16 @@ type VhdxWriter() =
 
             for i in 0UL .. rawDataSec - 1UL do
                 let curlba = blkcnt_me.ofUInt64 i + lba
+
                 let struct( badIndex, offsetInBat ) = VhdxCommons.LBAtoPayloadBlockIndex curlba structures
-                let pbStartPos = structures.BAT.Payloads.[ int32 badIndex ].FileOffset
+                let pb = structures.BAT.Payloads.[ int32 badIndex ]
+                if not ( pb.State.IsPayloadFullyPresent || pb.State.IsPayloadPartiallyPresent ) then
+                    raise <| VhdxMediaException( "Payload is not allocated." )
+
+                let pbStartPos = pb.FileOffset
                 let offsetInPB = ( uint64 offsetInBat ) * sectorSize
                 rawfs.ReadExactly( buffer, 0, int32 sectorSize )
-                do! vhdxfs.Write ( pbStartPos + offsetInPB ) ( ArraySegment buffer )
+                do! vhdxfs.WriteArray ( pbStartPos + offsetInPB ) buffer
         }
 
     /// <summary>
