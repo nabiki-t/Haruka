@@ -629,25 +629,30 @@ type VhdxWriter() =
     /// <param name="structures">
     ///  The VHDX file structures data.
     /// </param>
-    static member OutputRawData ( rawfs : FileStream ) ( vhdxfs : FileAccessor ) ( lba : BLKCNT64_T ) ( structures : VhdxStructures ) : Task =
+    static member OutputRawData ( rawfs : Stream ) ( vhdxfs : FileAccessor ) ( lba : BLKCNT64_T ) ( structures : VhdxStructures ) : Task =
         task {
             let sectorSize = structures.VDI.LogicalSectorSize |> Blocksize.toUInt64
-            let rawDataSec = Functions.CalcBlockCount64 ( uint64 rawfs.Length ) structures.VDI.LogicalSectorSize |> uint64
-            let buffer = Array.zeroCreate< byte >( int32 sectorSize )
-            rawfs.Seek( 0L, SeekOrigin.Begin ) |> ignore
+            let rawDataSec = Functions.CalcBlockCount64 ( uint64 rawfs.Length ) structures.VDI.LogicalSectorSize
+            let vdss = Functions.CalcBlockCount64 structures.VDI.VirtualDiskSize structures.VDI.LogicalSectorSize
+            if not( Functions.CheckAccessRangeBlock  lba rawDataSec vdss ) then
+                raise <| VhdxMediaException( "Out of access range." )
 
-            for i in 0UL .. rawDataSec - 1UL do
-                let curlba = blkcnt_me.ofUInt64 i + lba
+            if blkcnt_me.zero64 < rawDataSec then
+                let buffer = Array.zeroCreate< byte >( int32 sectorSize )
+                rawfs.Seek( 0L, SeekOrigin.Begin ) |> ignore
 
-                let struct( badIndex, offsetInBat ) = VhdxCommons.LBAtoPayloadBlockIndex curlba structures
-                let pb = structures.BAT.Payloads.[ int32 badIndex ]
-                if not ( pb.State.IsPayloadFullyPresent || pb.State.IsPayloadPartiallyPresent ) then
-                    raise <| VhdxMediaException( "Payload is not allocated." )
+                for i in 0UL .. ( uint64 rawDataSec ) - 1UL do
+                    let curlba = blkcnt_me.ofUInt64 i + lba
 
-                let pbStartPos = pb.FileOffset
-                let offsetInPB = ( uint64 offsetInBat ) * sectorSize
-                rawfs.ReadExactly( buffer, 0, int32 sectorSize )
-                do! vhdxfs.WriteArray ( pbStartPos + offsetInPB ) buffer
+                    let struct( badIndex, offsetInBat ) = VhdxCommons.LBAtoPayloadBlockIndex curlba structures
+                    let pb = structures.BAT.Payloads.[ int32 badIndex ]
+                    if not ( pb.State.IsPayloadFullyPresent || pb.State.IsPayloadPartiallyPresent ) then
+                        raise <| VhdxMediaException( "Payload is not allocated." )
+
+                    let pbStartPos = pb.FileOffset
+                    let offsetInPB = ( uint64 offsetInBat ) * sectorSize
+                    rawfs.ReadExactly( buffer, 0, int32 sectorSize )
+                    do! vhdxfs.WriteArray ( pbStartPos + offsetInPB ) buffer
         }
 
     /// <summary>

@@ -1316,3 +1316,71 @@ type VhdxWriter_Test () =
             fa2.Close()
             GlbFunc.DeleteFile fname
         }
+
+    [<Theory>]
+    [<InlineData( 0x100000UL, 2048UL,                  1UL,                  512 )>]
+    [<InlineData( 0x100000UL, 0UL,                     2049UL,               512 )>]
+    [<InlineData( 0x100000UL, 0xFFFFFFFFFFFFFFFFUL,    0xFFFFFFFFFFFFFFFFUL, 512 )>]
+    member _.OutputRawData_Fail_001 ( vdsize : uint64 ) ( lba : uint64 ) ( rawblkcnt : uint64 ) ( blksize : int ) =
+        task {
+            let bs = if blksize = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+            let fname = Path.GetTempFileName()
+            let fa1 = FileAccessor( fname, 1u, false )
+            let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u vdsize bs false
+            let fs = new Stream_Stub( p_get_Length = ( fun _ -> rawblkcnt * uint64 blksize |> int64 ) )
+
+            let! r = Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                do! VhdxWriter.OutputRawData fs fa1 ( blkcnt_me.ofUInt64 lba ) str
+            })
+            Assert.StartsWith( "Out of access range", r.Message )
+
+            fa1.Close()
+            GlbFunc.DeleteFile fname
+        }
+
+    [<Theory>]
+    [<InlineData( 0x100000UL, 2048UL, 0UL, 512 )>]
+    member _.OutputRawData_001 ( vdsize : uint64 ) ( lba : uint64 ) ( rawblkcnt : uint64 ) ( blksize : int ) =
+        task {
+            let bs = if blksize = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+            let fname = Path.GetTempFileName()
+            let fa1 = FileAccessor( fname, 1u, false )
+            let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u vdsize bs false
+            let fs = new Stream_Stub( p_get_Length = ( fun _ -> 0L ) )
+            do! VhdxWriter.OutputRawData fs fa1 ( blkcnt_me.ofUInt64 lba ) str
+            fa1.Close()
+            GlbFunc.DeleteFile fname
+        }
+
+    [<Theory>]
+    [<InlineData( 0x100000UL, 0UL,      1UL, 512,  0, 0UL )>]
+    [<InlineData( 0xA00000UL, 0x4FFFUL, 1UL,  512, 9, 0xFFE00UL )>]
+    [<InlineData( 0x100000UL, 0UL,      1UL, 4096, 0, 0UL )>]
+    [<InlineData( 0xA00000UL, 0x9FFUL,  1UL, 4096, 9, 0xFF000UL )>]
+    member _.OutputRawData_002 ( vdsize : uint64 ) ( lba : uint64 ) ( rawblkcnt : uint64 ) ( blksize : int ) ( pbidx : int ) ( offset : uint64 ) =
+        task {
+            let bs = if blksize = 512 then Blocksize.BS_512 else Blocksize.BS_4096
+            let fname = Path.GetTempFileName()
+            let fa1 = FileAccessor( fname, 1u, false )
+            let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u vdsize bs false
+            do! fa1.SetFileSize str.LastFileSize
+            let datalen = rawblkcnt * ( uint64 blksize )
+
+            let fs = new MemoryStream()
+            for i in 0UL .. datalen - 1UL do
+                fs.WriteByte( Random.Shared.Next() |> byte )
+            fs.Seek( 0L, SeekOrigin.Begin ) |> ignore
+
+            do! VhdxWriter.OutputRawData fs fa1 ( blkcnt_me.ofUInt64 lba ) str
+
+            let rdata = Array.zeroCreate<byte>( int32 datalen )
+            do! fa1.ReadArray ( str.BAT.Payloads.[ pbidx ].FileOffset + offset ) rdata
+
+            fs.Seek( 0L, SeekOrigin.Begin ) |> ignore
+            for i in 0UL .. datalen - 1UL do
+                let b1 = fs.ReadByte() |> byte
+                Assert.StrictEqual( b1, rdata.[ int32 i ] )
+
+            fa1.Close()
+            GlbFunc.DeleteFile fname
+        }
