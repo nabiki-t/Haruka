@@ -50,67 +50,16 @@ type VhdxCommons_Test () =
     }
 
     let GenStructures ( payloadBlockSize : uint32 ) ( virtualDiskSize : uint64 ) ( initialPB : BatEntryStatePB ) ( initialSB : BatEntryStateSB ) ( hasParent : bool ) =
-        let chunkSize = 512UL * 8388608UL;                          // Blocksize * 2^23
-        let chunkRatio = chunkSize / ( uint64 payloadBlockSize )    // ChunkSize / PayloadBlockSize
-        let payloadBlockCount =                                     // ceil( PayloadBlockCount / ChunkRatio )
-                Functions.CeilDiv virtualDiskSize ( uint64 payloadBlockSize )
-        let SectorBitmapBlockCount =                                // ceil( PayloadBlockCount / ChunkRatio )
-                Functions.CeilDiv payloadBlockCount chunkRatio
-        let batEntryCount =
-                if hasParent then
-                    // SectorBitmapBlockCount * ( ChunkRatio + 1 )
-                    SectorBitmapBlockCount * ( chunkRatio + 1UL )
-                else
-                    // PayloadBlockCount + floor( ( PayloadBlockCount - 1 ) / ChunkRatio )
-                    payloadBlockCount + ( payloadBlockCount - 1UL ) / chunkRatio
-
-        let structure = {
-            Creator = "";
-            ImmHeader = { zeroHeader with Offset = 0x10000UL };
-            LoadedVarHeader = zeroVarHeader;
-            Log = [];
-            LastFileSize = 1024UL;
-            Region = {
-                Signature = 0u;
-                Checksum = 0u;
-                EntryCount = 0u;
-                Entries = [];
-            }
-            VDI = {
-                PayloadBlockSize = payloadBlockSize;
-                LeaveBlockAllocated = false;
-                HasParent = hasParent;
-                VirtualDiskSize = virtualDiskSize;
-                VirtualDiskId = Guid();
-                LogicalSectorSize = Blocksize.BS_512;
-                PhysicalSectorSize = Blocksize.BS_512;
-                ParentLocator = Map<string,string>( [] );
-            };
-            BAT = {
-                BATRegionOffset = 0UL;
-                BATRegionLength = 4096u;
-                ChunkSize = chunkSize;
-                ChunkRatio = chunkRatio;
-                PayloadBlockCount = payloadBlockCount;
-                SectorBitmapBlockCount = SectorBitmapBlockCount;
-                BatEntryCount = batEntryCount;
-                Payloads = [|
-                    for i in 0UL .. payloadBlockCount - 1UL ->{
-                        BatEntryIndex = i;
-                        State = initialPB;
-                        FileOffset = ( uint64 payloadBlockSize ) * i;
-                    };
-                |];
-                SectorBitmap = [|
-                    for i in 0UL .. SectorBitmapBlockCount - 1UL -> {
-                        BatEntryIndex = i;
-                        SBState = initialSB;
-                        FileOffset = 0UL;
-                        Bitmap = Array.zeroCreate<byte> 1048576
-                    }
-                |];
-            }
-        }
+        let structure = VhdxTestFunc.GenStructures 0x100000u payloadBlockSize virtualDiskSize Blocksize.BS_512 hasParent
+        structure.BAT.Payloads
+        |> Array.iteri ( fun idx itr ->
+            structure.BAT.Payloads.[idx] <- { itr with State = initialPB }
+        )
+        if hasParent then
+            structure.BAT.SectorBitmap
+            |> Array.iteri ( fun idx itr ->
+                structure.BAT.SectorBitmap.[idx] <- { itr with SBState = initialSB }
+            )
         structure
 
 
@@ -237,9 +186,9 @@ type VhdxCommons_Test () =
         Assert.True( r.IsNone )
 
     [<Theory>]
-    [<InlineData( 0UL, 0UL )>]
-    [<InlineData( 4UL, 2048UL )>]
-    [<InlineData( 7UL, 3584UL )>]
+    [<InlineData( 0UL, 0UL + 0x400000UL )>]
+    [<InlineData( 4UL, 2048UL + 0x400000UL )>]
+    [<InlineData( 7UL, 3584UL + 0x400000UL )>]
     member _.ResolvLBA_Dynamic_Allocated_001 ( lba : uint64 ) ( offset : uint64 ) =
         let structure = GenStructures 2048u 4096UL BatEntryStatePB.PayloadFullyPresent BatEntryStateSB.SectorBitmapNotPresent false
         let r = VhdxCommons.ResolvLBA ( blkcnt_me.ofUInt64 lba ) [| structure |]
@@ -247,17 +196,22 @@ type VhdxCommons_Test () =
 
     [<Fact>]
     member _.ResolvLBA_Dynamic_Allocated_002 () =
-        let structure = GenStructures 4194304u 8589934592UL BatEntryStatePB.PayloadFullyPresent BatEntryStateSB.SectorBitmapNotPresent false
-        let r = VhdxCommons.ResolvLBA ( blkcnt_me.ofUInt64 16777215UL ) [| structure |]
-        Assert.StrictEqual( ValueSome( struct( 0, 8589934080UL ) ), r )
+        let structure = GenStructures 0x400000u 0x200000000UL BatEntryStatePB.PayloadFullyPresent BatEntryStateSB.SectorBitmapNotPresent false
+        let r = VhdxCommons.ResolvLBA ( blkcnt_me.ofUInt64 0xFFFFFFUL ) [| structure |]
+        Assert.StrictEqual( ValueSome( struct( 0, 0x1FFFFFE00UL + 0x400000UL ) ), r )
 
     [<Theory>]
-    [<InlineData( 0UL, true, 0UL )>]
+    [<InlineData( 0UL, true, 0UL + 0x400000UL )>]
     [<InlineData( 3UL, false, 0UL )>]
-    [<InlineData( 4UL, true, 2048UL )>]
+    [<InlineData( 4UL, true, 2048UL + 0x400000UL )>]
     [<InlineData( 7UL, false, 0UL )>]
     member _.ResolvLBA_Dynamic_Partially_001 ( lba : uint64 ) ( exist : bool ) ( offset : uint64 ) =
         let structure = GenStructures 2048u 4096UL BatEntryStatePB.PayloadPartiallyPresent BatEntryStateSB.SectorBitmapPresent false
+        structure.BAT.SectorBitmap.[0] <- {
+            structure.BAT.SectorBitmap.[0] with
+                SBState = BatEntryStateSB.SectorBitmapPresent;
+                Bitmap = Array.zeroCreate<byte> 0x100000
+        }
         structure.BAT.SectorBitmap.[0].Bitmap.[0] <- 0x33uy
         let r = VhdxCommons.ResolvLBA ( blkcnt_me.ofUInt64 lba ) [| structure |]
         if exist then
@@ -285,7 +239,7 @@ type VhdxCommons_Test () =
         let structure1 = GenStructures 2048u 4096UL stat BatEntryStateSB.SectorBitmapNotPresent true
         let r = VhdxCommons.ResolvLBA ( blkcnt_me.ofUInt64 0UL ) [| structure0; structure1 |]
         if rexist then
-            Assert.StrictEqual( ValueSome( struct( 0, 0UL ) ), r )
+            Assert.StrictEqual( ValueSome( struct( 0, 0x400000UL ) ), r )
         else
             Assert.True( r.IsNone )
 
@@ -310,10 +264,10 @@ type VhdxCommons_Test () =
         Assert.StrictEqual( ValueSome( struct( 0, 0x00000000AAAA0200UL ) ), r )
 
     [<Theory>]
-    [<InlineData( 0UL, true, 0UL )>]
-    [<InlineData( 3UL, false, 1536UL )>]
-    [<InlineData( 4UL, true, 2048UL )>]
-    [<InlineData( 7UL, false, 3584UL )>]
+    [<InlineData( 0UL, true, 0UL + 0x400000UL )>]
+    [<InlineData( 3UL, false, 1536UL + 0x400000UL )>]
+    [<InlineData( 4UL, true, 2048UL + 0x400000UL )>]
+    [<InlineData( 7UL, false, 3584UL + 0x400000UL )>]
     member _.ResolvLBA_Diff_Partially_001 ( lba : uint64 ) ( exist : bool ) ( offset : uint64 ) =
         let structure0 = GenStructures 2048u 4096UL BatEntryStatePB.PayloadFullyPresent BatEntryStateSB.SectorBitmapNotPresent false
         let structure1 = GenStructures 2048u 4096UL BatEntryStatePB.PayloadPartiallyPresent BatEntryStateSB.SectorBitmapPresent true
