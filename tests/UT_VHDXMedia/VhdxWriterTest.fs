@@ -1338,6 +1338,40 @@ type VhdxWriter_Test () =
             GlbFunc.DeleteFile fname
         }
 
+    static member m_OutputRawData_Fail_002_data : obj[][] = [|
+        [| BatEntryStatePB.PayloadNotPresent; |]
+        [| BatEntryStatePB.PayloadUndefined;    |]
+        [| BatEntryStatePB.PayloadZero;    |]
+        [| BatEntryStatePB.PayloadUnapped;    |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_OutputRawData_Fail_002_data" )>]
+    member _.OutputRawData_Fail_002 ( inits : BatEntryStatePB ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa1 = FileAccessor( fname, 1u, false )
+            let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+            do! fa1.SetFileSize str.LastFileSize
+            let datalen = 512UL
+
+            let fs = new MemoryStream()
+            for i in 0UL .. datalen - 1UL do
+                fs.WriteByte( Random.Shared.Next() |> byte )
+            fs.Seek( 0L, SeekOrigin.Begin ) |> ignore
+
+            str.BAT.Payloads.[0] <- {
+                str.BAT.Payloads.[0] with
+                    State = BatEntryStatePB.PayloadNotPresent;
+            }
+
+            let! r =
+                Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                    do! VhdxWriter.OutputRawData fs fa1 blkcnt_me.zero64 str
+                })
+            Assert.StartsWith( "Payload is not allocated", r.Message )
+        }
+
     [<Theory>]
     [<InlineData( 0x100000UL, 2048UL, 0UL, 512 )>]
     member _.OutputRawData_001 ( vdsize : uint64 ) ( lba : uint64 ) ( rawblkcnt : uint64 ) ( blksize : int ) =
@@ -1353,10 +1387,11 @@ type VhdxWriter_Test () =
         }
 
     [<Theory>]
-    [<InlineData( 0x100000UL, 0UL,      1UL, 512,  0, 0UL )>]
-    [<InlineData( 0xA00000UL, 0x4FFFUL, 1UL,  512, 9, 0xFFE00UL )>]
-    [<InlineData( 0x100000UL, 0UL,      1UL, 4096, 0, 0UL )>]
-    [<InlineData( 0xA00000UL, 0x9FFUL,  1UL, 4096, 9, 0xFF000UL )>]
+    [<InlineData( 0x100000UL, 0UL,      1UL,    512,  0, 0UL )>]
+    [<InlineData( 0xA00000UL, 0x4FFFUL, 1UL,    512,  9, 0xFFE00UL )>]
+    [<InlineData( 0x100000UL, 0UL,      1UL,    4096, 0, 0UL )>]
+    [<InlineData( 0xA00000UL, 0x9FFUL,  1UL,    4096, 9, 0xFF000UL )>]
+    [<InlineData( 0x100000UL, 0UL,      2048UL, 512,  0, 0UL )>]
     member _.OutputRawData_002 ( vdsize : uint64 ) ( lba : uint64 ) ( rawblkcnt : uint64 ) ( blksize : int ) ( pbidx : int ) ( offset : uint64 ) =
         task {
             let bs = if blksize = 512 then Blocksize.BS_512 else Blocksize.BS_4096
@@ -1384,3 +1419,173 @@ type VhdxWriter_Test () =
             fa1.Close()
             GlbFunc.DeleteFile fname
         }
+
+    static member m_OutputRawData_003_data : obj[][] = [|
+        [| BatEntryStatePB.PayloadFullyPresent; |]
+        [| BatEntryStatePB.PayloadPartiallyPresent;    |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_OutputRawData_003_data" )>]
+    member _.OutputRawData_003 ( inits : BatEntryStatePB ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa1 = FileAccessor( fname, 1u, false )
+            let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+            do! fa1.SetFileSize str.LastFileSize
+            let datalen = 512UL
+
+            let fs = new MemoryStream()
+            for i in 0UL .. datalen - 1UL do
+                fs.WriteByte( Random.Shared.Next() |> byte )
+            fs.Seek( 0L, SeekOrigin.Begin ) |> ignore
+
+            str.BAT.Payloads.[0] <- {
+                str.BAT.Payloads.[0] with
+                    State = inits;
+            }
+
+            do! VhdxWriter.OutputRawData fs fa1 blkcnt_me.zero64 str
+
+            let rdata = Array.zeroCreate<byte>( int32 datalen )
+            do! fa1.ReadArray ( str.BAT.Payloads.[0].FileOffset ) rdata
+
+            fs.Seek( 0L, SeekOrigin.Begin ) |> ignore
+            for i in 0UL .. datalen - 1UL do
+                let b1 = fs.ReadByte() |> byte
+                Assert.StrictEqual( b1, rdata.[ int32 i ] )
+
+            fa1.Close()
+            GlbFunc.DeleteFile fname
+        }
+
+    [<Theory>]
+    [<InlineData( 0, "Specified RAW data is empty" )>]
+    [<InlineData( 15, "RAW data length must be multiple of sector size" )>]
+    member _.Write_Fail_001 ( rawlen : int ) ( expmsg : string ) =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest( fun fa -> task {
+            let rawfname = Path.GetTempFileName()
+            File.WriteAllBytes ( rawfname, Array.zeroCreate<byte> rawlen )
+            try
+                let! r =
+                    Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                        do! VhdxWriter.Write fa rawfname blkcnt_me.zero64
+                    })
+                Assert.StartsWith( expmsg, r.Message )
+            finally
+                GlbFunc.DeleteFile rawfname
+        })
+
+    [<Theory>]
+    [<InlineData( 0UL, 0, 0UL )>]
+    [<InlineData( 2047UL, 0, 1048064UL )>]
+    [<InlineData( 2048UL, 1, 0UL )>]
+    member _.Write_Success_001 ( lba : uint64 ) ( pi : int ) ( offset : uint64 ) =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest( fun fa -> task {
+            let rawfname = Path.GetTempFileName()
+            GlbFunc.CreateRandomFile rawfname 512
+            try
+                do! VhdxWriter.Write fa rawfname ( blkcnt_me.ofUInt64 lba )
+
+                let! str = VhdxReader.ReadVhdx fa
+                Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[pi].State )
+                let result1 = Array.zeroCreate<byte> 512
+                do! fa.ReadArray ( str.BAT.Payloads.[pi].FileOffset + offset ) result1
+                let result2 = File.ReadAllBytes rawfname
+                Assert.True(( result2 = result1 ))
+
+            finally
+                GlbFunc.DeleteFile rawfname
+        })
+
+    [<Theory>]
+    [<InlineData( 0UL, 0, 0UL )>]
+    [<InlineData( 2047UL, 0, 1048064UL )>]
+    [<InlineData( 2048UL, 1, 0UL )>]
+    member _.Write_Success_002 ( lba : uint64 ) ( pi : int ) ( offset : uint64 ) =
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest( fun _ cfa -> task {
+            let rawfname = Path.GetTempFileName()
+            GlbFunc.CreateRandomFile rawfname 512
+            try
+                do! VhdxWriter.Write cfa rawfname ( blkcnt_me.ofUInt64 lba )
+
+                let! str = VhdxReader.ReadVhdx cfa
+                Assert.StrictEqual( BatEntryStatePB.PayloadPartiallyPresent, str.BAT.Payloads.[pi].State )
+                let result1 = Array.zeroCreate<byte> 512
+                do! cfa.ReadArray ( str.BAT.Payloads.[pi].FileOffset + offset ) result1
+                let result2 = File.ReadAllBytes rawfname
+                Assert.True(( result2 = result1 ))
+
+                let struct( sbIdx, bytePos, bitPos ) = VhdxCommons.LBAtoSectorBitmapIndex ( blkcnt_me.ofUInt64 lba ) str
+                let bitValue = ( str.BAT.SectorBitmap.[ int sbIdx ].Bitmap.[ int bytePos ]  >>> ( int32 bitPos ) ) &&& 1uy
+                Assert.StrictEqual( 1uy, bitValue )
+
+            finally
+                GlbFunc.DeleteFile rawfname
+        })
+
+    [<Fact>]
+    member _.Write_Success_003() =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest( fun fa -> task {
+            let! str1 = VhdxReader.ReadVhdx fa
+            let logLength = int32 str1.ImmHeader.LogLength
+            let logGuid = Guid.NewGuid()
+            let lastFileSize = fa.FileSize
+            let logData =
+                VhdxTestFunc.GenLogData
+                    logLength
+                    0
+                    [| { PatchPosition = 0; PatchData = [||]; Descriptor = [||] } |]
+                    logGuid
+                    1UL
+                    lastFileSize
+                    lastFileSize
+            let hdBytes =
+                VhdxTestFunc.GenHeaderBytes
+                    str1.ImmHeader
+                    { str1.LoadedVarHeader with LogGuid = logGuid }
+            do! fa.Write str1.ImmHeader.LogOffset (ArraySegment logData)
+            do! fa.Write 65536UL (ArraySegment hdBytes)
+            do! fa.Write 131072UL (ArraySegment [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy |])
+
+            let rawfname = Path.GetTempFileName()
+            File.WriteAllBytes( rawfname, Array.zeroCreate<byte> 512 )
+            try
+                do! VhdxWriter.Write fa rawfname blkcnt_me.zero64
+            finally
+                GlbFunc.DeleteFile rawfname
+        })
+
+    [<Fact>]
+    member _.Write_Success_004 () =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest( fun fa -> task {
+            let rawfname = Path.GetTempFileName()
+            GlbFunc.CreateRandomFile rawfname 0x4000000
+            try
+                do! VhdxWriter.Write fa rawfname blkcnt_me.zero64
+                let! r = VhdxToRaw.CompareVHDX_RAW fa rawfname
+                Assert.True r
+            finally
+                GlbFunc.DeleteFile rawfname
+        })
+
+    [<Theory>]
+    [<InlineData( 0x00UL,    0x4000200L )>]
+    [<InlineData( 0x20000UL, 512L )>]
+    member _.Write_Fail_002 ( lba : uint64 ) ( rawlen : int64 ) =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest( fun fa -> task {
+            let rawfname = Path.GetTempFileName()
+            use rawf = File.Open( rawfname, FileMode.Open, FileAccess.Write )
+            rawf.SetLength( rawlen )
+            rawf.Close()
+            rawf.Dispose()
+
+            try
+                let! r =
+                    Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                        do! VhdxWriter.Write fa rawfname ( blkcnt_me.ofUInt64 lba )
+                    })
+                Assert.StartsWith( "The target write range is outside the bounds of the virtual disk image", r.Message )
+            finally
+                GlbFunc.DeleteFile rawfname
+        })

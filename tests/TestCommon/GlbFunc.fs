@@ -556,3 +556,27 @@ type GlbFunc() =
             use m = MD5.Create()
             m.ComputeHash fd
 
+    /// <summary>
+    ///  Create a file containing random numbers. 
+    /// </summary>
+    /// <param name="fname">
+    ///  Specify the filename for the file to be created.
+    ///  If an existing filename is specified, that file will be overwritten.
+    /// </param>
+    /// <param name="size">
+    ///  Specify the number of bytes of data to write to the file.
+    /// </param>
+    static member CreateRandomFile ( fname : string ) ( size : int64 ) : unit =
+        let buflen = 8192L
+        use f = File.Open( fname, FileMode.OpenOrCreate, FileAccess.Write )
+        let buf = Array.zeroCreate<byte>( int buflen )
+        let cnt = size / buflen
+        for i in 1L .. cnt do
+            Random.Shared.NextBytes buf
+            f.Write( buf )
+        let r = size - ( cnt * buflen )
+        if r > 0L then
+            Random.Shared.NextBytes buf
+            f.Write( buf, 0, int r )
+        f.Close()
+        f.Dispose()

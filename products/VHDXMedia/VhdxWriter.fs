@@ -676,16 +676,12 @@ type VhdxWriter() =
             let rawDataLength = rawfs.Length |> uint64
             let rawDataSec = Functions.CalcBlockCount64 rawDataLength structures.VDI.LogicalSectorSize
 
+            if rawDataSec = blkcnt_me.zero64 then
+                raise <| VhdxMediaException( rawFileName, "Specified RAW data is empty." )
             if ( blkcnt_me.toUInt64 rawDataSec * uint64 sectorSize ) <> rawDataLength then
                 raise <| VhdxMediaException( rawFileName, "RAW data length must be multiple of sector size." )
-            if lba > vdss then
-                let msg = sprintf "LBA(%d) must be less than or equals virtual disk total sector count(%d)." lba vdss
-                raise <| VhdxMediaException( vhdxFile.FileName, msg )
-            if rawDataSec > vdss then
-                let msg = sprintf "RAW data sector count(%d) must be less than or equals virtual disk total sector count(%d)." rawDataSec vdss
-                raise <| VhdxMediaException( vhdxFile.FileName, msg )
-            if rawDataSec + lba > vdss || rawDataSec + lba < rawDataSec then
-                let msg = sprintf "RAW data sector count(%d) + LBA(%d) must be less than or equals virtual disk total sector count(%d)." rawDataSec lba vdss
+            if not ( Functions.CheckAccessRangeBlock lba rawDataSec vdss ) then
+                let msg = sprintf "The target write range is outside the bounds of the virtual disk image."
                 raise <| VhdxMediaException( vhdxFile.FileName, msg )
 
             // Flash log entries
