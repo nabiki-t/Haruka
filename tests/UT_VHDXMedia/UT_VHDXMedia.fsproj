@@ -28,6 +28,7 @@
     <Compile Include="VhdxCorrupterTest.fs" />
     <Compile Include="VhdxCreaterTest.fs" />
     <Compile Include="VhdxWriterTest.fs" />
+    <Compile Include="VhdxMergeTest.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 

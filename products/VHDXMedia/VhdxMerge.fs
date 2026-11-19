@@ -53,33 +53,51 @@ type VhdxMerge() =
     /// </remarks>
     static member CopyData ( srcFa : FileAccessor ) ( srcStr : VhdxStructures ) ( dstFa : FileAccessor ) ( dstStr : VhdxStructures ) ( lba : BLKCNT64_T ) ( cnt : BLKCNT32_T ) : Task =
         task {
-            let buf = PooledBuffer.Rent 1048576
-            let blocksize = Blocksize.toUInt32 srcStr.VDI.LogicalSectorSize
-            let lbPerChunk = 1048576u / blocksize    // 2048か256
-            let chunkCount = Functions.CeilDiv ( uint32 cnt ) lbPerChunk
-            let copyLength = uint64 cnt * uint64 blocksize
+            if srcStr.VDI.LogicalSectorSize <> dstStr.VDI.LogicalSectorSize then
+                raise <| VhdxMediaException( "The block lengths of the source and destination differ." )
 
-            let srcStartBytePos =
-                let struct( idx, off ) = VhdxCommons.LBAtoPayloadBlockIndex lba srcStr
-                let pboffset = srcStr.BAT.Payloads.[ int idx ].FileOffset
-                let inpboff = uint64 off * uint64 blocksize
-                ( pboffset + inpboff )
+            let srcMediaBlkCnt = Functions.CalcBlockCount64 srcStr.VDI.VirtualDiskSize srcStr.VDI.LogicalSectorSize
+            if not ( Functions.CheckAccessRangeBlock lba ( blkcnt_me.ofUInt64 ( uint64 cnt ) ) srcMediaBlkCnt ) then
+                raise <| VhdxMediaException( "The source region is outside the bounds of the media." )
 
-            let dstStartBytePos =
-                let struct( idx, off ) = VhdxCommons.LBAtoPayloadBlockIndex lba dstStr
-                let pboffset = dstStr.BAT.Payloads.[ int idx ].FileOffset
-                let inpboff = uint64 off * uint64 blocksize
-                ( pboffset + inpboff )
+            let dstMediaBlkCnt = Functions.CalcBlockCount64 dstStr.VDI.VirtualDiskSize dstStr.VDI.LogicalSectorSize
+            if not ( Functions.CheckAccessRangeBlock lba ( blkcnt_me.ofUInt64 ( uint64 cnt ) ) dstMediaBlkCnt ) then
+                raise <| VhdxMediaException( "The destination region is outside the bounds of the media." )
 
-            let s = seq {
-                for i in 0UL .. uint64 chunkCount - 1UL do
-                    let currentA = i * 1048576UL
-                    let currentB = min 1048576UL ( copyLength - currentA )
-                    yield ( currentA, currentB )
-            }
-            for ( start, length ) in s do
-                do! srcFa.Read ( srcStartBytePos + start ) ( ArraySegment( buf.Array, 0, int length ) )
-                do! dstFa.Write ( dstStartBytePos + start ) ( ArraySegment( buf.Array, 0, int length ) )
+            if cnt > blkcnt_me.zero32 then
+                let buf = PooledBuffer.Rent 1048576
+                let blocksize = Blocksize.toUInt32 srcStr.VDI.LogicalSectorSize
+                let lbPerChunk = 1048576u / blocksize    // 2048 or 256
+                let chunkCount = Functions.CeilDiv ( uint32 cnt ) lbPerChunk
+                let copyLength = uint64 cnt * uint64 blocksize
+
+                let srcStartBytePos =
+                    let struct( idx, off ) = VhdxCommons.LBAtoPayloadBlockIndex lba srcStr
+                    let pboffset = srcStr.BAT.Payloads.[ int idx ].FileOffset
+                    let inpboff = uint64 off * uint64 blocksize
+                    let payloadBlockCount = srcStr.VDI.PayloadBlockSize / blocksize |> blkcnt_me.ofUInt32
+                    if payloadBlockCount - off < cnt then
+                        raise <| VhdxMediaException( "The source region is not contained within a single payload." )
+                    ( pboffset + inpboff )
+
+                let dstStartBytePos =
+                    let struct( idx, off ) = VhdxCommons.LBAtoPayloadBlockIndex lba dstStr
+                    let pboffset = dstStr.BAT.Payloads.[ int idx ].FileOffset
+                    let inpboff = uint64 off * uint64 blocksize
+                    let payloadBlockCount = dstStr.VDI.PayloadBlockSize / blocksize |> blkcnt_me.ofUInt32
+                    if payloadBlockCount - off < cnt then
+                        raise <| VhdxMediaException( "The destination region is not contained within a single payload." )
+                    ( pboffset + inpboff )
+
+                let s = seq {
+                    for i in 0UL .. uint64 chunkCount - 1UL do
+                        let currentA = i * 1048576UL
+                        let currentB = min 1048576UL ( copyLength - currentA )
+                        yield struct ( currentA, currentB )
+                }
+                for struct ( start, length ) in s do
+                    do! srcFa.Read ( srcStartBytePos + start ) ( ArraySegment( buf.Array, 0, int length ) )
+                    do! dstFa.Write ( dstStartBytePos + start ) ( ArraySegment( buf.Array, 0, int length ) )
         }
 
     /// <summary>

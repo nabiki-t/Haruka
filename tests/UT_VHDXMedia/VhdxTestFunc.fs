@@ -823,6 +823,52 @@ type VhdxTestFunc() =
         }
 
     /// <summary>
+    ///  Generate two dynamic VHDX file and run the test cases.
+    /// </summary>
+    /// <param name="pbSize1">
+    ///  VHDX 1 payload block size.
+    /// </param>
+    /// <param name="dskSize1">
+    ///  VHDX 1 virtual disk size.
+    /// </param>
+    /// <param name="blkSize1">
+    ///  VHDX 1 block size.
+    /// </param>
+    /// <param name="pbSize2">
+    ///  VHDX 2 payload block size.
+    /// </param>
+    /// <param name="dskSize2">
+    ///  VHDX 2 virtual disk size.
+    /// </param>
+    /// <param name="blkSize2">
+    ///  VHDX 2 block size.
+    /// </param>
+    /// <param name="f">
+    ///  Specify the function of the test case to be executed.
+    /// </param>
+    static member CreateTwoDynamicVHDXFileAndTest
+                    ( pbSize1 : uint32 ) ( dskSize1 : uint64 ) ( blkSize1 : Blocksize )
+                    ( pbSize2 : uint32 ) ( dskSize2 : uint64 ) ( blkSize2 : Blocksize )
+                    ( f : ( FileAccessor -> FileAccessor -> Task ) ) : Task =
+        task {
+            let fname1 = Path.GetTempFileName()
+            let fa1 = FileAccessor( fname1, 1u, false )
+            try
+                do! VhdxCreator.Create None fa1 0x100000u pbSize1 false dskSize1 blkSize1
+                let fname2 = Path.GetTempFileName()
+                let fa2 = FileAccessor( fname2, 1u, false )
+                try
+                    do! VhdxCreator.Create None fa2 0x100000u pbSize2 false dskSize2 blkSize2
+                    do! f fa1 fa2
+                finally
+                    fa2.Close()
+                    GlbFunc.DeleteFile fname2
+            finally
+                fa1.Close()
+                GlbFunc.DeleteFile fname1
+        }
+
+    /// <summary>
     ///  Generate VHDX header bytes.
     /// </summary>
     /// <param name="imhd">
