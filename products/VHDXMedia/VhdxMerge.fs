@@ -73,21 +73,32 @@ type VhdxMerge() =
 
                 let srcStartBytePos =
                     let struct( idx, off ) = VhdxCommons.LBAtoPayloadBlockIndex lba srcStr
-                    let pboffset = srcStr.BAT.Payloads.[ int idx ].FileOffset
-                    let inpboff = uint64 off * uint64 blocksize
+
                     let payloadBlockCount = srcStr.VDI.PayloadBlockSize / blocksize |> blkcnt_me.ofUInt32
                     if payloadBlockCount - off < cnt then
                         raise <| VhdxMediaException( "The source region is not contained within a single payload." )
-                    ( pboffset + inpboff )
+
+                    let pb = srcStr.BAT.Payloads.[ int idx ]
+                    if pb.State <> BatEntryStatePB.PayloadFullyPresent && pb.State <> BatEntryStatePB.PayloadPartiallyPresent then
+                        raise <| VhdxMediaException( "The source payload block is not allocated." )
+
+                    if pb.State <> BatEntryStatePB.PayloadZero then
+                        ValueSome ( pb.FileOffset + uint64 off * uint64 blocksize )
+                    else
+                        ValueNone
 
                 let dstStartBytePos =
                     let struct( idx, off ) = VhdxCommons.LBAtoPayloadBlockIndex lba dstStr
-                    let pboffset = dstStr.BAT.Payloads.[ int idx ].FileOffset
-                    let inpboff = uint64 off * uint64 blocksize
+
                     let payloadBlockCount = dstStr.VDI.PayloadBlockSize / blocksize |> blkcnt_me.ofUInt32
                     if payloadBlockCount - off < cnt then
                         raise <| VhdxMediaException( "The destination region is not contained within a single payload." )
-                    ( pboffset + inpboff )
+
+                    let pb = dstStr.BAT.Payloads.[ int idx ]
+                    if pb.State <> BatEntryStatePB.PayloadFullyPresent && pb.State <> BatEntryStatePB.PayloadPartiallyPresent then
+                        raise <| VhdxMediaException( "The destination payload block is not allocated." )
+
+                    ( pb.FileOffset + uint64 off * uint64 blocksize )
 
                 let s = seq {
                     for i in 0UL .. uint64 chunkCount - 1UL do
@@ -96,7 +107,10 @@ type VhdxMerge() =
                         yield struct ( currentA, currentB )
                 }
                 for struct ( start, length ) in s do
-                    do! srcFa.Read ( srcStartBytePos + start ) ( ArraySegment( buf.Array, 0, int length ) )
+                    if srcStartBytePos.IsSome then
+                        do! srcFa.Read ( srcStartBytePos.Value + start ) ( ArraySegment( buf.Array, 0, int length ) )
+                    else
+                        Array.fill buf.Array 0 ( int length ) 0uy
                     do! dstFa.Write ( dstStartBytePos + start ) ( ArraySegment( buf.Array, 0, int length ) )
         }
 
