@@ -79,13 +79,12 @@ type VhdxMerge() =
                         raise <| VhdxMediaException( "The source region is not contained within a single payload." )
 
                     let pb = srcStr.BAT.Payloads.[ int idx ]
-                    if pb.State <> BatEntryStatePB.PayloadFullyPresent && pb.State <> BatEntryStatePB.PayloadPartiallyPresent then
-                        raise <| VhdxMediaException( "The source payload block is not allocated." )
-
-                    if pb.State <> BatEntryStatePB.PayloadZero then
+                    if pb.State = BatEntryStatePB.PayloadZero then
+                        ValueNone
+                    elif pb.State = BatEntryStatePB.PayloadFullyPresent || pb.State = BatEntryStatePB.PayloadPartiallyPresent then
                         ValueSome ( pb.FileOffset + uint64 off * uint64 blocksize )
                     else
-                        ValueNone
+                        raise <| VhdxMediaException( "The source payload block is not allocated." )
 
                 let dstStartBytePos =
                     let struct( idx, off ) = VhdxCommons.LBAtoPayloadBlockIndex lba dstStr

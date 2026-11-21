@@ -166,6 +166,9 @@ type VhdxMergeTest_Test () =
     [<InlineData( 0x100000UL, 0x100000u, 0x7FFUL, 1u )>]
     [<InlineData( 0x100000UL, 0x100000u, 0UL,     0x800u )>]
     [<InlineData( 0x200000UL, 0x100000u, 0x800UL, 1u )>]
+    [<InlineData( 0x200000UL, 0x200000u, 0x400UL, 0x800u )>]
+    [<InlineData( 0x200000UL, 0x200000u, 0x400UL, 0xA00u )>]
+    [<InlineData( 0x200000UL, 0x200000u, 0UL,     0x1000u )>]
     member _.CopyData_001 ( vdsize : uint64 ) ( pbsize : uint32 ) ( lba : uint64 ) ( cnt : uint32 ) =
         let testcase ( srcFA : FileAccessor ) ( dstFA : FileAccessor ) : Task = task {
             let bllba = blkcnt_me.ofUInt64 lba
@@ -200,3 +203,92 @@ type VhdxMergeTest_Test () =
         }
         let bs5 = Blocksize.BS_512
         VhdxTestFunc.CreateTwoDynamicVHDXFileAndTest pbsize vdsize bs5 pbsize vdsize bs5 testcase
+
+    static member m_CopyData_002_data : obj[][] = [|
+        [| BatEntryStatePB.PayloadPartiallyPresent; BatEntryStatePB.PayloadFullyPresent; |];
+        [| BatEntryStatePB.PayloadFullyPresent;     BatEntryStatePB.PayloadPartiallyPresent; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_CopyData_002_data" )>]
+    member _.CopyData_002 ( sstate : BatEntryStatePB ) ( dstate : BatEntryStatePB ) =
+        let testcase ( srcFA : FileAccessor ) ( dstFA : FileAccessor ) : Task = task {
+            let rndfname = Path.GetTempFileName()
+            try
+                // Write random data to the source VHDX file
+                GlbFunc.CreateRandomFile rndfname 512L
+                do! VhdxWriter.Write srcFA rndfname blkcnt_me.zero64
+
+                let! srcStr = VhdxReader.ReadVhdx srcFA
+                let! dstStr = VhdxReader.ReadVhdx dstFA
+
+                // update the source payload block status
+                srcStr.BAT.Payloads.[0] <- {
+                    srcStr.BAT.Payloads.[0] with
+                        State = sstate;
+                }
+
+                // Allocate payload blocks within the destination VHDX file
+                let struct( updated4KSecsForBAT, requiredFileSize ) =
+                    VhdxWriter.AllocatePayloadBlock dstStr blkcnt_me.zero64 ( blkcnt_me.ofUInt64 1UL )
+                let! _ = VhdxWriter.WriteUpdatedBAT dstFA dstStr dstStr.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT ) requiredFileSize
+
+                // update the destination payload block status
+                dstStr.BAT.Payloads.[0] <- {
+                    dstStr.BAT.Payloads.[0] with
+                        State = dstate;
+                }
+
+                do! VhdxMerge.CopyData srcFA srcStr dstFA dstStr blkcnt_me.zero64 ( blkcnt_me.ofUInt32 1u )
+
+                // Read copied data
+                let resultdata = Array.zeroCreate<byte> 512
+                do! dstFA.ReadArray dstStr.BAT.Payloads.[0].FileOffset resultdata
+
+                // compare
+                let expdata = File.ReadAllBytes rndfname
+                Assert.True(( expdata = resultdata ))
+
+            finally
+                GlbFunc.DeleteFile rndfname
+        }
+        let bs5 = Blocksize.BS_512
+        VhdxTestFunc.CreateTwoDynamicVHDXFileAndTest 0x100000u 0x100000UL bs5 0x100000u 0x100000UL bs5 testcase
+
+    [<Fact>]
+    member _.CopyData_003 () =
+        let testcase ( srcFA : FileAccessor ) ( dstFA : FileAccessor ) : Task = task {
+            let rndfname = Path.GetTempFileName()
+            try
+                // Write random data to the destination VHDX file
+                GlbFunc.CreateRandomFile rndfname 0x100000L
+                do! VhdxWriter.Write dstFA rndfname blkcnt_me.zero64
+
+                let! srcStr = VhdxReader.ReadVhdx srcFA
+                let! dstStr = VhdxReader.ReadVhdx dstFA
+
+                // update the source payload block status
+                srcStr.BAT.Payloads.[0] <- {
+                    srcStr.BAT.Payloads.[0] with
+                        State = BatEntryStatePB.PayloadZero;
+                }
+
+                do! VhdxMerge.CopyData srcFA srcStr dstFA dstStr blkcnt_me.zero64 ( blkcnt_me.ofUInt32 0x400u )
+
+                // Read copied data
+                let resultdata = Array.zeroCreate<byte> 0x100000
+                do! dstFA.ReadArray dstStr.BAT.Payloads.[0].FileOffset resultdata
+
+                // compare
+                let expdata = File.ReadAllBytes rndfname
+                for i = 0 to 524287 do
+                    Assert.StrictEqual( 0uy, resultdata.[i] )
+                for i = 524288 to 1048575 do
+                    Assert.StrictEqual( expdata.[i], resultdata.[i] )
+
+            finally
+                GlbFunc.DeleteFile rndfname
+        }
+        let bs5 = Blocksize.BS_512
+        VhdxTestFunc.CreateTwoDynamicVHDXFileAndTest 0x100000u 0x100000UL bs5 0x100000u 0x100000UL bs5 testcase
+
