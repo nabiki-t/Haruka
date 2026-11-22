@@ -65,7 +65,6 @@ type VhdxMerge() =
                 raise <| VhdxMediaException( "The destination region is outside the bounds of the media." )
 
             if cnt > blkcnt_me.zero32 then
-                let buf = PooledBuffer.Rent 1048576
                 let blocksize = Blocksize.toUInt32 srcStr.VDI.LogicalSectorSize
                 let lbPerChunk = 1048576u / blocksize    // 2048 or 256
                 let chunkCount = Functions.CeilDiv ( uint32 cnt ) lbPerChunk
@@ -105,12 +104,15 @@ type VhdxMerge() =
                         let currentB = min 1048576UL ( copyLength - currentA )
                         yield struct ( currentA, currentB )
                 }
+
+                let buf = PooledBuffer.Rent 1048576
                 for struct ( start, length ) in s do
                     if srcStartBytePos.IsSome then
                         do! srcFa.Read ( srcStartBytePos.Value + start ) ( ArraySegment( buf.Array, 0, int length ) )
                     else
                         Array.fill buf.Array 0 ( int length ) 0uy
                     do! dstFa.Write ( dstStartBytePos + start ) ( ArraySegment( buf.Array, 0, int length ) )
+                buf.Return()
         }
 
     /// <summary>
@@ -136,33 +138,38 @@ type VhdxMerge() =
                     structures.Region.Entries
                     |> List.find ( fun itr -> itr.Guid = VhdxCommons.REGENT_TYPE_METADATA )
                 e.FileOffset, e.Length
+            if metadataLength <= 0u then
+                raise <| VhdxMediaException( "Unexpected metadata region length." )
             let sec4kCount = metadataLength / 4096u
 
             // Read old metadata bytes.
-            let oldMetadataBytes = Array.zeroCreate< byte > ( int metadataLength )
-            do! fa.Read metadataFileOffset ( ArraySegment oldMetadataBytes )
+            let oldMetadataBytes = PooledBuffer.Rent ( int32 metadataLength )
+            do! fa.Read metadataFileOffset oldMetadataBytes.ArraySegment
 
             // Create bytes array of the updated metadata.
             let metadataTableBytes, metadataItemsBytes = VhdxCreator.CreateMetadataBytes structures.VDI
-            let newMetadataBytes = Array.zeroCreate< byte > ( int metadataLength )
-            Array.blit metadataTableBytes 0 newMetadataBytes 0 metadataTableBytes.Length
-            Array.blit metadataItemsBytes 0 newMetadataBytes 65536 metadataItemsBytes.Length
+            let newMetadataBytes = PooledBuffer.RentAndInit ( int32 metadataLength )
+            Array.blit metadataTableBytes 0 newMetadataBytes.Array 0 metadataTableBytes.Length
+            Array.blit metadataItemsBytes 0 newMetadataBytes.Array 65536 metadataItemsBytes.Length
 
             // Calculate differences in 4KB increments and generate log data.
             let update4KSecs =
                 [|
                     for blockIdx = 0 to int sec4kCount - 1 do
                         let offset = blockIdx * 4096
-                        let oldSpan = ReadOnlySpan<byte>( oldMetadataBytes, offset, 4096 )
-                        let newSpan = ReadOnlySpan<byte>( newMetadataBytes, offset, 4096 )
+                        let oldSpan = ReadOnlySpan<byte>( oldMetadataBytes.Array, offset, 4096 )
+                        let newSpan = ReadOnlySpan<byte>( newMetadataBytes.Array, offset, 4096 )
                         if not ( oldSpan.SequenceEqual newSpan ) then
                             let idx = sec4k_me.ofUInt64 ( uint64 blockIdx + ( metadataFileOffset / 4096UL ) )
-                            let segment = ArraySegment<byte>( newMetadataBytes, offset, 4096 )
+                            let segment = newMetadataBytes.GetArraySegment offset 4096
                             struct( idx, segment )
                 |]
 
             // Update metadata while going through the log.
-            return! VhdxWriter.WriteUpdatedSB fa structures verhd update4KSecs
+            let! r = VhdxWriter.WriteUpdatedSB fa structures verhd update4KSecs
+            oldMetadataBytes.Return()
+            newMetadataBytes.Return()
+            return r
         }
 
     /// <summary>
@@ -210,12 +217,13 @@ type VhdxMerge() =
             |> _.GetEnumerator()
 
         // Update BAT
-        let rec loop1 struct ( lba1 : BLKCNT64_T, ubufcnt1 : int, gfs1 : uint64 )  : uint64 * BLKCNT64_T =
+        let rec loop1 struct ( lba1 : BLKCNT64_T, ubufcnt1 : int, gfs1 : uint64 )  : struct( uint64 * BLKCNT64_T ) =
             if lba1 < d_VirtualDiskLBACount && ubufcnt1 < updateLbaBuf.Length then
 
-                let struct( pdidx, pblbaoff ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 dstr
-                let lbastart = ( uint64 pdidx ) * d_PayloadBlockLBACount + ( pblbaoff |> blkcnt_me.toUInt32 |> uint64 |> blkcnt_me.ofUInt64 )
-                let lbaend = ( uint64 pdidx + 1UL ) * d_PayloadBlockLBACount
+                let struct( pdidx, _ ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 dstr
+                let lbaend =
+                    let struct( m_pdidx, _ ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 mstr
+                    min ( ( uint64 pdidx + 1UL ) * d_PayloadBlockLBACount ) ( ( uint64 m_pdidx + 1UL ) * m_PayloadBlockLBACount )
 
                 match dstr.BAT.Payloads.[ int pdidx ].State with
                 | PayloadNotPresent
@@ -265,13 +273,13 @@ type VhdxMerge() =
                                 else
                                     loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ( ubufcnt2 + 1 ) nextGFS2
 
-                    loop2 lbastart ubufcnt1 gfs1
+                    loop2 lba1 ubufcnt1 gfs1
                     |> loop1
 
             else
                 gfs1, lba1
 
-        let requiredFileSize, nextlba = loop1 struct ( startLba, 0, mstr.LastFileSize )
+        let struct( requiredFileSize, nextlba ) = loop1 struct ( startLba, 0, mstr.LastFileSize )
         requiredFileSize, updatedPB4K, nextlba
 
     /// <summary>
@@ -457,8 +465,9 @@ type VhdxMerge() =
             if lba1 < d_VirtualDiskLBACount && ubufcnt1 < updateLbaBuf.Length then
 
                 let struct( pdidx, pblbaoff ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 dstr
-                let lbastart = ( uint64 pdidx ) * d_PayloadBlockLBACount + ( pblbaoff |> blkcnt_me.toUInt32 |> uint64 |> blkcnt_me.ofUInt64 )
-                let lbaend = ( uint64 pdidx + 1UL ) * d_PayloadBlockLBACount
+                let lbaend =
+                    let struct( m_pdidx, _ ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 mstr
+                    min ( ( uint64 pdidx + 1UL ) * d_PayloadBlockLBACount ) ( ( uint64 m_pdidx + 1UL ) * m_PayloadBlockLBACount )
 
                 match dstr.BAT.Payloads.[ int pdidx ].State with
                 | PayloadNotPresent
@@ -497,7 +506,7 @@ type VhdxMerge() =
                                 else
                                     loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ( ubufcnt2 + 1 ) nextGFS2
 
-                    loop2 lbastart ubufcnt1 gfs1
+                    loop2 lba1 ubufcnt1 gfs1
                     |> loop1
 
                 | PayloadPartiallyPresent ->
@@ -525,7 +534,7 @@ type VhdxMerge() =
                             else
                                 // Since the logical sector in question is unused, there is no need to allocate it to the target VHDX.
                                 loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ( ubufcnt2 + 1 ) gfs2
-                    loop2 lbastart ubufcnt1 gfs1
+                    loop2 lba1 ubufcnt1 gfs1
                     |> loop1
             else
                 gfs1, lba1

@@ -292,3 +292,68 @@ type VhdxMergeTest_Test () =
         let bs5 = Blocksize.BS_512
         VhdxTestFunc.CreateTwoDynamicVHDXFileAndTest 0x100000u 0x100000UL bs5 0x100000u 0x100000UL bs5 testcase
 
+    [<Fact>]
+    member _.UpdateMetadata_Fail_001 () =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
+            let! str = VhdxReader.ReadVhdx fa
+            let str2 = { str with Region.Entries = []; }
+            let! _ =
+                Assert.ThrowsAnyAsync<Exception>( fun _ -> task {
+                    let! _ = VhdxMerge.UpdateMetadata fa str2 str2.LoadedVarHeader
+                    ()
+                } )
+            ()
+        } )
+
+    [<Fact>]
+    member _.UpdateMetadata_Fail_002 () =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
+            let! str = VhdxReader.ReadVhdx fa
+            let b =
+                str.Region.Entries |> List.find ( _.Guid >> (=) VhdxCommons.REGENT_TYPE_BAT )
+            let m =
+                let m2 =
+                    str.Region.Entries |> List.find ( _.Guid >> (=) VhdxCommons.REGENT_TYPE_METADATA )
+                { m2 with Length = 0u }
+            let str2 = { str with Region.Entries = [ b; m; ]; }
+
+            let! r =
+                Assert.ThrowsAnyAsync<VhdxMediaException>( fun _ -> task {
+                    let! _ = VhdxMerge.UpdateMetadata fa str2 str2.LoadedVarHeader
+                    ()
+                } )
+            Assert.StartsWith( "Unexpected metadata region length", r.Message )
+        } )
+
+    [<Fact>]
+    member _.UpdateMetadata_001 () =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
+            let! str = VhdxReader.ReadVhdx fa
+            let str2 = {
+                str with
+                    VDI.HasParent = true;
+                    VDI.VirtualDiskId = Guid.NewGuid()
+                    VDI.ParentLocator = 
+                        [|
+                            ( "parent_linkage", "{83ed0ec3-24c8-49a6-a959-5e4bf1288bfb}" );
+                            ( "relative_path", "../../../../../../../../../../../../../../aaa/bbb.vhdx" );
+                        |]
+                        |> Map;
+            }
+            let! r = VhdxMerge.UpdateMetadata fa str2 str2.LoadedVarHeader
+            Assert.StrictEqual( Guid(), r.LogGuid )
+            Assert.NotStrictEqual( str2.LoadedVarHeader.SequenceNumber, r.SequenceNumber )
+
+            let! str3 = VhdxReader.ReadVhdx fa
+            Assert.True str3.VDI.HasParent
+            Assert.StrictEqual( str2.VDI.VirtualDiskId, str3.VDI.VirtualDiskId )
+            Assert.StrictEqual( str2.VDI.ParentLocator, str3.VDI.ParentLocator )
+        } )
+
+    [<Fact>]
+    member _.UpdateMetadata_002 () =
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest ( fun fa -> task {
+            let! str = VhdxReader.ReadVhdx fa
+            let! r = VhdxMerge.UpdateMetadata fa str str.LoadedVarHeader
+            Assert.StrictEqual( str.LoadedVarHeader, r )
+        } )
