@@ -219,8 +219,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int32 ) =
             PooledBuffer.Empty
         else
             let r = PooledBuffer.Rent s
-            for i = 0 to s - 1 do
-                r.Array.[i] <- 0uy
+            Span( r.Array ).Clear()
             r
 
     /// <summary>
