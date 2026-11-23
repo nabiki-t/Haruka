@@ -1550,17 +1550,222 @@ type blkcnt_me =
     static member inline ofUInt8( v : uint8 ) : uint8<blkcnt_me> =
         v * 1uy<blkcnt_me>
 
+    /// <summary>
+    ///  Get the value after adding 1.
+    /// </summary>
+    /// <param name="v">
+    ///  Value subject to addition.
+    /// </param>
+    /// <returns>
+    ///  Value incremented by 1.
+    /// </returns>
+    static member inline Incr( v : uint8<blkcnt_me> ) : uint8<blkcnt_me> =
+        v + 1uy<blkcnt_me>
+
+    /// <summary>
+    ///  Get the value after adding 1.
+    /// </summary>
+    /// <param name="v">
+    ///  Value subject to addition.
+    /// </param>
+    /// <returns>
+    ///  Value incremented by 1.
+    /// </returns>
+    static member inline Incr( v : uint16<blkcnt_me> ) : uint16<blkcnt_me> =
+        v + 1us<blkcnt_me>
+
+    /// <summary>
+    ///  Get the value after adding 1.
+    /// </summary>
+    /// <param name="v">
+    ///  Value subject to addition.
+    /// </param>
+    /// <returns>
+    ///  Value incremented by 1.
+    /// </returns>
+    static member inline Incr( v : uint32<blkcnt_me> ) : uint32<blkcnt_me> =
+        v + 1u<blkcnt_me>
+
+    /// <summary>
+    ///  Get the value after adding 1.
+    /// </summary>
+    /// <param name="v">
+    ///  Value subject to addition.
+    /// </param>
+    /// <returns>
+    ///  Value incremented by 1.
+    /// </returns>
+    static member inline Incr( v : uint64<blkcnt_me> ) : uint64<blkcnt_me> =
+        v + 1UL<blkcnt_me>
+
+    /// <summary>
+    ///  Convert to BLKCNT8_T.
+    /// </summary>
+    /// <param name="v">
+    ///  A value of BLKCNT16_T, BLKCNT32_T or BLKCNT64_T.
+    /// </param>
+    /// <returns>
+    ///  A value of BLKCNT8_T.
+    /// </returns>
+    static member inline toBLKCNT8_T ( v : uint16<blkcnt_me> ) : uint8<blkcnt_me> =
+        blkcnt_me.ofUInt8 ( uint8 v )
+
+    /// <summary>
+    ///  Convert to BLKCNT8_T.
+    /// </summary>
+    /// <param name="v">
+    ///  A value of BLKCNT16_T, BLKCNT32_T or BLKCNT64_T.
+    /// </param>
+    /// <returns>
+    ///  A value of BLKCNT8_T.
+    /// </returns>
+    static member inline toBLKCNT8_T ( v : uint32<blkcnt_me> ) : uint8<blkcnt_me> =
+        blkcnt_me.ofUInt8 ( uint8 v )
+
+    /// <summary>
+    ///  Convert to BLKCNT8_T.
+    /// </summary>
+    /// <param name="v">
+    ///  A value of BLKCNT16_T, BLKCNT32_T or BLKCNT64_T.
+    /// </param>
+    /// <returns>
+    ///  A value of BLKCNT8_T.
+    /// </returns>
+    static member inline toBLKCNT8_T ( v : uint64<blkcnt_me> ) : uint8<blkcnt_me> =
+        blkcnt_me.ofUInt8 ( uint8 v )
+
+    /// <summary>
+    ///  Convert to BLKCNT16_T.
+    /// </summary>
+    /// <param name="v">
+    ///  A value of BLKCNT8_T, BLKCNT32_T or BLKCNT64_T.
+    /// </param>
+    /// <returns>
+    ///  A value of BLKCNT16_T.
+    /// </returns>
+    static member inline toBLKCNT16_T ( v : uint8<blkcnt_me> ) : uint16<blkcnt_me> =
+        blkcnt_me.ofUInt16 ( uint16 v )
+
+    /// <summary>
+    ///  Convert to BLKCNT16_T.
+    /// </summary>
+    /// <param name="v">
+    ///  A value of BLKCNT8_T, BLKCNT32_T or BLKCNT64_T.
+    /// </param>
+    /// <returns>
+    ///  A value of BLKCNT16_T.
+    /// </returns>
+    static member inline toBLKCNT16_T ( v : uint32<blkcnt_me> ) : uint16<blkcnt_me> =
+        blkcnt_me.ofUInt16 ( uint16 v )
+
+    /// <summary>
+    ///  Convert to BLKCNT16_T.
+    /// </summary>
+    /// <param name="v">
+    ///  A value of BLKCNT8_T, BLKCNT32_T or BLKCNT64_T.
+    /// </param>
+    /// <returns>
+    ///  A value of BLKCNT16_T.
+    /// </returns>
+    static member inline toBLKCNT16_T ( v : uint64<blkcnt_me> ) : uint16<blkcnt_me> =
+        blkcnt_me.ofUInt16 ( uint16 v )
+
+    /// <summary>
+    ///  Convert to BLKCNT32_T.
+    /// </summary>
+    /// <param name="v">
+    ///  A value of BLKCNT8_T, BLKCNT16_T or BLKCNT64_T.
+    /// </param>
+    /// <returns>
+    ///  A value of BLKCNT32_T.
+    /// </returns>
+    static member inline toBLKCNT32_T ( v : uint8<blkcnt_me> ) : uint32<blkcnt_me> =
+        blkcnt_me.ofUInt32 ( uint32 v )
+
+    /// <summary>
+    ///  Convert to BLKCNT32_T.
+    /// </summary>
+    /// <param name="v">
+    ///  A value of BLKCNT8_T, BLKCNT16_T or BLKCNT64_T.
+    /// </param>
+    /// <returns>
+    ///  A value of BLKCNT32_T.
+    /// </returns>
+    static member inline toBLKCNT32_T ( v : uint16<blkcnt_me> ) : uint32<blkcnt_me> =
+        blkcnt_me.ofUInt32 ( uint32 v )
+
+    /// <summary>
+    ///  Convert to BLKCNT32_T.
+    /// </summary>
+    /// <param name="v">
+    ///  A value of BLKCNT8_T, BLKCNT16_T or BLKCNT64_T.
+    /// </param>
+    /// <returns>
+    ///  A value of BLKCNT32_T.
+    /// </returns>
+    static member inline toBLKCNT32_T ( v : uint64<blkcnt_me> ) : uint32<blkcnt_me> =
+        blkcnt_me.ofUInt32 ( uint32 v )
+
+    /// <summary>
+    ///  Convert to BLKCNT64_T.
+    /// </summary>
+    /// <param name="v">
+    ///  A value of BLKCNT8_T, BLKCNT16_T or BLKCNT32_T.
+    /// </param>
+    /// <returns>
+    ///  A value of BLKCNT64_T.
+    /// </returns>
+    static member inline toBLKCNT64_T ( v : uint8<blkcnt_me> ) : uint64<blkcnt_me> =
+        blkcnt_me.ofUInt64 ( uint64 v )
+
+    /// <summary>
+    ///  Convert to BLKCNT64_T.
+    /// </summary>
+    /// <param name="v">
+    ///  A value of BLKCNT8_T, BLKCNT16_T or BLKCNT32_T.
+    /// </param>
+    /// <returns>
+    ///  A value of BLKCNT64_T.
+    /// </returns>
+    static member inline toBLKCNT64_T ( v : uint16<blkcnt_me> ) : uint64<blkcnt_me> =
+        blkcnt_me.ofUInt64 ( uint64 v )
+
+    /// <summary>
+    ///  Convert to BLKCNT64_T.
+    /// </summary>
+    /// <param name="v">
+    ///  A value of BLKCNT8_T, BLKCNT16_T or BLKCNT32_T.
+    /// </param>
+    /// <returns>
+    ///  A value of BLKCNT64_T.
+    /// </returns>
+    static member inline toBLKCNT64_T ( v : uint32<blkcnt_me> ) : uint64<blkcnt_me> =
+        blkcnt_me.ofUInt64 ( uint64 v )
+
     /// zero value by uint8
-    static member zero8 = 0uy<blkcnt_me>
+    static member inline zero8 = 0uy<blkcnt_me>
 
     /// zero value by uint16
-    static member zero16 = 0us<blkcnt_me>
+    static member inline zero16 = 0us<blkcnt_me>
 
     /// zero value by uint32
-    static member zero32 = 0u<blkcnt_me>
+    static member inline zero32 = 0u<blkcnt_me>
 
     /// zero value by uint64
-    static member zero64 = 0UL<blkcnt_me>
+    static member inline zero64 = 0UL<blkcnt_me>
+
+    /// 1 value by uint8
+    static member inline one8 = 1uy<blkcnt_me>
+
+    /// 1 value by uint16
+    static member inline one16 = 1us<blkcnt_me>
+
+    /// 1 value by uint32
+    static member inline one32 = 1u<blkcnt_me>
+
+    /// 1 value by uint64
+    static member inline one64 = 1UL<blkcnt_me>
+
 
 /// Data type that uses uint8 to represent the number of blocks
 type BLKCNT8_T = uint8<blkcnt_me>

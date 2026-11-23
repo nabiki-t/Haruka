@@ -516,3 +516,30 @@ type TypeDefs_Test () =
         | _ ->
             Assert.Fail __LINE__
 
+    [<Theory>]
+    [<InlineData( 0uy, 1uy )>]
+    [<InlineData( 255uy, 0uy )>]
+    member _.blkcnt_me_Incr_uint8_001 ( a : uint8 ) ( b : uint8 ) =
+        let v = blkcnt_me.ofUInt8 a
+        Assert.StrictEqual( blkcnt_me.ofUInt8 b, blkcnt_me.Incr v )
+        
+    [<Theory>]
+    [<InlineData( 0us, 1us )>]
+    [<InlineData( 65535us, 0us )>]
+    member _.blkcnt_me_Incr_uint16_001 ( a : uint16 ) ( b : uint16 ) =
+        let v = blkcnt_me.ofUInt16 a
+        Assert.StrictEqual( blkcnt_me.ofUInt16 b, blkcnt_me.Incr v )
+
+    [<Theory>]
+    [<InlineData( 0u, 1u )>]
+    [<InlineData( 4294967295u, 0u )>]
+    member _.blkcnt_me_Incr_uint32_001 ( a : uint32 ) ( b : uint32 ) =
+        let v = blkcnt_me.ofUInt32 a
+        Assert.StrictEqual( blkcnt_me.ofUInt32 b, blkcnt_me.Incr v )
+
+    [<Theory>]
+    [<InlineData( 0UL, 1UL )>]
+    [<InlineData( 18446744073709551615UL, 0UL )>]
+    member _.blkcnt_me_Incr_uint64_001 ( a : uint64 ) ( b : uint64 ) =
+        let v = blkcnt_me.ofUInt64 a
+        Assert.StrictEqual( blkcnt_me.ofUInt64 b, blkcnt_me.Incr v )
