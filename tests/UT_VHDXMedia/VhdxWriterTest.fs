@@ -1503,7 +1503,7 @@ type VhdxWriter_Test () =
     [<InlineData( 2047UL, 0, 1048064UL )>]
     [<InlineData( 2048UL, 1, 0UL )>]
     member _.Write_Success_002 ( lba : uint64 ) ( pi : int ) ( offset : uint64 ) =
-        VhdxTestFunc.CreateDifferencingVHDXFileAndTest( fun _ cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x4000000UL Blocksize.BS_512 0x100000u 0x100000u ( fun _ cfa -> task {
             let rawfname = Path.GetTempFileName()
             GlbFunc.CreateRandomFile rawfname 512
             try

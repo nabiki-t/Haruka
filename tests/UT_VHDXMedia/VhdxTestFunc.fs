@@ -799,21 +799,32 @@ type VhdxTestFunc() =
     /// <summary>
     ///  Generate differencing VHDX files and run the test cases.
     /// </summary>
+    /// <param name="dskSize">
+    ///  VHDX virtual disk size.
+    /// </param>
+    /// <param name="blkSize">
+    ///  VHDX block size.
+    /// </param>
+    /// <param name="pbSize1">
+    ///  VHDX 1 payload block size.
+    /// </param>
+    /// <param name="pbSize2">
+    ///  VHDX 2 payload block size.
+    /// </param>
     /// <param name="f">
     ///  Specify the function of the test case to be executed.
     /// </param>
-    static member CreateDifferencingVHDXFileAndTest ( f : ( FileAccessor -> FileAccessor -> Task ) ) : Task =
+    static member CreateDifferencingVHDXFileAndTest
+                    ( dskSize : uint64 ) ( blkSize : Blocksize ) ( pbSize1 : uint32 ) ( pbSize2 : uint32 )
+                    ( f : ( FileAccessor -> FileAccessor -> Task ) ) : Task =
         task {
-            let fact a b c d =
-                let o = FileStreamOptions( Access = c, Mode = b, Share = d, Options = FileOptions.DeleteOnClose )
-                File.Open( a, o ) :> Stream
             let pfname = Path.GetTempFileName()
             let pfa = FileAccessor( pfname, 1u, false )
             let cfname = Path.GetTempFileName()
             let cfa = FileAccessor( cfname, 1u, false )
             try
-                do! VhdxCreator.Create None pfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
-                do! VhdxCreator.Create ( Some pfa ) cfa 0x100000u 0x100000u false 0x4000000UL Blocksize.BS_512
+                do! VhdxCreator.Create None pfa 0x100000u pbSize1 false dskSize blkSize
+                do! VhdxCreator.Create ( Some pfa ) cfa 0x100000u pbSize2 false dskSize blkSize
                 do! f pfa cfa
             finally
                 pfa.Close()

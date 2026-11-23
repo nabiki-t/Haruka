@@ -57,11 +57,11 @@ type VhdxMerge() =
                 raise <| VhdxMediaException( "The block lengths of the source and destination differ." )
 
             let srcMediaBlkCnt = Functions.CalcBlockCount64 srcStr.VDI.VirtualDiskSize srcStr.VDI.LogicalSectorSize
-            if not ( Functions.CheckAccessRangeBlock lba ( blkcnt_me.ofUInt64 ( uint64 cnt ) ) srcMediaBlkCnt ) then
+            if not ( Functions.CheckAccessRangeBlock lba ( blkcnt_me.toBLKCNT64_T cnt ) srcMediaBlkCnt ) then
                 raise <| VhdxMediaException( "The source region is outside the bounds of the media." )
 
             let dstMediaBlkCnt = Functions.CalcBlockCount64 dstStr.VDI.VirtualDiskSize dstStr.VDI.LogicalSectorSize
-            if not ( Functions.CheckAccessRangeBlock lba ( blkcnt_me.ofUInt64 ( uint64 cnt ) ) dstMediaBlkCnt ) then
+            if not ( Functions.CheckAccessRangeBlock lba ( blkcnt_me.toBLKCNT64_T cnt ) dstMediaBlkCnt ) then
                 raise <| VhdxMediaException( "The destination region is outside the bounds of the media." )
 
             if cnt > blkcnt_me.zero32 then
@@ -202,13 +202,26 @@ type VhdxMerge() =
         ( updateLbaBuf : struct( BLKCNT64_T * BLKCNT32_T )[] )
         : ( uint64 * HashSet<SEC4K_T> * BLKCNT64_T ) =
 
+        if Array.isEmpty updateLbaBuf then
+            raise <| VhdxMediaException( "updateLbaBuf must not be empty." )
+        if dstr.VDI.LogicalSectorSize <> mstr.VDI.LogicalSectorSize then
+            raise <| VhdxMediaException( "Logical Sector Size unmatch." )
+        if dstr.VDI.VirtualDiskSize <> mstr.VDI.VirtualDiskSize then
+            raise <| VhdxMediaException( "Virtual Disk Size unmatch." )
+        if dstr.VDI.HasParent then
+            raise <| VhdxMediaException( "A root VHDX file must not have a parent." )
+        if not mstr.VDI.HasParent then
+            raise <| VhdxMediaException( "A child VHDX file must have a parent." )
+
         let d_PayloadBlockLBACount = Functions.CalcBlockCount64 ( uint64 dstr.VDI.PayloadBlockSize ) dstr.VDI.LogicalSectorSize
         let m_PayloadBlockLBACount = Functions.CalcBlockCount64 ( uint64 mstr.VDI.PayloadBlockSize ) mstr.VDI.LogicalSectorSize
         let d_VirtualDiskLBACount = Functions.CalcBlockCount64 dstr.VDI.VirtualDiskSize dstr.VDI.LogicalSectorSize
 
+        if d_VirtualDiskLBACount <= startLba then
+            raise <| VhdxMediaException( "The value of startLba is out of range." )
+
         // initialize return buffer
-        for i = 0 to updateLbaBuf.Length - 1 do
-            updateLbaBuf.[i] <- struct( blkcnt_me.ofUInt64 UInt64.MaxValue, blkcnt_me.ofUInt32 UInt32.MaxValue )
+        Array.fill updateLbaBuf 0 updateLbaBuf.Length struct( blkcnt_me.ofUInt64 UInt64.MaxValue, blkcnt_me.ofUInt32 UInt32.MaxValue )
 
         let updatedPB4K = HashSet<SEC4K_T>()
         let enumFreeList =
@@ -250,28 +263,30 @@ type VhdxMerge() =
                             let nextGFS2 = VhdxWriter.UpdatePBForAllocate mstr lba2 enumFreeList gfs2 updatedPB4K
                             let struct( sbIdx, bytePos, bitPos ) = VhdxCommons.LBAtoSectorBitmapIndex lba2 mstr
                             let sbEntry = mstr.BAT.SectorBitmap.[ int32 sbIdx ].Bitmap
+                            if Array.isEmpty sbEntry then
+                                raise <| VhdxMediaException( "Sector bitmap is not allocated." )
                             let bitValue = ( sbEntry.[ int32 bytePos ] >>> ( int32 bitPos ) ) &&& 1uy
 
                             if bitValue = 0uy then
                                 // The value needs to be copied to this LBA.
                                 let struct( a, b ) = updateLbaBuf.[ ubufcnt2 ]
                                 if a = blkcnt_me.ofUInt64 UInt64.MaxValue then
-                                    updateLbaBuf.[ ubufcnt2 ] <- struct( lba2, blkcnt_me.ofUInt32 1u )
+                                    updateLbaBuf.[ ubufcnt2 ] <- struct( lba2, blkcnt_me.one32 )
                                 else
-                                    updateLbaBuf.[ ubufcnt2 ] <- struct( a, b + blkcnt_me.ofUInt32 1u )
+                                    updateLbaBuf.[ ubufcnt2 ] <- struct( a, blkcnt_me.Incr b )
 
                                 // Although the sector bitmap will be discarded later,
                                 // it must be marked as "used" here to facilitate the process of zero-clearing unused areas.
                                 // There is no need to output the sector bitmap updates to the file.
                                 sbEntry.[ int32 bytePos ] <- sbEntry.[ int32 bytePos ] ||| ( 1uy <<< ( int32 bitPos ) )
 
-                                loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextGFS2
+                                loop2 ( blkcnt_me.Incr lba2 ) ubufcnt2 nextGFS2
                             else
                                 let struct( a, _ ) = updateLbaBuf.[ ubufcnt2 ]
                                 if a = blkcnt_me.ofUInt64 UInt64.MaxValue then
-                                    loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextGFS2
+                                    loop2 ( blkcnt_me.Incr lba2 ) ubufcnt2 nextGFS2
                                 else
-                                    loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ( ubufcnt2 + 1 ) nextGFS2
+                                    loop2 ( blkcnt_me.Incr lba2 ) ( ubufcnt2 + 1 ) nextGFS2
 
                     loop2 lba1 ubufcnt1 gfs1
                     |> loop1
@@ -495,16 +510,16 @@ type VhdxMerge() =
                                 // The value needs to be copied to this LBA.
                                 let struct( a, b ) = updateLbaBuf.[ ubufcnt2 ]
                                 if a = blkcnt_me.ofUInt64 UInt64.MaxValue then
-                                    updateLbaBuf.[ ubufcnt2 ] <- struct( lba2, blkcnt_me.ofUInt32 1u )
+                                    updateLbaBuf.[ ubufcnt2 ] <- struct( lba2, blkcnt_me.one32 )
                                 else
-                                    updateLbaBuf.[ ubufcnt2 ] <- struct( a, b + blkcnt_me.ofUInt32 1u )
-                                loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextGFS2
+                                    updateLbaBuf.[ ubufcnt2 ] <- struct( a, blkcnt_me.Incr b )
+                                loop2 ( blkcnt_me.Incr lba2 ) ubufcnt2 nextGFS2
                             else
                                 let struct( a, _ ) = updateLbaBuf.[ ubufcnt2 ]
                                 if a = blkcnt_me.ofUInt64 UInt64.MaxValue then
-                                    loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextGFS2
+                                    loop2 ( blkcnt_me.Incr lba2 ) ubufcnt2 nextGFS2
                                 else
-                                    loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ( ubufcnt2 + 1 ) nextGFS2
+                                    loop2 ( blkcnt_me.Incr lba2 ) ( ubufcnt2 + 1 ) nextGFS2
 
                     loop2 lba1 ubufcnt1 gfs1
                     |> loop1
@@ -527,13 +542,13 @@ type VhdxMerge() =
                                     // The value needs to be copied to this LBA.
                                     let struct( a, b ) = updateLbaBuf.[ ubufcnt2 ]
                                     if a = blkcnt_me.ofUInt64 UInt64.MaxValue then
-                                        updateLbaBuf.[ ubufcnt2 ] <- struct( lba2, blkcnt_me.ofUInt32 1u )
+                                        updateLbaBuf.[ ubufcnt2 ] <- struct( lba2, blkcnt_me.one32 )
                                     else
-                                        updateLbaBuf.[ ubufcnt2 ] <- struct( lba2, b + blkcnt_me.ofUInt32 1u )
-                                loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ubufcnt2 nextGFS2
+                                        updateLbaBuf.[ ubufcnt2 ] <- struct( lba2, blkcnt_me.Incr b )
+                                loop2 ( blkcnt_me.Incr lba2 ) ubufcnt2 nextGFS2
                             else
                                 // Since the logical sector in question is unused, there is no need to allocate it to the target VHDX.
-                                loop2 ( lba2 + blkcnt_me.ofUInt64 1UL ) ( ubufcnt2 + 1 ) gfs2
+                                loop2 ( blkcnt_me.Incr lba2 ) ( ubufcnt2 + 1 ) gfs2
                     loop2 lba1 ubufcnt1 gfs1
                     |> loop1
             else

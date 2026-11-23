@@ -554,7 +554,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_004 () =
-        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun _ cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x4000000UL Blocksize.BS_512 0x100000u 0x100000u ( fun _ cfa -> task {
             let! cstr = VhdxReader.ReadVhdx cfa
 
             // The sector bitmap overlaps with the log area.
@@ -594,7 +594,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_006 () =
-        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun _ cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x4000000UL Blocksize.BS_512 0x100000u 0x100000u ( fun _ cfa -> task {
             let! cstr = VhdxReader.ReadVhdx cfa
 
             // The sector bitmap overlaps with the BAT or metadata area.
@@ -614,7 +614,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_Fail_007 () =
-        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun _ cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x4000000UL Blocksize.BS_512 0x100000u 0x100000u ( fun _ cfa -> task {
             do! cfa.SetFileSize 0xF00000UL
             let! cstr = VhdxReader.ReadVhdx cfa
 
@@ -667,7 +667,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadVhdx_002 () =
-        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun _ fa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x4000000UL Blocksize.BS_512 0x100000u 0x100000u ( fun _ fa -> task {
             let! cstr = VhdxReader.ReadVhdx fa
             Assert.StrictEqual( 0x100000u, cstr.ImmHeader.LogLength )
             Assert.True( cstr.VDI.HasParent )
@@ -728,7 +728,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadAllStructures_Fail_002 () =
-        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x4000000UL Blocksize.BS_512 0x100000u 0x100000u ( fun pfa cfa -> task {
             let! pstr = VhdxReader.ReadVhdx pfa
             // corrupt DataWriteGuid on header 1
             let v = VhdxTestFunc.GenHeaderBytes pstr.ImmHeader { pstr.LoadedVarHeader with DataWriteGuid = Guid.NewGuid() }
@@ -745,7 +745,7 @@ type VhdxReader_Test3 () =
 
     [<Fact>]
     member _.ReadAllStructures_Fail_003 () =
-        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x4000000UL Blocksize.BS_512 0x100000u 0x100000u ( fun pfa cfa -> task {
             let! pstr = VhdxReader.ReadVhdx pfa
             let! cstr = VhdxReader.ReadVhdx cfa
             // corrupt FileWriteGuid on header 1
@@ -771,7 +771,7 @@ type VhdxReader_Test3 () =
     [<Theory>]
     [<MemberData( "m_ReadAllStructures_Fail_004_data" )>]
     member _.ReadAllStructures_Fail_004 ( vdiud : VirtualDiskInfo -> VirtualDiskInfo ) ( expmsg : string ) =
-        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x4000000UL Blocksize.BS_512 0x100000u 0x100000u ( fun pfa cfa -> task {
             let! pstr = VhdxReader.ReadVhdx pfa
             let! cstr = VhdxReader.ReadVhdx cfa
 
@@ -798,7 +798,7 @@ type VhdxReader_Test3 () =
     [<Theory>]
     [<MemberData( "m_ReadAllStructures_Fail_005_data" )>]
     member _.ReadAllStructures_001 ( keyname : string ) ( genpname : FileAccessor -> string ) =
-        VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x4000000UL Blocksize.BS_512 0x100000u 0x100000u ( fun pfa cfa -> task {
             let! pstr = VhdxReader.ReadVhdx pfa
             let! cstr = VhdxReader.ReadVhdx cfa
 
@@ -825,7 +825,7 @@ type VhdxReader_Test3 () =
     [<Fact>]
     member _.ReadAllStructures_002 () =
         if RuntimeInformation.IsOSPlatform OSPlatform.Windows then
-            VhdxTestFunc.CreateDifferencingVHDXFileAndTest ( fun pfa cfa -> task {
+            VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x4000000UL Blocksize.BS_512 0x100000u 0x100000u ( fun pfa cfa -> task {
                 let! pstr = VhdxReader.ReadVhdx pfa
                 let! cstr = VhdxReader.ReadVhdx cfa
 

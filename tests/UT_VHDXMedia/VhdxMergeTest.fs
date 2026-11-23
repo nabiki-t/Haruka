@@ -357,3 +357,66 @@ type VhdxMergeTest_Test () =
             let! r = VhdxMerge.UpdateMetadata fa str str.LoadedVarHeader
             Assert.StrictEqual( str.LoadedVarHeader, r )
         } )
+
+    static member m_UpdateBATForDeleteRoot_Fail_001_data : obj[][] = [|
+        [| 0; Blocksize.BS_512; Blocksize.BS_512; 0x100000UL; 0x100000UL; "updateLbaBuf must not be empty" |];
+        [| 1; Blocksize.BS_512; Blocksize.BS_4096; 0x100000UL; 0x100000UL; "Logical Sector Size unmatch" |];
+        [| 1; Blocksize.BS_512; Blocksize.BS_512; 0x100000UL; 0x200000UL; "Virtual Disk Size unmatch" |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_UpdateBATForDeleteRoot_Fail_001_data" )>]
+    member _.UpdateBATForDeleteRoot_Fail_001 ( bufsize : int ) ( bs1 : Blocksize ) ( bs2 : Blocksize ) ( vds1 : uint64 ) ( vds2 : uint64 ) ( expmsg : string ) =
+        let testcase ( dfa : FileAccessor ) ( mfa : FileAccessor ) : Task = task {
+            let! dstr = VhdxReader.ReadVhdx dfa
+            let! mstr = VhdxReader.ReadVhdx mfa
+            let r =
+                Assert.ThrowsAny<VhdxMediaException>( fun _ ->
+                    let v = Array.zeroCreate< struct( BLKCNT64_T * BLKCNT32_T ) > bufsize
+                    let _ = VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 v
+                    ()
+                )
+            Assert.StartsWith( expmsg, r.Message )
+        }
+        VhdxTestFunc.CreateTwoDynamicVHDXFileAndTest 0x100000u vds1 bs1 0x100000u vds2 bs2 testcase
+
+    [<Theory>]
+    [<InlineData( true, true, "A root VHDX file must not have a parent" )>]
+    [<InlineData( false, false, "A child VHDX file must have a parent" )>]
+    member _.UpdateBATForDeleteRoot_Fail_002 ( hp1 : bool ) ( hp2 : bool ) ( expmsg : string ) =
+        let testcase ( dfa : FileAccessor ) ( mfa : FileAccessor ) : Task = task {
+            let! dstr = VhdxReader.ReadVhdx dfa
+            let! mstr = VhdxReader.ReadVhdx mfa
+            let dstr2 = { dstr with VDI.HasParent = hp1 }
+            let mstr2 = { mstr with VDI.HasParent = hp2 }
+            let r =
+                Assert.ThrowsAny<VhdxMediaException>( fun _ ->
+                    let v = Array.zeroCreate< struct( BLKCNT64_T * BLKCNT32_T ) > 1
+                    let _ = VhdxMerge.UpdateBATForDeleteRoot dstr2 mstr2 blkcnt_me.zero64 v
+                    ()
+                )
+            Assert.StartsWith( expmsg, r.Message )
+        }
+        VhdxTestFunc.CreateTwoDynamicVHDXFileAndTest 0x100000u 0x100000UL Blocksize.BS_512 0x100000u 0x100000UL Blocksize.BS_512 testcase
+
+    static member m_UpdateBATForDeleteRoot_Fail_003_data : obj[][] = [|
+        [| 0x100000UL; Blocksize.BS_512; 2048UL; |];
+        [| 0x100000UL; Blocksize.BS_4096; 256UL; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_UpdateBATForDeleteRoot_Fail_003_data" )>]
+    member _.UpdateBATForDeleteRoot_Fail_003 ( vdsize : uint64 ) ( bs : Blocksize ) ( lba : uint64 ) =
+        let testcase ( dfa : FileAccessor ) ( mfa : FileAccessor ) : Task = task {
+            let! dstr = VhdxReader.ReadVhdx dfa
+            let! mstr = VhdxReader.ReadVhdx mfa
+            let r =
+                Assert.ThrowsAny<VhdxMediaException>( fun _ ->
+                    let v = Array.zeroCreate< struct( BLKCNT64_T * BLKCNT32_T ) > 1
+                    let _ = VhdxMerge.UpdateBATForDeleteRoot dstr mstr ( blkcnt_me.ofUInt64 lba ) v
+                    ()
+                )
+            Assert.StartsWith( "The value of startLba is out of range", r.Message )
+        }
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest vdsize bs 0x100000u 0x100000u testcase
+
