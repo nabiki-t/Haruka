@@ -126,7 +126,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
     let iSCSIPortNo = fx.iSCSIPortNo
     let m_MediaSize = fx.MediaSize
     let m_MediaBlockSize = fx.MediaBlockSize
-    let m_BlkCnt1 = blkcnt_me.ofUInt16 1us
+    let m_BlkCnt1 = blkcnt_me.one16
 
     let m_ClientProc = fx.clientProc
 
@@ -304,7 +304,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( tmdRespPDU.Value.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // SCSI read
-            let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 ( blkcnt_me.ofUInt16 1us ) m_MediaBlockSize
+            let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 blkcnt_me.one16 m_MediaBlockSize
             Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F

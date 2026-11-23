@@ -258,7 +258,7 @@ type PlainFileMedia_Test () =
 
             let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
             let buf = Array.zeroCreate<byte>( wBlockSize )
-            let! r = f.Read ( itt_me.fromPrim 0u ) src ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment buf )
+            let! r = f.Read ( itt_me.fromPrim 0u ) src blkcnt_me.zero64 ( ArraySegment buf )
             Assert.True( ( buf = wrotedata.[ .. wBlockSize - 1 ] ))
             Assert.True(( r = buf.Length ))
 
@@ -288,7 +288,7 @@ type PlainFileMedia_Test () =
 
             let buf = Array.zeroCreate<byte>( wBlockSize )
             try
-                let! _ = f.Read ( itt_me.fromPrim 0u ) src ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment buf )
+                let! _ = f.Read ( itt_me.fromPrim 0u ) src blkcnt_me.zero64 ( ArraySegment buf )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException ->
@@ -389,7 +389,7 @@ type PlainFileMedia_Test () =
 
             let buf = Array.zeroCreate<byte>( wBlockSize )
             try
-                let! _ = f.Write ( itt_me.fromPrim 0u ) src ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment buf )
+                let! _ = f.Write ( itt_me.fromPrim 0u ) src blkcnt_me.zero64 0UL ( ArraySegment buf )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException ->
@@ -426,7 +426,7 @@ type PlainFileMedia_Test () =
 
             let buf = Array.zeroCreate<byte>( wBlockSize )
             try
-                let! _ = f.Write ( itt_me.fromPrim 0u ) src ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment buf )
+                let! _ = f.Write ( itt_me.fromPrim 0u ) src blkcnt_me.zero64 0UL ( ArraySegment buf )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException ->

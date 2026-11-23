@@ -181,7 +181,7 @@ type VhdxToRaw() =
                     let buf1 = Array.zeroCreate<byte> sectorSize
                     let buf2 = Array.zeroCreate<byte> sectorSize
 
-                    let ps = PseudoSeq< BLKCNT64_T >( blkcnt_me.zero64 )
+                    let ps = PseudoSeq< BLKCNT64_T > blkcnt_me.zero64
                     for cnt in ps do
                         if cnt < sectorCount then
                             fs2.ReadExactly buf2
@@ -193,7 +193,7 @@ type VhdxToRaw() =
                             if buf1 <> buf2 then
                                 ps.Break cnt
                             else
-                                ps.Continue( cnt + blkcnt_me.ofUInt64 1UL )
+                                ps.Continue( blkcnt_me.Incr cnt )
                         else
                             ps.Break cnt
                     return ( ValueOption.get ps.LastValue = sectorCount )
@@ -238,7 +238,7 @@ type VhdxToRaw() =
                     let buf1 = Array.zeroCreate<byte> sectorSize1
                     let buf2 = Array.zeroCreate<byte> sectorSize1
 
-                    let ps = PseudoSeq< BLKCNT64_T >( blkcnt_me.zero64 )
+                    let ps = PseudoSeq< BLKCNT64_T > blkcnt_me.zero64
                     for cnt in ps do
                         if cnt < sectorCount then
 
@@ -259,7 +259,7 @@ type VhdxToRaw() =
                             if buf1 <> buf2 then
                                 ps.Break cnt
                             else
-                                ps.Continue( cnt + blkcnt_me.ofUInt64 1UL )
+                                ps.Continue( blkcnt_me.Incr cnt )
                         else
                             ps.Break cnt
                     return ( ValueOption.get ps.LastValue = sectorCount )

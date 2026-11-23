@@ -227,7 +227,7 @@ type SCSI_MemBufferMedia( fx : SCSI_MemBufferMedia_Fixture ) =
             let! _ = r.WaitSCSIResponseGoodStatus itt_f
 
             // All data will be erased.
-            let! itt_r = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_BlockSize1 ( blkcnt_me.ofUInt16 1us ) NACA.T 
+            let! itt_r = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_BlockSize1 blkcnt_me.one16 NACA.T 
             let! v2 = r.WaitSCSIResponseGoodStatus itt_r
             for i = 0 to v2.Length - 1 do
                 Assert.StrictEqual( 0uy, v2.Array.[i] )
@@ -251,7 +251,7 @@ type SCSI_MemBufferMedia( fx : SCSI_MemBufferMedia_Fixture ) =
             Assert.StrictEqual( TaskMgrResCd.FUNCTION_COMPLETE, res_tmf )
 
             // All data will be erased.
-            let! itt_r = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_BlockSize1 ( blkcnt_me.ofUInt16 1us ) NACA.T 
+            let! itt_r = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_BlockSize1 blkcnt_me.one16 NACA.T 
             let! v2 = r.WaitSCSIResponseGoodStatus itt_r
             for i = 0 to v2.Length - 1 do
                 Assert.StrictEqual( 0uy, v2.Array.[i] )

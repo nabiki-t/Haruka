@@ -309,7 +309,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
                 let! _ = r1.WaitSCSIResponseGoodStatus itt_w1
 
                 // read
-                let! itt_r1 = r2.Send_Read10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+                let! itt_r1 = r2.Send_Read10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
                 let! res_r1 = r2.WaitSCSIResponseGoodStatus itt_r1
                 Assert.True(( PooledBuffer.ValueEquals writeData1 res_r1 ))
 
@@ -320,7 +320,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
                 let! _ = r2.WaitSCSIResponseGoodStatus itt_w2
 
                 // read
-                let! itt_r2 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+                let! itt_r2 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
                 let! res_r2 = r1.WaitSCSIResponseGoodStatus itt_r2
                 Assert.True(( PooledBuffer.ValueEquals writeData1 res_r2 ))
 

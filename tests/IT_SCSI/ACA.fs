@@ -454,10 +454,10 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 do! Task.Delay 10
 
             // Read request 1 at session 1 ( Enters a dormant task state )
-            let! itt_s1_r1 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_s1_r1 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Read request 2 at session 2 ( Enters a dormant task state )
-            let! itt_s2_r2 = r2.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 1u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_s2_r2 = r2.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.one32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Just in case, wait until the simple task is queued
             // Wait until above task is queued.
@@ -466,10 +466,10 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 do! Task.Delay 5
 
             // Write request 3 at session 1 ( Overtake SIMPLE tasks )
-            let! itt_s1_w3 = r1.Send_Write10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize writeData3 NACA.T
+            let! itt_s1_w3 = r1.Send_Write10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData3 NACA.T
 
             // Write request 4 at session 2 ( Overtake SIMPLE tasks )
-            let! itt_s2_w4 = r2.Send_Write10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 1u ) m_MediaBlockSize writeData4 NACA.T
+            let! itt_s2_w4 = r2.Send_Write10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 blkcnt_me.one32 m_MediaBlockSize writeData4 NACA.T
 
             // Confirm that 3 tasks are stuck
             do! Task.Delay 10
@@ -906,7 +906,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 do! Task.Delay 10
 
             // Send a Simple task(T2), which goes into the Dormant Task state.
-            let! itt_t2 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_t2 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Resume T1 HOQ task, and it raise ACA
             m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_t1 ) "Task(" "MD> "
@@ -932,7 +932,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             // If an ACA task with NACA=1 fails, a new ACA is established.
             if argNaca then
                 // Send a new Simple task and verify that the ACA is established. 
-                let! itt_t4 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+                let! itt_t4 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
                 let! res_t4 = r1.WaitSCSIResponse itt_t4
                 Assert.True(( res_t4.Status = ScsiCmdStatCd.ACA_ACTIVE ))
 
@@ -1002,7 +1002,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 if lun = g_LUN0 then
                     r2.Send_Inquiry taskCode lun EVPD.T 0uy 256us naca
                 else
-                    r2.Send_Write10 taskCode lun ( blkcnt_me.ofUInt32 1u ) m_MediaBlockSize writeData1 naca
+                    r2.Send_Write10 taskCode lun blkcnt_me.one32 m_MediaBlockSize writeData1 naca
             let! res_t2 = r2.WaitSCSIResponse itt_t2
 
             if expresult then

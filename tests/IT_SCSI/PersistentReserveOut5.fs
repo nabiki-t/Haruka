@@ -418,12 +418,12 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r3
-            let! _ = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
-            let! itt_read3 = r3.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! _ = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
+            let! itt_read3 = r3.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until above task is queued.
             do! Task.Delay 5
@@ -441,7 +441,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
 
             // The command is executable.
             // ( The ACA has been cleared. Above SIMPLE 1 task is aborted. )
-            let! itt_read4 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read4 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
             let! res_read4 = r1.WaitSCSIResponseGoodStatus itt_read4
             res_read4.Return()
 
@@ -450,7 +450,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             res_read3.Return()
 
             // The command is executable.
-            let! itt_read5 = r3.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read5 = r3.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
             let! res_read5 = r3.WaitSCSIResponseGoodStatus itt_read5
             res_read5.Return()
 
@@ -501,7 +501,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r3
@@ -564,7 +564,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r3
@@ -625,7 +625,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r3
@@ -697,7 +697,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r3
@@ -776,7 +776,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 3 ))
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2, SIMPLE 3 tasks from r1, r2, r3
@@ -846,7 +846,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 tasks from r1, r2
@@ -914,7 +914,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 3 ))
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2, SIMPLE 3 tasks from r1, r2, r3
@@ -986,7 +986,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r2
@@ -1049,7 +1049,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 tasks from r1, r2
@@ -1114,7 +1114,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 tasks from r1, r2
@@ -1177,7 +1177,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r2
@@ -1238,7 +1238,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r2
@@ -1304,7 +1304,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r2
@@ -1376,7 +1376,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 tasks from r1, r2
@@ -1442,7 +1442,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 tasks from r1, r2
@@ -1505,7 +1505,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r2
@@ -1568,7 +1568,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r2
@@ -1633,7 +1633,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r2
@@ -1698,7 +1698,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
 
             // send ORDERED 1 task from r1, and wait that task is stuck
-            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             do! WaitTaskStucked 1
 
             // send SIMPLE 1, SIMPLE 2 task from r1, r2

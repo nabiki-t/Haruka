@@ -215,7 +215,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
 
             // Submit first task
-            let! itt_r1 = r.Send_Read10 at1 g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 at1 g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that above task is stuck.
             do! Task.Delay 10
@@ -223,7 +223,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 10
 
             // Submit second task
-            let! itt_r2 = r.Send_Read10 at2 g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 at2 g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that above task is stuck.
             do! Task.Delay 10
@@ -268,7 +268,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
 
             // Submit first task.
-            let! itt_r1 = r.Send_Read10 at1 g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 at1 g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that the task 1 is stuck.
             do! Task.Delay 5
@@ -276,7 +276,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit second task.
-            let! itt_r2 = r.Send_Read10 at2 g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 at2 g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until the task 2 is queued.
             do! Task.Delay 5
@@ -326,7 +326,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
 
             // Submit a HEAD OF QUEUE 1 task.
-            let! itt_r1 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that the HEAD OF QUEUE 1 task is stuck.
             do! Task.Delay 5
@@ -334,7 +334,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit a SIMPLE 2 task.
-            let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until the SIMPLE 2 task is queued.
             do! Task.Delay 5
@@ -342,7 +342,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit a HEAD OF QUEUE 3 task.
-            let! itt_r3 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r3 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that the HEAD OF QUEUE 3 task is stuck.
             do! Task.Delay 5
@@ -350,7 +350,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit a SIMPLE 4 task.
-            let! itt_r4 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r4 = r.Send_Read10 simpleatt g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until the SIMPLE 4 task is queued.
             do! Task.Delay 5
@@ -425,7 +425,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
 
             // Submit a HEAD OF QUEUE 1 task.
-            let! itt_r1 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that the HEAD OF QUEUE 1 task is stuck.
             do! Task.Delay 5
@@ -433,7 +433,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit a SIMPLE 2 task.
-            let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until the SIMPLE 2 task is queued.
             do! Task.Delay 5
@@ -441,7 +441,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit a HEAD OF QUEUE 3 task.
-            let! itt_r3 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r3 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that the HEAD OF QUEUE 3 task is stuck.
             do! Task.Delay 5
@@ -449,7 +449,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit a SIMPLE 4 task.
-            let! itt_r4 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r4 = r.Send_Read10 simpleatt g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until the SIMPLE 4 task is queued.
             do! Task.Delay 5
@@ -519,8 +519,8 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
 
             // Submit two SIMPLE tasks.
-            let! itt_r1 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
-            let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 simpleatt g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
+            let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that above two tasks are stuck.
             do! Task.Delay 5
@@ -528,7 +528,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit ORDERED task.
-            let! itt_r3 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r3 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until the task 2 is queued.
             do! Task.Delay 5
@@ -583,7 +583,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
 
             // Submit ORDERED task.
-            let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that ORDERED task is stuck.
             do! Task.Delay 5
@@ -591,8 +591,8 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit two SIMPLE tasks.
-            let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
-            let! itt_r3 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
+            let! itt_r3 = r.Send_Read10 simpleatt g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until the two SIMPLE tasks are queued.
             do! Task.Delay 5
@@ -642,7 +642,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
 
             // Submit a SIMPLE task.
-            let! itt_r1 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 simpleatt g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that SIMPLE task is stuck.
             do! Task.Delay 5
@@ -650,7 +650,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit a ORDERED tasks.
-            let! itt_r2 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until the ORDERED task is queued.
             do! Task.Delay 5
@@ -658,7 +658,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit a SIMPLE task.
-            let! itt_r3 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r3 = r.Send_Read10 simpleatt g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until the SIMPLE task is queued.
             do! Task.Delay 5
@@ -703,7 +703,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
 
             // Submit a ORDERED 1 task.
-            let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that ORDERED 1 task is stuck.
             do! Task.Delay 5
@@ -711,7 +711,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit a ORDERED 2 tasks.
-            let! itt_r2 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until the ORDERED task is queued.
             do! Task.Delay 5
@@ -719,7 +719,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit a HOQ task.
-            let! itt_r3 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r3 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that HOQ task is stuck.
             do! Task.Delay 5
@@ -786,7 +786,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
 
             // Submit a ORDERED 1 task.
-            let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that ORDERED 1 task is stuck.
             do! Task.Delay 5
@@ -794,7 +794,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit a ORDERED 2 tasks.
-            let! itt_r2 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until the ORDERED 2 task is queued.
             do! Task.Delay 5
@@ -802,7 +802,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit a HOQ task.
-            let! itt_r3 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r3 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that HOQ task is stuck.
             do! Task.Delay 10
@@ -844,7 +844,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
             // Submit a ACA task.
-            let! itt_r1 = r.Send_Read10 TaskATTRCd.ACA_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.ACA_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
             let! resp_r1 = r.WaitSCSIResponse itt_r1
             Assert.True(( resp_r1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -868,12 +868,12 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
             // establish ACA.
-            let! itt_r1 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize blkcnt_me.one16 NACA.T
             let! resp_r1 = r.WaitSCSIResponse itt_r1
             Assert.True(( resp_r1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
             // Submit a task.
-            let! itt_r1 = r.Send_Read10 att g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 att g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
             let! resp_r1 = r.WaitSCSIResponse itt_r1
             Assert.True(( resp_r1.Status = ScsiCmdStatCd.ACA_ACTIVE ))
 
@@ -899,7 +899,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Read /a ACA /slba 10 /elba 20" "Trap added" "MD> "
 
             // Submit a ORDERED 1 task.
-            let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that ORDERED 1 task is stuck.
             do! Task.Delay 5
@@ -910,7 +910,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r1 ) ) tasks ))
 
             // Submit SIMPLE or ORDERED task.
-            let! itt_r2 = r.Send_Read10 att g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 att g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until above task is queued.
             do! Task.Delay 5
@@ -928,7 +928,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit ACA task.
-            let! itt_r4 = r.Send_Read10 TaskATTRCd.ACA_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r4 = r.Send_Read10 TaskATTRCd.ACA_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // ACA task is executed.
             do! Task.Delay 5
@@ -978,7 +978,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Read /a ACA /slba 10 /elba 20" "Trap added" "MD> "
 
             // Submit a ORDERED 1 task.
-            let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that ORDERED 1 task is stuck.
             do! Task.Delay 5
@@ -989,7 +989,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r1 ) ) tasks ))
 
             // Submit SIMPLE or ORDERED task.
-            let! itt_r2 = r.Send_Read10 att g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 att g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until above task is queued.
             do! Task.Delay 5
@@ -1007,7 +1007,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Clear ACA by failing the CA task.
-            let! itt_r3 = r.Send_Read10 TaskATTRCd.ACA_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.F
+            let! itt_r3 = r.Send_Read10 TaskATTRCd.ACA_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.F
             do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
                 do! Task.Delay 5
@@ -1042,8 +1042,8 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Read /a ACA /slba 10 /elba 20" "Trap added" "MD> "
 
             // Submit a SIMPLE 1 and SIMPLE 2 task.
-            let! itt_r1 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
-            let! itt_r2 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize blkcnt_me.one16 NACA.T
+            let! itt_r2 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Confirm that above two tasks are stuck.
             do! Task.Delay 5
@@ -1051,7 +1051,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Submit ORDERED task.
-            let! itt_r3 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r3 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
 
             // Wait until above task is queued.
             do! Task.Delay 5

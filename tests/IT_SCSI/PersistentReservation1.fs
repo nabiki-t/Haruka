@@ -265,7 +265,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     static member PreFetch10 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
         task {
-            let! itt_msense = r.Send_PreFetch10 TaskATTRCd.SIMPLE_TASK lun IMMED.F blkcnt_me.zero32 ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_msense = r.Send_PreFetch10 TaskATTRCd.SIMPLE_TASK lun IMMED.F blkcnt_me.zero32 blkcnt_me.one16 NACA.T
             let! resp_cmd = r.WaitSCSIResponse itt_msense
             resp_cmd.ResData.Return()
             Assert.True(( resp_cmd.Status = ex ))
@@ -273,7 +273,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     static member PreFetch16 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
         task {
-            let! itt_msense = r.Send_PreFetch16 TaskATTRCd.SIMPLE_TASK lun IMMED.F blkcnt_me.zero64 ( blkcnt_me.ofUInt32 1u ) NACA.T
+            let! itt_msense = r.Send_PreFetch16 TaskATTRCd.SIMPLE_TASK lun IMMED.F blkcnt_me.zero64 blkcnt_me.one32 NACA.T
             let! resp_cmd = r.WaitSCSIResponse itt_msense
             resp_cmd.ResData.Return()
             Assert.True(( resp_cmd.Status = ex ))
@@ -313,7 +313,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     static member Read6 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
         task {
-            let! itt_msense = r.Send_Read6 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt8 1uy ) NACA.T
+            let! itt_msense = r.Send_Read6 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one8 NACA.T
             let! resp_cmd = r.WaitSCSIResponse itt_msense
             resp_cmd.ResData.Return()
             Assert.True(( resp_cmd.Status = ex ))
@@ -321,7 +321,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     static member Read10 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
         task {
-            let! itt_msense = r.Send_Read10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_msense = r.Send_Read10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
             let! resp_cmd = r.WaitSCSIResponse itt_msense
             resp_cmd.ResData.Return()
             Assert.True(( resp_cmd.Status = ex ))
@@ -329,7 +329,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     static member Read12 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
         task {
-            let! itt_msense = r.Send_Read12 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt32 1u ) NACA.T
+            let! itt_msense = r.Send_Read12 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one32 NACA.T
             let! resp_cmd = r.WaitSCSIResponse itt_msense
             resp_cmd.ResData.Return()
             Assert.True(( resp_cmd.Status = ex ))
@@ -337,7 +337,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     static member Read16 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
         task {
-            let! itt_msense = r.Send_Read16 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero64 m_MediaBlockSize ( blkcnt_me.ofUInt32 1u ) NACA.T
+            let! itt_msense = r.Send_Read16 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero64 m_MediaBlockSize blkcnt_me.one32 NACA.T
             let! resp_cmd = r.WaitSCSIResponse itt_msense
             resp_cmd.ResData.Return()
             Assert.True(( resp_cmd.Status = ex ))
@@ -361,7 +361,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     static member SynchronizeCache10 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
         task {
-            let! itt_msense = r.Send_SynchronizeCache10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_msense = r.Send_SynchronizeCache10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 blkcnt_me.one16 NACA.T
             let! resp_cmd = r.WaitSCSIResponse itt_msense
             resp_cmd.ResData.Return()
             Assert.True(( resp_cmd.Status = ex ))
@@ -369,7 +369,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     static member SynchronizeCache16 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
         task {
-            let! itt_msense = r.Send_SynchronizeCache16 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero64 ( blkcnt_me.ofUInt32 1u ) NACA.T
+            let! itt_msense = r.Send_SynchronizeCache16 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero64 blkcnt_me.one32 NACA.T
             let! resp_cmd = r.WaitSCSIResponse itt_msense
             resp_cmd.ResData.Return()
             Assert.True(( resp_cmd.Status = ex ))
@@ -1651,7 +1651,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
             // get UA
             if regist && PR_TYPE.isAllRegistrants prtype then
-                let! itt_read1 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+                let! itt_read1 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
                 let! res_read1 = r1.WaitSCSIResponse itt_read1
                 Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
                 Assert.True(( res_read1.Sense |> _.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))

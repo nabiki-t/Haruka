@@ -433,7 +433,7 @@ type DebugMedia_Test () =
 
         let r2 =
             let buf = Array.zeroCreate< byte >( 512 * 10 )
-            dm.Read ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment( buf, 0, buf.Length ) )
+            dm.Read ( itt_me.fromPrim 99u ) defaultCommandSource blkcnt_me.zero64 ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
         Assert.True(( cnt = 1 ))
@@ -553,7 +553,7 @@ type DebugMedia_Test () =
 
         let r2 =
             let buf = Array.zeroCreate< byte >( 512 * 1 )
-            dm.Read ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment( buf, 0, buf.Length ) )
+            dm.Read ( itt_me.fromPrim 99u ) defaultCommandSource blkcnt_me.zero64 ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
         Assert.True(( cnt = 1 ))
@@ -642,7 +642,7 @@ type DebugMedia_Test () =
 
         let r2 =
             let buf = Array.zeroCreate< byte >( 512 * 10 )
-            dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment( buf, 0, buf.Length ) )
+            dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource blkcnt_me.zero64 0UL ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
         Assert.True(( cnt = 1 ))
@@ -672,7 +672,7 @@ type DebugMedia_Test () =
 
         let r2 =
             let buf = Array.zeroCreate< byte >( 512 * 11 )
-            dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment( buf, 0, buf.Length ) )
+            dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource blkcnt_me.zero64 0UL ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
         Assert.True(( cnt = 1 ))
@@ -762,7 +762,7 @@ type DebugMedia_Test () =
 
         let r2 =
             let buf = Array.zeroCreate< byte >( 512 * 1 )
-            dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment( buf, 0, buf.Length ) )
+            dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource blkcnt_me.zero64 0UL ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
         Assert.True(( cnt = 1 ))

@@ -955,7 +955,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
                 mp1 with
                     Block = Some {
                         mp1.Block.Value with
-                            BlockCount = blkcnt_me.ofUInt64 1UL;
+                            BlockCount = blkcnt_me.one64;
                             BlockLength = 1u;
                     };
                     Control = None;
@@ -1397,7 +1397,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
                 mp1 with
                     Block = Some {
                         mp1.Block.Value with
-                            BlockCount = blkcnt_me.ofUInt64 1UL;
+                            BlockCount = blkcnt_me.one64;
                             BlockLength = 1u;
                     };
                     Control = None;

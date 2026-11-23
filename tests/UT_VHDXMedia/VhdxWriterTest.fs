@@ -462,7 +462,7 @@ type VhdxWriter_Test () =
         let str2 = { str with VDI.PayloadBlockSize = 0u; }
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
-                VhdxWriter.AllocatePayloadBlock str2 blkcnt_me.zero64 ( blkcnt_me.ofUInt64 1UL ) |> ignore
+                VhdxWriter.AllocatePayloadBlock str2 blkcnt_me.zero64 blkcnt_me.one64 |> ignore
             )
         Assert.StartsWith( "Unexpected the payload block size value", r.Message )
 
@@ -570,7 +570,7 @@ type VhdxWriter_Test () =
                 FileOffset = 0UL;
         }
         let struct( d, r ) =
-            VhdxWriter.AllocatePayloadBlock str blkcnt_me.zero64 ( blkcnt_me.ofUInt64 1UL )
+            VhdxWriter.AllocatePayloadBlock str blkcnt_me.zero64 blkcnt_me.one64
         let bat4ksec = ( str.BAT.BATRegionOffset / 4096UL )|> sec4k_me.ofUInt64
         Assert.StrictEqual( 1, d.Count )
         Assert.True( d.Contains bat4ksec )
@@ -593,7 +593,7 @@ type VhdxWriter_Test () =
                 FileOffset = 0UL;
         }
         let struct( d, r ) =
-            VhdxWriter.AllocatePayloadBlock str2 ( blkcnt_me.ofUInt64 2095104UL ) ( blkcnt_me.ofUInt64 1UL )
+            VhdxWriter.AllocatePayloadBlock str2 ( blkcnt_me.ofUInt64 2095104UL ) blkcnt_me.one64
         Assert.StrictEqual( str2.LastFileSize + uint64 str2.VDI.PayloadBlockSize, r )
         Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str2.BAT.Payloads.[1023].State )
         Assert.StrictEqual( freeSpace, str2.BAT.Payloads.[1023].FileOffset )
@@ -603,7 +603,7 @@ type VhdxWriter_Test () =
     member _.AllocatePayloadBlock_008 () =
         let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
         let struct( d, r ) =
-            VhdxWriter.AllocatePayloadBlock str blkcnt_me.zero64 ( blkcnt_me.ofUInt64 1UL )
+            VhdxWriter.AllocatePayloadBlock str blkcnt_me.zero64 blkcnt_me.one64
         Assert.StrictEqual( str.LastFileSize, r )
         Assert.Empty d
         Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[0].State )
@@ -840,7 +840,7 @@ type VhdxWriter_Test () =
     member _.UpdateSectorBitmap_003 () =
         let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000000UL Blocksize.BS_512 true
         let h = HashSet<SEC4K_T>( [| for i in 0UL .. 9UL do sec4k_me.ofUInt64 i |] )
-        let d = VhdxWriter.UpdateSectorBitmap str h blkcnt_me.zero64 ( blkcnt_me.ofUInt64 1UL )
+        let d = VhdxWriter.UpdateSectorBitmap str h blkcnt_me.zero64 blkcnt_me.one64
         Assert.StrictEqual( 10, h.Count )
 
     [<Fact>]

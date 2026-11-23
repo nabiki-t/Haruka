@@ -517,7 +517,7 @@ type VHDXFileMedia
                     let bitValue = ( sb.[ int32 bytePos ] >>> ( int32 bitPos ) ) &&& 1uy
                     if bitValue <> 0uy then
                         // it is already marked as in use
-                        loop ( wpos + blkcnt_me.ofUInt64 1UL )
+                        loop ( blkcnt_me.Incr wpos )
                     else
                         // must be update sector bitmap
                         false

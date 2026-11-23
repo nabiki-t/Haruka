@@ -57,7 +57,7 @@ type VhdxMergeTest_Test () =
             let! dstStr = VhdxReader.ReadVhdx dstFA
             let! r =
                 Assert.ThrowsAsync<VhdxMediaException>( fun _ -> task {
-                    do! VhdxMerge.CopyData srcFA srcStr dstFA dstStr ( blkcnt_me.zero64 ) ( blkcnt_me.ofUInt32 1u )
+                    do! VhdxMerge.CopyData srcFA srcStr dstFA dstStr blkcnt_me.zero64 blkcnt_me.one32
                 } )
             Assert.StartsWith( "The block lengths of the source and destination differ", r.Message )
         }
@@ -115,7 +115,7 @@ type VhdxMergeTest_Test () =
 
             let! r =
                 Assert.ThrowsAsync<VhdxMediaException>( fun _ -> task {
-                    do! VhdxMerge.CopyData srcFA srcStr dstFA dstStr ( blkcnt_me.zero64 ) ( blkcnt_me.ofUInt32 1u )
+                    do! VhdxMerge.CopyData srcFA srcStr dstFA dstStr blkcnt_me.zero64 blkcnt_me.one32
                 } )
             Assert.StartsWith( "The source payload block is not allocated", r.Message )
         }
@@ -154,7 +154,7 @@ type VhdxMergeTest_Test () =
 
             let! r =
                 Assert.ThrowsAsync<VhdxMediaException>( fun _ -> task {
-                    do! VhdxMerge.CopyData srcFA srcStr dstFA dstStr ( blkcnt_me.zero64 ) ( blkcnt_me.ofUInt32 1u )
+                    do! VhdxMerge.CopyData srcFA srcStr dstFA dstStr blkcnt_me.zero64 blkcnt_me.one32
                 } )
             Assert.StartsWith( "The destination payload block is not allocated", r.Message )
         }
@@ -230,7 +230,7 @@ type VhdxMergeTest_Test () =
 
                 // Allocate payload blocks within the destination VHDX file
                 let struct( updated4KSecsForBAT, requiredFileSize ) =
-                    VhdxWriter.AllocatePayloadBlock dstStr blkcnt_me.zero64 ( blkcnt_me.ofUInt64 1UL )
+                    VhdxWriter.AllocatePayloadBlock dstStr blkcnt_me.zero64 blkcnt_me.one64
                 let! _ = VhdxWriter.WriteUpdatedBAT dstFA dstStr dstStr.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT ) requiredFileSize
 
                 // update the destination payload block status
@@ -239,7 +239,7 @@ type VhdxMergeTest_Test () =
                         State = dstate;
                 }
 
-                do! VhdxMerge.CopyData srcFA srcStr dstFA dstStr blkcnt_me.zero64 ( blkcnt_me.ofUInt32 1u )
+                do! VhdxMerge.CopyData srcFA srcStr dstFA dstStr blkcnt_me.zero64 blkcnt_me.one32
 
                 // Read copied data
                 let resultdata = Array.zeroCreate<byte> 512

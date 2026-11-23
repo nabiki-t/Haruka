@@ -3593,8 +3593,8 @@ type GenConfRW_Test_001 () =
         Assert.True( r.D1 = blkcnt_me.ofUInt8 exr )
 
     static member m_SingleValue_BLKCNT8_003_data = [|
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt8 0uy; blkcnt_me.ofUInt8 1uy; ] :> obj |];
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt8 0uy; blkcnt_me.ofUInt8 1uy; blkcnt_me.ofUInt8 2uy; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.zero8; blkcnt_me.one8; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.zero8; blkcnt_me.one8; blkcnt_me.ofUInt8 2uy; ] :> obj |];
     |]
 
     [<Theory>]
@@ -3605,7 +3605,7 @@ type GenConfRW_Test_001 () =
 
     static member m_SingleValue_BLKCNT8_004_data = [|
         [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; None :> obj |];
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some( blkcnt_me.ofUInt8 1uy ) :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some blkcnt_me.one8 :> obj |];
     |]
 
     [<Theory>]
@@ -3623,7 +3623,7 @@ type GenConfRW_Test_001 () =
     [<MemberData( "m_SingleValue_BLKCNT8_005_data" )>]
     member _.SingleValue_BLKCNT8_005 ( s : string ) ( exr_D7 : BLKCNT8_T ) ( exr_D8 : BLKCNT8_T ) =
         let r = ConfRW_002_BLKCNT8_T.ConfRW_UT002_BLKCNT8_T.LoadString s
-        Assert.True( r.D4 = blkcnt_me.ofUInt8 0uy; )
+        Assert.True( r.D4 = blkcnt_me.zero8; )
         Assert.True( r.D5 = blkcnt_me.ofUInt8 99uy; )
         Assert.True( r.D6 = blkcnt_me.ofUInt8 ( uint8 Constants.MAX_TARGET_DEVICE_COUNT ) )
         Assert.True( r.D7 = exr_D7 )
@@ -3631,15 +3631,15 @@ type GenConfRW_Test_001 () =
 
     static member m_SingleValue_BLKCNT8_006_data = [|
         [|
-            ( { D1 = blkcnt_me.ofUInt8 2uy; D2 = [ blkcnt_me.ofUInt8 0uy; blkcnt_me.ofUInt8 1uy; ]; D3 = None; D4 = blkcnt_me.ofUInt8 0uy; D5 = blkcnt_me.ofUInt8 0uy; D6 = blkcnt_me.ofUInt8 1uy; D7 = blkcnt_me.ofUInt8 2uy; D8 = blkcnt_me.ofUInt8 3uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj;
+            ( { D1 = blkcnt_me.ofUInt8 2uy; D2 = [ blkcnt_me.zero8; blkcnt_me.one8; ]; D3 = None; D4 = blkcnt_me.zero8; D5 = blkcnt_me.zero8; D6 = blkcnt_me.one8; D7 = blkcnt_me.ofUInt8 2uy; D8 = blkcnt_me.ofUInt8 3uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj;
             "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>2</D7><D8>3</D8></Test>" :> obj
         |];
         [|
-            ( { D1 = blkcnt_me.ofUInt8 3uy; D2 = [ blkcnt_me.ofUInt8 0uy; blkcnt_me.ofUInt8 1uy; blkcnt_me.ofUInt8 2uy; ]; D3 = None; D4 = blkcnt_me.ofUInt8 0uy; D5 = blkcnt_me.ofUInt8 0uy; D6 = blkcnt_me.ofUInt8 2uy; D7 = blkcnt_me.ofUInt8 3uy; D8 = blkcnt_me.ofUInt8 4uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj;
+            ( { D1 = blkcnt_me.ofUInt8 3uy; D2 = [ blkcnt_me.zero8; blkcnt_me.one8; blkcnt_me.ofUInt8 2uy; ]; D3 = None; D4 = blkcnt_me.zero8; D5 = blkcnt_me.zero8; D6 = blkcnt_me.ofUInt8 2uy; D7 = blkcnt_me.ofUInt8 3uy; D8 = blkcnt_me.ofUInt8 4uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj;
             "<Test><D1>3</D1><D2>0</D2><D2>1</D2><D2>2</D2><D7>3</D7><D8>4</D8></Test>" :> obj
         |];
         [|
-            ( { D1 = blkcnt_me.ofUInt8 2uy; D2 = [ blkcnt_me.ofUInt8 0uy; blkcnt_me.ofUInt8 1uy; ]; D3 = Some( blkcnt_me.ofUInt8 5uy ); D4 = blkcnt_me.ofUInt8 0uy; D5 = blkcnt_me.ofUInt8 0uy; D6 = blkcnt_me.ofUInt8 3uy; D7 = blkcnt_me.ofUInt8 4uy; D8 = blkcnt_me.ofUInt8 5uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj;
+            ( { D1 = blkcnt_me.ofUInt8 2uy; D2 = [ blkcnt_me.zero8; blkcnt_me.one8; ]; D3 = Some( blkcnt_me.ofUInt8 5uy ); D4 = blkcnt_me.zero8; D5 = blkcnt_me.zero8; D6 = blkcnt_me.ofUInt8 3uy; D7 = blkcnt_me.ofUInt8 4uy; D8 = blkcnt_me.ofUInt8 5uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj;
             "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>5</D3><D7>4</D7><D8>5</D8></Test>" :> obj
         |];
     |]
@@ -3651,8 +3651,8 @@ type GenConfRW_Test_001 () =
         Assert.True(( r = exr ))
 
     static member m_SingleValue_BLKCNT8_007_data = [|
-        [| ( { D1 = blkcnt_me.ofUInt8 2uy; D2 = [ blkcnt_me.ofUInt8 0uy; ]; D3 = None; D4 = blkcnt_me.ofUInt8 0uy; D5 = blkcnt_me.ofUInt8 0uy; D6 = blkcnt_me.ofUInt8 1uy; D7 = blkcnt_me.ofUInt8 2uy; D8 = blkcnt_me.ofUInt8 3uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj |];
-        [| ( { D1 = blkcnt_me.ofUInt8 2uy; D2 = [ blkcnt_me.ofUInt8 0uy; blkcnt_me.ofUInt8 1uy; blkcnt_me.ofUInt8 2uy; blkcnt_me.ofUInt8 3uy; ]; D3 = None; D4 = blkcnt_me.ofUInt8 0uy; D5 = blkcnt_me.ofUInt8 0uy; D6 = blkcnt_me.ofUInt8 1uy; D7 = blkcnt_me.ofUInt8 2uy; D8 = blkcnt_me.ofUInt8 3uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj |];
+        [| ( { D1 = blkcnt_me.ofUInt8 2uy; D2 = [ blkcnt_me.zero8; ]; D3 = None; D4 = blkcnt_me.zero8; D5 = blkcnt_me.zero8; D6 = blkcnt_me.one8; D7 = blkcnt_me.ofUInt8 2uy; D8 = blkcnt_me.ofUInt8 3uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj |];
+        [| ( { D1 = blkcnt_me.ofUInt8 2uy; D2 = [ blkcnt_me.zero8; blkcnt_me.one8; blkcnt_me.ofUInt8 2uy; blkcnt_me.ofUInt8 3uy; ]; D3 = None; D4 = blkcnt_me.zero8; D5 = blkcnt_me.zero8; D6 = blkcnt_me.one8; D7 = blkcnt_me.ofUInt8 2uy; D8 = blkcnt_me.ofUInt8 3uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj |];
     |]
 
     [<Theory>]
@@ -3695,8 +3695,8 @@ type GenConfRW_Test_001 () =
         Assert.True( r.D1 = blkcnt_me.ofUInt16 exr )
 
     static member m_SingleValue_BLKCNT16_003_data = [|
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt16 0us; blkcnt_me.ofUInt16 1us; ] :> obj |];
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt16 0us; blkcnt_me.ofUInt16 1us; blkcnt_me.ofUInt16 2us; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.zero16; blkcnt_me.one16; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.zero16; blkcnt_me.one16; blkcnt_me.ofUInt16 2us; ] :> obj |];
     |]
 
     [<Theory>]
@@ -3707,7 +3707,7 @@ type GenConfRW_Test_001 () =
 
     static member m_SingleValue_BLKCNT16_004_data = [|
         [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; None :> obj |];
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some( blkcnt_me.ofUInt16 1us ) :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some blkcnt_me.one16 :> obj |];
     |]
 
     [<Theory>]
@@ -3725,7 +3725,7 @@ type GenConfRW_Test_001 () =
     [<MemberData( "m_SingleValue_BLKCNT16_005_data" )>]
     member _.SingleValue_BLKCNT16_005 ( s : string ) ( exr_D7 : BLKCNT16_T ) ( exr_D8 : BLKCNT16_T ) =
         let r = ConfRW_002_BLKCNT16_T.ConfRW_UT002_BLKCNT16_T.LoadString s
-        Assert.True( r.D4 = blkcnt_me.ofUInt16 0us; )
+        Assert.True( r.D4 = blkcnt_me.zero16; )
         Assert.True( r.D5 = blkcnt_me.ofUInt16 99us; )
         Assert.True( r.D6 = blkcnt_me.ofUInt16 ( uint16 Constants.MAX_TARGET_DEVICE_COUNT ) )
         Assert.True( r.D7 = exr_D7 )
@@ -3733,15 +3733,15 @@ type GenConfRW_Test_001 () =
 
     static member m_SingleValue_BLKCNT16_006_data = [|
         [|
-            ( { D1 = blkcnt_me.ofUInt16 2us; D2 = [ blkcnt_me.ofUInt16 0us; blkcnt_me.ofUInt16 1us; ]; D3 = None; D4 = blkcnt_me.ofUInt16 0us; D5 = blkcnt_me.ofUInt16 0us; D6 = blkcnt_me.ofUInt16 1us; D7 = blkcnt_me.ofUInt16 2us; D8 = blkcnt_me.ofUInt16 3us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj;
+            ( { D1 = blkcnt_me.ofUInt16 2us; D2 = [ blkcnt_me.zero16; blkcnt_me.one16; ]; D3 = None; D4 = blkcnt_me.zero16; D5 = blkcnt_me.zero16; D6 = blkcnt_me.one16; D7 = blkcnt_me.ofUInt16 2us; D8 = blkcnt_me.ofUInt16 3us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj;
             "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>2</D7><D8>3</D8></Test>" :> obj
         |];
         [|
-            ( { D1 = blkcnt_me.ofUInt16 3us; D2 = [ blkcnt_me.ofUInt16 0us; blkcnt_me.ofUInt16 1us; blkcnt_me.ofUInt16 2us; ]; D3 = None; D4 = blkcnt_me.ofUInt16 0us; D5 = blkcnt_me.ofUInt16 0us; D6 = blkcnt_me.ofUInt16 2us; D7 = blkcnt_me.ofUInt16 3us; D8 = blkcnt_me.ofUInt16 4us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj;
+            ( { D1 = blkcnt_me.ofUInt16 3us; D2 = [ blkcnt_me.zero16; blkcnt_me.one16; blkcnt_me.ofUInt16 2us; ]; D3 = None; D4 = blkcnt_me.zero16; D5 = blkcnt_me.zero16; D6 = blkcnt_me.ofUInt16 2us; D7 = blkcnt_me.ofUInt16 3us; D8 = blkcnt_me.ofUInt16 4us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj;
             "<Test><D1>3</D1><D2>0</D2><D2>1</D2><D2>2</D2><D7>3</D7><D8>4</D8></Test>" :> obj
         |];
         [|
-            ( { D1 = blkcnt_me.ofUInt16 2us; D2 = [ blkcnt_me.ofUInt16 0us; blkcnt_me.ofUInt16 1us; ]; D3 = Some( blkcnt_me.ofUInt16 5us ); D4 = blkcnt_me.ofUInt16 0us; D5 = blkcnt_me.ofUInt16 0us; D6 = blkcnt_me.ofUInt16 3us; D7 = blkcnt_me.ofUInt16 4us; D8 = blkcnt_me.ofUInt16 5us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj;
+            ( { D1 = blkcnt_me.ofUInt16 2us; D2 = [ blkcnt_me.zero16; blkcnt_me.one16; ]; D3 = Some( blkcnt_me.ofUInt16 5us ); D4 = blkcnt_me.zero16; D5 = blkcnt_me.zero16; D6 = blkcnt_me.ofUInt16 3us; D7 = blkcnt_me.ofUInt16 4us; D8 = blkcnt_me.ofUInt16 5us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj;
             "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>5</D3><D7>4</D7><D8>5</D8></Test>" :> obj
         |];
     |]
@@ -3753,8 +3753,8 @@ type GenConfRW_Test_001 () =
         Assert.True(( r = exr ))
 
     static member m_SingleValue_BLKCNT16_007_data = [|
-        [| ( { D1 = blkcnt_me.ofUInt16 2us; D2 = [ blkcnt_me.ofUInt16 0us; ]; D3 = None; D4 = blkcnt_me.ofUInt16 0us; D5 = blkcnt_me.ofUInt16 0us; D6 = blkcnt_me.ofUInt16 1us; D7 = blkcnt_me.ofUInt16 2us; D8 = blkcnt_me.ofUInt16 3us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj |];
-        [| ( { D1 = blkcnt_me.ofUInt16 2us; D2 = [ blkcnt_me.ofUInt16 0us; blkcnt_me.ofUInt16 1us; blkcnt_me.ofUInt16 2us; blkcnt_me.ofUInt16 3us; ]; D3 = None; D4 = blkcnt_me.ofUInt16 0us; D5 = blkcnt_me.ofUInt16 0us; D6 = blkcnt_me.ofUInt16 1us; D7 = blkcnt_me.ofUInt16 2us; D8 = blkcnt_me.ofUInt16 3us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj |];
+        [| ( { D1 = blkcnt_me.ofUInt16 2us; D2 = [ blkcnt_me.zero16; ]; D3 = None; D4 = blkcnt_me.zero16; D5 = blkcnt_me.zero16; D6 = blkcnt_me.one16; D7 = blkcnt_me.ofUInt16 2us; D8 = blkcnt_me.ofUInt16 3us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj |];
+        [| ( { D1 = blkcnt_me.ofUInt16 2us; D2 = [ blkcnt_me.zero16; blkcnt_me.one16; blkcnt_me.ofUInt16 2us; blkcnt_me.ofUInt16 3us; ]; D3 = None; D4 = blkcnt_me.zero16; D5 = blkcnt_me.zero16; D6 = blkcnt_me.one16; D7 = blkcnt_me.ofUInt16 2us; D8 = blkcnt_me.ofUInt16 3us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj |];
     |]
 
     [<Theory>]
@@ -3797,8 +3797,8 @@ type GenConfRW_Test_001 () =
         Assert.True( r.D1 = blkcnt_me.ofUInt32 exr )
 
     static member m_SingleValue_BLKCNT32_003_data = [|
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt32 0u; blkcnt_me.ofUInt32 1u; ] :> obj |];
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt32 0u; blkcnt_me.ofUInt32 1u; blkcnt_me.ofUInt32 2u; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.zero32; blkcnt_me.one32; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.zero32; blkcnt_me.one32; blkcnt_me.ofUInt32 2u; ] :> obj |];
     |]
 
     [<Theory>]
@@ -3809,7 +3809,7 @@ type GenConfRW_Test_001 () =
 
     static member m_SingleValue_BLKCNT32_004_data = [|
         [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; None :> obj |];
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some( blkcnt_me.ofUInt32 1u ) :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some blkcnt_me.one32 :> obj |];
     |]
 
     [<Theory>]
@@ -3827,7 +3827,7 @@ type GenConfRW_Test_001 () =
     [<MemberData( "m_SingleValue_BLKCNT32_005_data" )>]
     member _.SingleValue_BLKCNT32_005 ( s : string ) ( exr_D7 : BLKCNT32_T ) ( exr_D8 : BLKCNT32_T ) =
         let r = ConfRW_002_BLKCNT32_T.ConfRW_UT002_BLKCNT32_T.LoadString s
-        Assert.True( r.D4 = blkcnt_me.ofUInt32 0u; )
+        Assert.True( r.D4 = blkcnt_me.zero32; )
         Assert.True( r.D5 = blkcnt_me.ofUInt32 99u; )
         Assert.True( r.D6 = blkcnt_me.ofUInt32 ( uint32 Constants.MAX_TARGET_DEVICE_COUNT ) )
         Assert.True( r.D7 = exr_D7 )
@@ -3835,15 +3835,15 @@ type GenConfRW_Test_001 () =
 
     static member m_SingleValue_BLKCNT32_006_data = [|
         [|
-            ( { D1 = blkcnt_me.ofUInt32 2u; D2 = [ blkcnt_me.ofUInt32 0u; blkcnt_me.ofUInt32 1u; ]; D3 = None; D4 = blkcnt_me.ofUInt32 0u; D5 = blkcnt_me.ofUInt32 0u; D6 = blkcnt_me.ofUInt32 1u; D7 = blkcnt_me.ofUInt32 2u; D8 = blkcnt_me.ofUInt32 3u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj;
+            ( { D1 = blkcnt_me.ofUInt32 2u; D2 = [ blkcnt_me.zero32; blkcnt_me.one32; ]; D3 = None; D4 = blkcnt_me.zero32; D5 = blkcnt_me.zero32; D6 = blkcnt_me.one32; D7 = blkcnt_me.ofUInt32 2u; D8 = blkcnt_me.ofUInt32 3u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj;
             "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>2</D7><D8>3</D8></Test>" :> obj
         |];
         [|
-            ( { D1 = blkcnt_me.ofUInt32 3u; D2 = [ blkcnt_me.ofUInt32 0u; blkcnt_me.ofUInt32 1u; blkcnt_me.ofUInt32 2u; ]; D3 = None; D4 = blkcnt_me.ofUInt32 0u; D5 = blkcnt_me.ofUInt32 0u; D6 = blkcnt_me.ofUInt32 2u; D7 = blkcnt_me.ofUInt32 3u; D8 = blkcnt_me.ofUInt32 4u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj;
+            ( { D1 = blkcnt_me.ofUInt32 3u; D2 = [ blkcnt_me.zero32; blkcnt_me.one32; blkcnt_me.ofUInt32 2u; ]; D3 = None; D4 = blkcnt_me.zero32; D5 = blkcnt_me.zero32; D6 = blkcnt_me.ofUInt32 2u; D7 = blkcnt_me.ofUInt32 3u; D8 = blkcnt_me.ofUInt32 4u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj;
             "<Test><D1>3</D1><D2>0</D2><D2>1</D2><D2>2</D2><D7>3</D7><D8>4</D8></Test>" :> obj
         |];
         [|
-            ( { D1 = blkcnt_me.ofUInt32 2u; D2 = [ blkcnt_me.ofUInt32 0u; blkcnt_me.ofUInt32 1u; ]; D3 = Some( blkcnt_me.ofUInt32 5u ); D4 = blkcnt_me.ofUInt32 0u; D5 = blkcnt_me.ofUInt32 0u; D6 = blkcnt_me.ofUInt32 3u; D7 = blkcnt_me.ofUInt32 4u; D8 = blkcnt_me.ofUInt32 5u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj;
+            ( { D1 = blkcnt_me.ofUInt32 2u; D2 = [ blkcnt_me.zero32; blkcnt_me.one32; ]; D3 = Some( blkcnt_me.ofUInt32 5u ); D4 = blkcnt_me.zero32; D5 = blkcnt_me.zero32; D6 = blkcnt_me.ofUInt32 3u; D7 = blkcnt_me.ofUInt32 4u; D8 = blkcnt_me.ofUInt32 5u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj;
             "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>5</D3><D7>4</D7><D8>5</D8></Test>" :> obj
         |];
     |]
@@ -3855,8 +3855,8 @@ type GenConfRW_Test_001 () =
         Assert.True(( r = exr ))
 
     static member m_SingleValue_BLKCNT32_007_data = [|
-        [| ( { D1 = blkcnt_me.ofUInt32 2u; D2 = [ blkcnt_me.ofUInt32 0u; ]; D3 = None; D4 = blkcnt_me.ofUInt32 0u; D5 = blkcnt_me.ofUInt32 0u; D6 = blkcnt_me.ofUInt32 1u; D7 = blkcnt_me.ofUInt32 2u; D8 = blkcnt_me.ofUInt32 3u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj |];
-        [| ( { D1 = blkcnt_me.ofUInt32 2u; D2 = [ blkcnt_me.ofUInt32 0u; blkcnt_me.ofUInt32 1u; blkcnt_me.ofUInt32 2u; blkcnt_me.ofUInt32 3u; ]; D3 = None; D4 = blkcnt_me.ofUInt32 0u; D5 = blkcnt_me.ofUInt32 0u; D6 = blkcnt_me.ofUInt32 1u; D7 = blkcnt_me.ofUInt32 2u; D8 = blkcnt_me.ofUInt32 3u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj |];
+        [| ( { D1 = blkcnt_me.ofUInt32 2u; D2 = [ blkcnt_me.zero32; ]; D3 = None; D4 = blkcnt_me.zero32; D5 = blkcnt_me.zero32; D6 = blkcnt_me.one32; D7 = blkcnt_me.ofUInt32 2u; D8 = blkcnt_me.ofUInt32 3u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj |];
+        [| ( { D1 = blkcnt_me.ofUInt32 2u; D2 = [ blkcnt_me.zero32; blkcnt_me.one32; blkcnt_me.ofUInt32 2u; blkcnt_me.ofUInt32 3u; ]; D3 = None; D4 = blkcnt_me.zero32; D5 = blkcnt_me.zero32; D6 = blkcnt_me.one32; D7 = blkcnt_me.ofUInt32 2u; D8 = blkcnt_me.ofUInt32 3u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj |];
     |]
 
     [<Theory>]
@@ -3899,8 +3899,8 @@ type GenConfRW_Test_001 () =
         Assert.True( r.D1 = blkcnt_me.ofUInt64 exr )
 
     static member m_SingleValue_BLKCNT64_003_data = [|
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt64 0UL; blkcnt_me.ofUInt64 1UL; ] :> obj |];
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt64 0UL; blkcnt_me.ofUInt64 1UL; blkcnt_me.ofUInt64 2UL; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.zero64; blkcnt_me.one64; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.zero64; blkcnt_me.one64; blkcnt_me.ofUInt64 2UL; ] :> obj |];
     |]
 
     [<Theory>]
@@ -3911,7 +3911,7 @@ type GenConfRW_Test_001 () =
 
     static member m_SingleValue_BLKCNT64_004_data = [|
         [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; None :> obj |];
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some( blkcnt_me.ofUInt64 1UL ) :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some blkcnt_me.one64 :> obj |];
     |]
 
     [<Theory>]
@@ -3929,7 +3929,7 @@ type GenConfRW_Test_001 () =
     [<MemberData( "m_SingleValue_BLKCNT64_005_data" )>]
     member _.SingleValue_BLKCNT64_005 ( s : string ) ( exr_D7 : BLKCNT64_T ) ( exr_D8 : BLKCNT64_T ) =
         let r = ConfRW_002_BLKCNT64_T.ConfRW_UT002_BLKCNT64_T.LoadString s
-        Assert.True( r.D4 = blkcnt_me.ofUInt64 0UL; )
+        Assert.True( r.D4 = blkcnt_me.zero64; )
         Assert.True( r.D5 = blkcnt_me.ofUInt64 99UL; )
         Assert.True( r.D6 = blkcnt_me.ofUInt64 ( uint64 Constants.MAX_TARGET_DEVICE_COUNT ) )
         Assert.True( r.D7 = exr_D7 )
@@ -3937,15 +3937,15 @@ type GenConfRW_Test_001 () =
 
     static member m_SingleValue_BLKCNT64_006_data = [|
         [|
-            ( { D1 = blkcnt_me.ofUInt64 2UL; D2 = [ blkcnt_me.ofUInt64 0UL; blkcnt_me.ofUInt64 1UL; ]; D3 = None; D4 = blkcnt_me.ofUInt64 0UL; D5 = blkcnt_me.ofUInt64 0UL; D6 = blkcnt_me.ofUInt64 1UL; D7 = blkcnt_me.ofUInt64 2UL; D8 = blkcnt_me.ofUInt64 3UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj;
+            ( { D1 = blkcnt_me.ofUInt64 2UL; D2 = [ blkcnt_me.zero64; blkcnt_me.one64; ]; D3 = None; D4 = blkcnt_me.zero64; D5 = blkcnt_me.zero64; D6 = blkcnt_me.one64; D7 = blkcnt_me.ofUInt64 2UL; D8 = blkcnt_me.ofUInt64 3UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj;
             "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>2</D7><D8>3</D8></Test>" :> obj
         |];
         [|
-            ( { D1 = blkcnt_me.ofUInt64 3UL; D2 = [ blkcnt_me.ofUInt64 0UL; blkcnt_me.ofUInt64 1UL; blkcnt_me.ofUInt64 2UL; ]; D3 = None; D4 = blkcnt_me.ofUInt64 0UL; D5 = blkcnt_me.ofUInt64 0UL; D6 = blkcnt_me.ofUInt64 2UL; D7 = blkcnt_me.ofUInt64 3UL; D8 = blkcnt_me.ofUInt64 4UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj;
+            ( { D1 = blkcnt_me.ofUInt64 3UL; D2 = [ blkcnt_me.zero64; blkcnt_me.one64; blkcnt_me.ofUInt64 2UL; ]; D3 = None; D4 = blkcnt_me.zero64; D5 = blkcnt_me.zero64; D6 = blkcnt_me.ofUInt64 2UL; D7 = blkcnt_me.ofUInt64 3UL; D8 = blkcnt_me.ofUInt64 4UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj;
             "<Test><D1>3</D1><D2>0</D2><D2>1</D2><D2>2</D2><D7>3</D7><D8>4</D8></Test>" :> obj
         |];
         [|
-            ( { D1 = blkcnt_me.ofUInt64 2UL; D2 = [ blkcnt_me.ofUInt64 0UL; blkcnt_me.ofUInt64 1UL; ]; D3 = Some( blkcnt_me.ofUInt64 5UL ); D4 = blkcnt_me.ofUInt64 0UL; D5 = blkcnt_me.ofUInt64 0UL; D6 = blkcnt_me.ofUInt64 3UL; D7 = blkcnt_me.ofUInt64 4UL; D8 = blkcnt_me.ofUInt64 5UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj;
+            ( { D1 = blkcnt_me.ofUInt64 2UL; D2 = [ blkcnt_me.zero64; blkcnt_me.one64; ]; D3 = Some( blkcnt_me.ofUInt64 5UL ); D4 = blkcnt_me.zero64; D5 = blkcnt_me.zero64; D6 = blkcnt_me.ofUInt64 3UL; D7 = blkcnt_me.ofUInt64 4UL; D8 = blkcnt_me.ofUInt64 5UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj;
             "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>5</D3><D7>4</D7><D8>5</D8></Test>" :> obj
         |];
     |]
@@ -3957,8 +3957,8 @@ type GenConfRW_Test_001 () =
         Assert.True(( r = exr ))
 
     static member m_SingleValue_BLKCNT64_007_data = [|
-        [| ( { D1 = blkcnt_me.ofUInt64 2UL; D2 = [ blkcnt_me.ofUInt64 0UL; ]; D3 = None; D4 = blkcnt_me.ofUInt64 0UL; D5 = blkcnt_me.ofUInt64 0UL; D6 = blkcnt_me.ofUInt64 1UL; D7 = blkcnt_me.ofUInt64 2UL; D8 = blkcnt_me.ofUInt64 3UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj |];
-        [| ( { D1 = blkcnt_me.ofUInt64 2UL; D2 = [ blkcnt_me.ofUInt64 0UL; blkcnt_me.ofUInt64 1UL; blkcnt_me.ofUInt64 2UL; blkcnt_me.ofUInt64 3UL; ]; D3 = None; D4 = blkcnt_me.ofUInt64 0UL; D5 = blkcnt_me.ofUInt64 0UL; D6 = blkcnt_me.ofUInt64 1UL; D7 = blkcnt_me.ofUInt64 2UL; D8 = blkcnt_me.ofUInt64 3UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj |];
+        [| ( { D1 = blkcnt_me.ofUInt64 2UL; D2 = [ blkcnt_me.zero64; ]; D3 = None; D4 = blkcnt_me.zero64; D5 = blkcnt_me.zero64; D6 = blkcnt_me.one64; D7 = blkcnt_me.ofUInt64 2UL; D8 = blkcnt_me.ofUInt64 3UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj |];
+        [| ( { D1 = blkcnt_me.ofUInt64 2UL; D2 = [ blkcnt_me.zero64; blkcnt_me.one64; blkcnt_me.ofUInt64 2UL; blkcnt_me.ofUInt64 3UL; ]; D3 = None; D4 = blkcnt_me.zero64; D5 = blkcnt_me.zero64; D6 = blkcnt_me.one64; D7 = blkcnt_me.ofUInt64 2UL; D8 = blkcnt_me.ofUInt64 3UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj |];
     |]
 
     [<Theory>]

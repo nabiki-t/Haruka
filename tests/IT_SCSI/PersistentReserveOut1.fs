@@ -1471,7 +1471,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out4
 
             // check UA status
-            let! itt_read1 = r2.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_read1 = r2.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize blkcnt_me.one16 NACA.T
             if isua then
                 let! res_read1 = r2.WaitSCSIResponse itt_read1
                 Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))

@@ -185,7 +185,7 @@ type VhdxWriter() =
                 if wcnt < cnt then
                     let nextgfs =
                         VhdxWriter.UpdatePBForAllocate structures ( lba + wcnt ) enumFreeList gfs updated4KSecs
-                    loop ( wcnt + blkcnt_me.ofUInt64 1UL ) nextgfs
+                    loop ( blkcnt_me.Incr wcnt ) nextgfs
                 else
                     gfs
             let requiredFileSize = loop blkcnt_me.zero64 structures.LastFileSize
@@ -224,7 +224,7 @@ type VhdxWriter() =
         : uint64 =
 
         let mediaBlkCnt = Functions.CalcBlockCount64 structures.VDI.VirtualDiskSize structures.VDI.LogicalSectorSize
-        if not <| Functions.CheckAccessRangeBlock lba ( blkcnt_me.ofUInt64 1UL ) mediaBlkCnt then
+        if not <| Functions.CheckAccessRangeBlock lba blkcnt_me.one64 mediaBlkCnt then
             raise <| VhdxMediaException( "Unexpected access range." )
 
         let pbSize = uint64 structures.VDI.PayloadBlockSize
@@ -326,7 +326,7 @@ type VhdxWriter() =
     static member UpdateSBForAllocate ( structures : VhdxStructures ) ( lba : BLKCNT64_T ) ( updatedPB4K : HashSet<SEC4K_T> ) ( updatedSB4K : Dictionary< SEC4K_T, ArraySegment<byte> > ) : bool =
 
         let mediaBlkCnt = Functions.CalcBlockCount64 structures.VDI.VirtualDiskSize structures.VDI.LogicalSectorSize
-        if not <| Functions.CheckAccessRangeBlock lba ( blkcnt_me.ofUInt64 1UL ) mediaBlkCnt then
+        if not <| Functions.CheckAccessRangeBlock lba blkcnt_me.one64 mediaBlkCnt then
             raise <| VhdxMediaException( "Unexpected access range." )
 
         if not structures.VDI.HasParent then

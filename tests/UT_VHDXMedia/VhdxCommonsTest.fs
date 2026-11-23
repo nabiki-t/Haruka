@@ -182,7 +182,7 @@ type VhdxCommons_Test () =
     [<MemberData( "m_ResolvLBA_Dynamic_NoAllocated_001_Data" )>]
     member _.ResolvLBA_Dynamic_NoAllocated_001 ( stat : BatEntryStatePB ) =
         let structure = GenStructures 2048u 4096UL stat BatEntryStateSB.SectorBitmapNotPresent false
-        let r = VhdxCommons.ResolvLBA ( blkcnt_me.ofUInt64 0UL ) [| structure |]
+        let r = VhdxCommons.ResolvLBA blkcnt_me.zero64 [| structure |]
         Assert.True( r.IsNone )
 
     [<Theory>]
@@ -237,7 +237,7 @@ type VhdxCommons_Test () =
             let pstat = if pexist then BatEntryStatePB.PayloadFullyPresent else BatEntryStatePB.PayloadNotPresent
             GenStructures 2048u 4096UL pstat BatEntryStateSB.SectorBitmapNotPresent false
         let structure1 = GenStructures 2048u 4096UL stat BatEntryStateSB.SectorBitmapNotPresent true
-        let r = VhdxCommons.ResolvLBA ( blkcnt_me.ofUInt64 0UL ) [| structure0; structure1 |]
+        let r = VhdxCommons.ResolvLBA blkcnt_me.zero64 [| structure0; structure1 |]
         if rexist then
             Assert.StrictEqual( ValueSome( struct( 0, 0x400000UL ) ), r )
         else
