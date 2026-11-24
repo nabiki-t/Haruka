@@ -208,6 +208,8 @@ type VhdxMerge() =
             raise <| VhdxMediaException( "Logical Sector Size unmatch." )
         if dstr.VDI.VirtualDiskSize <> mstr.VDI.VirtualDiskSize then
             raise <| VhdxMediaException( "Virtual Disk Size unmatch." )
+        if dstr.VDI.PayloadBlockSize <= 0u || mstr.VDI.PayloadBlockSize <= 0u then
+            raise <| VhdxMediaException( "Unexpected payload block size." )
         if dstr.VDI.HasParent then
             raise <| VhdxMediaException( "A root VHDX file must not have a parent." )
         if not mstr.VDI.HasParent then
@@ -236,7 +238,9 @@ type VhdxMerge() =
                 let struct( pdidx, _ ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 dstr
                 let lbaend =
                     let struct( m_pdidx, _ ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 mstr
-                    min ( ( uint64 pdidx + 1UL ) * d_PayloadBlockLBACount ) ( ( uint64 m_pdidx + 1UL ) * m_PayloadBlockLBACount )
+                    ( uint64 pdidx + 1UL ) * d_PayloadBlockLBACount
+                    |> min ( ( uint64 m_pdidx + 1UL ) * m_PayloadBlockLBACount )
+                    |> min  d_VirtualDiskLBACount
 
                 match dstr.BAT.Payloads.[ int pdidx ].State with
                 | PayloadNotPresent
@@ -315,14 +319,20 @@ type VhdxMerge() =
     /// </returns>
     static member FillPartiallyPayload ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) : Task<VhdxMutableHeader> =
         task {
+            if structures.VDI.PayloadBlockSize <= 0u then
+                raise <| VhdxMediaException( "Unexpected payload block size." )
+            if Array.exists ( _.Bitmap >> Array.isEmpty ) structures.BAT.SectorBitmap then
+                raise <| VhdxMediaException( "Sector bitmap is not allocated." )
+
             let blocksize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
+            let virtualDiskLBACount = Functions.CalcBlockCount64 structures.VDI.VirtualDiskSize structures.VDI.LogicalSectorSize
             let payloadBlockLBACount = Functions.CalcBlockCount64 ( uint64 structures.VDI.PayloadBlockSize ) structures.VDI.LogicalSectorSize
             let zerobuf = Array.zeroCreate<byte> ( int blocksize )
             let updatedPB4K = HashSet<SEC4K_T>()
 
             for pdidx = 0 to structures.BAT.Payloads.Length - 1 do
                 let lbastart = ( uint64 pdidx ) * payloadBlockLBACount
-                let lbaend = ( uint64 pdidx + 1UL ) * payloadBlockLBACount
+                let lbaend = min virtualDiskLBACount ( ( uint64 pdidx + 1UL ) * payloadBlockLBACount )
 
                 match structures.BAT.Payloads.[ pdidx ].State with
                 | PayloadNotPresent
@@ -350,20 +360,23 @@ type VhdxMerge() =
                             ( sbEntry.Bitmap.[ int32 bytePos ] >>> ( int32 bitPos ) ) &&& 1uy
                         if bitValue = 0uy then
                             let pos = structures.BAT.Payloads.[ pdidx ].FileOffset + ( wlba - uint64 lbastart ) * blocksize
-                            do! fa.Write pos ( ArraySegment zerobuf )
+                            do! fa.WriteArray pos zerobuf
 
             // unallocate sector bitmaps
-            for i = 0 to structures.BAT.SectorBitmap.Length - 1 do
-                let pb = structures.BAT.SectorBitmap.[i]
-                structures.BAT.SectorBitmap.[i] <- {
-                    pb with
+            // In principle, a sector bitmap must always be allocated for a differencing VHDX file.
+            // However, to convert it into a dynamic VHDX file, the sector bitmap is set to unallocated here.
+            structures.BAT.SectorBitmap
+            |> Array.iteri ( fun idx itr ->
+                structures.BAT.SectorBitmap.[idx] <- {
+                    itr with
                         SBState = BatEntryStateSB.SectorBitmapNotPresent;
                         FileOffset = 0UL;
-                        Bitmap = [||];
+                        Bitmap = Array.empty
                 }
-                let fpos = structures.BAT.BATRegionOffset + ( 8UL * pb.BatEntryIndex )
+                let fpos = structures.BAT.BATRegionOffset + ( 8UL * itr.BatEntryIndex )
                 let secidx = fpos / 4096UL |> sec4k_me.ofUInt64
                 updatedPB4K.Add secidx |> ignore
+            )
             let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
             // Output updated BAT entry

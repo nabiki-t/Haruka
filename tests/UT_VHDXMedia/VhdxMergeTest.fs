@@ -380,10 +380,33 @@ type VhdxMergeTest_Test () =
         }
         VhdxTestFunc.CreateTwoDynamicVHDXFileAndTest 0x100000u vds1 bs1 0x100000u vds2 bs2 testcase
 
+    static member m_UpdateBATForDeleteRoot_Fail_002_data : obj[][] = [|
+        [| 0u; 0x100000u; |];
+        [| 0x100000u; 0u; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_UpdateBATForDeleteRoot_Fail_002_data" )>]
+    member _.UpdateBATForDeleteRoot_Fail_002 ( pb1 : uint32 ) ( pb2 : uint32 ) =
+        let testcase ( dfa : FileAccessor ) ( mfa : FileAccessor ) : Task = task {
+            let! dstr = VhdxReader.ReadVhdx dfa
+            let! mstr = VhdxReader.ReadVhdx mfa
+            let dstr2 = { dstr with VDI.PayloadBlockSize = pb1; }
+            let mstr2 = { mstr with VDI.PayloadBlockSize = pb2; }
+            let r =
+                Assert.ThrowsAny<VhdxMediaException>( fun _ ->
+                    let v = Array.zeroCreate< struct( BLKCNT64_T * BLKCNT32_T ) > 1
+                    let _ = VhdxMerge.UpdateBATForDeleteRoot dstr2 mstr2 blkcnt_me.zero64 v
+                    ()
+                )
+            Assert.StartsWith( "Unexpected payload block size", r.Message )
+        }
+        VhdxTestFunc.CreateTwoDynamicVHDXFileAndTest 0x100000u 0x100000UL Blocksize.BS_512 0x100000u 0x100000UL Blocksize.BS_512 testcase
+
     [<Theory>]
     [<InlineData( true, true, "A root VHDX file must not have a parent" )>]
     [<InlineData( false, false, "A child VHDX file must have a parent" )>]
-    member _.UpdateBATForDeleteRoot_Fail_002 ( hp1 : bool ) ( hp2 : bool ) ( expmsg : string ) =
+    member _.UpdateBATForDeleteRoot_Fail_003 ( hp1 : bool ) ( hp2 : bool ) ( expmsg : string ) =
         let testcase ( dfa : FileAccessor ) ( mfa : FileAccessor ) : Task = task {
             let! dstr = VhdxReader.ReadVhdx dfa
             let! mstr = VhdxReader.ReadVhdx mfa
@@ -406,7 +429,7 @@ type VhdxMergeTest_Test () =
 
     [<Theory>]
     [<MemberData( "m_UpdateBATForDeleteRoot_Fail_003_data" )>]
-    member _.UpdateBATForDeleteRoot_Fail_003 ( vdsize : uint64 ) ( bs : Blocksize ) ( lba : uint64 ) =
+    member _.UpdateBATForDeleteRoot_Fail_004 ( vdsize : uint64 ) ( bs : Blocksize ) ( lba : uint64 ) =
         let testcase ( dfa : FileAccessor ) ( mfa : FileAccessor ) : Task = task {
             let! dstr = VhdxReader.ReadVhdx dfa
             let! mstr = VhdxReader.ReadVhdx mfa
@@ -419,4 +442,300 @@ type VhdxMergeTest_Test () =
             Assert.StartsWith( "The value of startLba is out of range", r.Message )
         }
         VhdxTestFunc.CreateDifferencingVHDXFileAndTest vdsize bs 0x100000u 0x100000u testcase
+
+    static member m_UpdateBATForDeleteRoot_001_data : obj[][] = [|
+        [| BatEntryStatePB.PayloadNotPresent; |];
+        [| BatEntryStatePB.PayloadUndefined; |];
+        [| BatEntryStatePB.PayloadUnapped; |];
+    |]
+
+    // If the parent payload is unassigned, the process terminates without taking any action.
+    [<Theory>]
+    [<MemberData( "m_UpdateBATForDeleteRoot_001_data" )>]
+    member _.UpdateBATForDeleteRoot_001 ( dstate : BatEntryStatePB ) =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[0] <- { dstr.BAT.Payloads.[0] with State = dstate }
+
+        let updateLbaBuf = [| struct( blkcnt_me.ofUInt64 123UL, blkcnt_me.ofUInt32 456u ) |]
+        let required, updated, nextLba =
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+
+        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.Empty updated
+        Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, nextLba )
+        let struct( start, count ) = updateLbaBuf.[0]
+        Assert.StrictEqual( blkcnt_me.ofUInt64 UInt64.MaxValue, start )
+        Assert.StrictEqual( blkcnt_me.ofUInt32 UInt32.MaxValue, count )
+
+    static member m_UpdateBATForDeleteRoot_002_data : obj[][] = [|
+        [| BatEntryStatePB.PayloadZero;             true; |];
+        [| BatEntryStatePB.PayloadPartiallyPresent; true; |];
+        [| BatEntryStatePB.PayloadFullyPresent;     true; |];
+        [| BatEntryStatePB.PayloadZero;             false; |];
+        [| BatEntryStatePB.PayloadPartiallyPresent; false; |];
+        [| BatEntryStatePB.PayloadFullyPresent;     false; |];
+    |]
+
+    // The parent payload is already assigned.
+    // If a child sector is unused, include it in the copy range; if it is in use, do not include it.
+    [<Theory>]
+    [<MemberData( "m_UpdateBATForDeleteRoot_002_data" )>]
+    member _.UpdateBATForDeleteRoot_002 ( dstate : BatEntryStatePB ) ( copySector : bool ) =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[0] <- { dstr.BAT.Payloads.[0] with State = dstate }
+        if copySector then
+            Array.fill mstr.BAT.SectorBitmap.[0].Bitmap 0 mstr.BAT.SectorBitmap.[0].Bitmap.Length 0uy
+        else
+            Array.fill mstr.BAT.SectorBitmap.[0].Bitmap 0 mstr.BAT.SectorBitmap.[0].Bitmap.Length 0xFFuy
+
+        let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
+        let required, updated, nextLba =
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+
+        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.Empty updated
+        Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, nextLba )
+        if copySector then
+            let struct( start, count ) = updateLbaBuf.[0]
+            Assert.StrictEqual( blkcnt_me.zero64, start )
+            Assert.StrictEqual( blkcnt_me.ofUInt32 2048u, count )
+            Assert.All( mstr.BAT.SectorBitmap.[0].Bitmap.[ 0 .. 255 ], fun value -> Assert.Equal( 0xFFuy, value ) )
+            Assert.All( mstr.BAT.SectorBitmap.[0].Bitmap.[ 256 .. ], fun value -> Assert.Equal( 0uy, value ) )
+            Assert.StrictEqual( 1uy, mstr.BAT.SectorBitmap.[0].Bitmap.[0] &&& 1uy )
+        else
+            let struct( start, _ ) = updateLbaBuf.[0]
+            Assert.StrictEqual( blkcnt_me.ofUInt64 UInt64.MaxValue, start )
+            Assert.All( mstr.BAT.SectorBitmap.[0].Bitmap, fun value -> Assert.Equal( 0xFFuy, value ) )
+
+    // Terminate processing once the copy range buffer is exhausted, and return the next unprocessed LBA.
+    [<Fact>]
+    member _.UpdateBATForDeleteRoot_003 () =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[0] <- { dstr.BAT.Payloads.[0] with State = BatEntryStatePB.PayloadFullyPresent }
+        mstr.BAT.SectorBitmap.[0].Bitmap.[0] <- 0x02uy
+
+        let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
+        let required, updated, nextLba =
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+
+        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.Empty updated
+        Assert.StrictEqual( blkcnt_me.ofUInt64 2UL, nextLba )
+        let struct( start, count ) = updateLbaBuf.[0]
+        Assert.StrictEqual( blkcnt_me.zero64, start )
+        Assert.StrictEqual( blkcnt_me.one32, count )
+
+    // When the copy range is fragmented by used sectors
+    [<Fact>]
+    member _.UpdateBATForDeleteRoot_004 () =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[0] <- { dstr.BAT.Payloads.[0] with State = BatEntryStatePB.PayloadZero }
+        mstr.BAT.SectorBitmap.[0].Bitmap.[0] <- 0x02uy
+
+        let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 2
+        let _, _, nextLba =
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+
+        let struct( start1, count1 ) = updateLbaBuf.[0]
+        let struct( start2, count2 ) = updateLbaBuf.[1]
+        Assert.StrictEqual( blkcnt_me.zero64, start1 )
+        Assert.StrictEqual( blkcnt_me.one32, count1 )
+        Assert.StrictEqual( blkcnt_me.ofUInt64 2UL, start2 )
+        Assert.StrictEqual( blkcnt_me.ofUInt32 2046u, count2 )
+        Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, nextLba )
+
+    // Case where the child payload is unassigned
+    [<Fact>]
+    member _.UpdateBATForDeleteRoot_005 () =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[0] <- { dstr.BAT.Payloads.[0] with State = BatEntryStatePB.PayloadFullyPresent }
+        mstr.BAT.Payloads.[0] <- { mstr.BAT.Payloads.[0] with State = BatEntryStatePB.PayloadNotPresent }
+
+        let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
+        let required, updated, nextLba =
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+
+        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.StrictEqual( BatEntryStatePB.PayloadPartiallyPresent, mstr.BAT.Payloads.[0].State )
+        Assert.True( updated.Count > 0 )
+        Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, nextLba )
+
+    // Cases where a sector bitmap is not allocated
+    [<Fact>]
+    member _.UpdateBATForDeleteRoot_006 () =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[0] <- { dstr.BAT.Payloads.[0] with State = BatEntryStatePB.PayloadFullyPresent }
+        mstr.BAT.SectorBitmap.[0] <- { mstr.BAT.SectorBitmap.[0] with Bitmap = Array.empty }
+
+        let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
+        let r =
+            Assert.Throws<VhdxMediaException>( fun _ ->
+                VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf |> ignore
+            )
+        Assert.StartsWith( "Sector bitmap is not allocated", r.Message )
+
+    // Cases that begin at the boundary of a parent payload
+    [<Fact>]
+    member _.UpdateBATForDeleteRoot_007 () =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x200000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[1] <- { dstr.BAT.Payloads.[1] with State = BatEntryStatePB.PayloadPartiallyPresent }
+
+        let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
+        let required, updated, nextLba =
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr ( blkcnt_me.ofUInt64 2048UL ) updateLbaBuf
+
+        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.Empty updated
+        Assert.StrictEqual( blkcnt_me.ofUInt64 4096UL, nextLba )
+        let struct( start, count ) = updateLbaBuf.[0]
+        Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, start )
+        Assert.StrictEqual( blkcnt_me.ofUInt32 2048u, count )
+
+    static member m_UpdateBATForDeleteRoot_008_data : obj[][] = [|
+        [| 0x180000u; 0x280000u; 3072UL; 2048UL; |];
+        [| 0x280000u; 0x180000u; 3072UL; 2048UL; |];
+    |]
+
+    // Cases where parent and child payload sizes differ.
+    [<Theory>]
+    [<MemberData( "m_UpdateBATForDeleteRoot_008_data" )>]
+    member _.UpdateBATForDeleteRoot_008 ( parentPbSize : uint32 ) ( childPbSize : uint32 ) ( firstRangeCount : uint64 ) ( secondRangeCount : uint64 ) =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u parentPbSize 0xC00000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u childPbSize 0xC00000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[0] <- { dstr.BAT.Payloads.[0] with State = BatEntryStatePB.PayloadFullyPresent }
+        dstr.BAT.Payloads.[1] <- { dstr.BAT.Payloads.[1] with State = BatEntryStatePB.PayloadFullyPresent }
+        Array.fill mstr.BAT.SectorBitmap.[0].Bitmap 0 mstr.BAT.SectorBitmap.[0].Bitmap.Length 0uy
+
+        let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 2
+        let required, updated, nextLba =
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+
+        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.Empty updated
+
+        let struct( start1, count1 ) = updateLbaBuf.[0]
+        let struct( start2, count2 ) = updateLbaBuf.[1]
+        Assert.StrictEqual( blkcnt_me.zero64, start1 )
+        Assert.StrictEqual( blkcnt_me.ofUInt32 ( uint32 firstRangeCount ), count1 )
+        Assert.StrictEqual( blkcnt_me.ofUInt64 firstRangeCount, start2 )
+        Assert.StrictEqual( blkcnt_me.ofUInt32 ( uint32 secondRangeCount ), count2 )
+        Assert.StrictEqual( blkcnt_me.ofUInt64 5120UL, nextLba )
+
+    // Cases where the copy range is fragmented due to unallocated payloads in the parent.
+    [<Fact>]
+    member _.UpdateBATForDeleteRoot_009 () =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x300000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x300000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[0] <- { dstr.BAT.Payloads.[0] with State = BatEntryStatePB.PayloadFullyPresent }
+        dstr.BAT.Payloads.[1] <- { dstr.BAT.Payloads.[1] with State = BatEntryStatePB.PayloadNotPresent }
+        dstr.BAT.Payloads.[2] <- { dstr.BAT.Payloads.[2] with State = BatEntryStatePB.PayloadFullyPresent }
+
+        let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 2
+        let required, updated, nextLba =
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+
+        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.Empty updated
+        Assert.StrictEqual( blkcnt_me.ofUInt64 6144UL, nextLba )
+        let struct( start1, count1 ) = updateLbaBuf.[0]
+        let struct( start2, count2 ) = updateLbaBuf.[1]
+        Assert.StrictEqual( blkcnt_me.zero64, start1 )
+        Assert.StrictEqual( blkcnt_me.ofUInt32 2048u, count1 )
+        Assert.StrictEqual( blkcnt_me.ofUInt64 4096UL, start2 )
+        Assert.StrictEqual( blkcnt_me.ofUInt32 2048u, count2 )
+
+    // Cases where the end of a virtual disk does not align with a payload boundary
+    [<Fact>]
+    member _.UpdateBATForDeleteRoot_010 () =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x180000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x180000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[0] <- { dstr.BAT.Payloads.[0] with State = BatEntryStatePB.PayloadFullyPresent }
+        dstr.BAT.Payloads.[1] <- { dstr.BAT.Payloads.[1] with State = BatEntryStatePB.PayloadFullyPresent }
+
+        let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 2
+        let required, updated, nextLba =
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+
+        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.Empty updated
+        Assert.StrictEqual( blkcnt_me.ofUInt64 3072UL, nextLba )
+        let struct( start1, count1 ) = updateLbaBuf.[0]
+        let struct( start2, count2 ) = updateLbaBuf.[1]
+        Assert.StrictEqual( blkcnt_me.zero64, start1 )
+        Assert.StrictEqual( blkcnt_me.ofUInt32 2048u, count1 )
+        Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, start2 )
+        Assert.StrictEqual( blkcnt_me.ofUInt32 1024u, count2 )
+
+    // Cases in which a child file's size is expanded
+    [<Fact>]
+    member _.UpdateBATForDeleteRoot_011 () =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[0] <- { dstr.BAT.Payloads.[0] with State = BatEntryStatePB.PayloadFullyPresent }
+        mstr.BAT.Payloads.[0] <- { mstr.BAT.Payloads.[0] with State = BatEntryStatePB.PayloadNotPresent }
+        mstr.BAT.SectorBitmap.[0] <- { mstr.BAT.SectorBitmap.[0] with FileOffset = 0x400000UL }
+
+        let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
+        let required, updated, nextLba =
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+
+        Assert.StrictEqual( 0x600000UL, required )
+        Assert.StrictEqual( BatEntryStatePB.PayloadPartiallyPresent, mstr.BAT.Payloads.[0].State )
+        Assert.StrictEqual( 0x500000UL, mstr.BAT.Payloads.[0].FileOffset )
+        Assert.True( updated.Contains( sec4k_me.ofUInt64 768UL ) )
+        Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, nextLba )
+        let struct( start, count ) = updateLbaBuf.[0]
+        Assert.StrictEqual( blkcnt_me.zero64, start )
+        Assert.StrictEqual( blkcnt_me.ofUInt32 2048u, count )
+
+    // Ensure that the copy range is split at both the bit boundaries and the byte boundaries of the sector bitmap.
+    [<Fact>]
+    member _.UpdateBATForDeleteRoot_012 () =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[0] <- { dstr.BAT.Payloads.[0] with State = BatEntryStatePB.PayloadFullyPresent }
+        mstr.BAT.SectorBitmap.[0].Bitmap.[0] <- 0x01uy
+        mstr.BAT.SectorBitmap.[0].Bitmap.[1] <- 0x01uy
+
+        let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 2
+        let required, updated, nextLba =
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+
+        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.Empty updated
+        Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, nextLba )
+        let struct( start1, count1 ) = updateLbaBuf.[0]
+        let struct( start2, count2 ) = updateLbaBuf.[1]
+        Assert.StrictEqual( blkcnt_me.ofUInt64 1UL, start1 )
+        Assert.StrictEqual( blkcnt_me.ofUInt32 7u, count1 )
+        Assert.StrictEqual( blkcnt_me.ofUInt64 9UL, start2 )
+        Assert.StrictEqual( blkcnt_me.ofUInt32 2039u, count2 )
+
+    // Verify that, when starting from the final valid LBA,
+    // only one sector is processed and the position immediately following the end of the disk is returned.
+    [<Fact>]
+    member _.UpdateBATForDeleteRoot_013 () =
+        let dstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let mstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 true
+        dstr.BAT.Payloads.[0] <- { dstr.BAT.Payloads.[0] with State = BatEntryStatePB.PayloadFullyPresent }
+
+        let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
+        let required, updated, nextLba =
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr ( blkcnt_me.ofUInt64 2047UL ) updateLbaBuf
+
+        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.Empty updated
+        Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, nextLba )
+        let struct( start, count ) = updateLbaBuf.[0]
+        Assert.StrictEqual( blkcnt_me.ofUInt64 2047UL, start )
+        Assert.StrictEqual( blkcnt_me.one32, count )
+        Assert.StrictEqual( 0x80uy, mstr.BAT.SectorBitmap.[0].Bitmap.[255] &&& 0x80uy )
+
 
