@@ -321,6 +321,8 @@ type VhdxMerge() =
         task {
             if structures.VDI.PayloadBlockSize <= 0u then
                 raise <| VhdxMediaException( "Unexpected payload block size." )
+            if not structures.VDI.HasParent then
+                raise <| VhdxMediaException( "It must be a differencing VHDX file." )
             if Array.exists ( _.Bitmap >> Array.isEmpty ) structures.BAT.SectorBitmap then
                 raise <| VhdxMediaException( "Sector bitmap is not allocated." )
 
@@ -380,7 +382,7 @@ type VhdxMerge() =
             let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
             // Output updated BAT entry
-            return! VhdxWriter.WriteUpdatedBAT fa structures verhd updated4KSecsForBAT structures.LastFileSize
+            return! VhdxWriter.WriteUpdatedBAT fa structures verhd updated4KSecsForBAT fa.FileSize
         }
 
     /// <summary>
@@ -388,6 +390,9 @@ type VhdxMerge() =
     /// </summary>
     static member DeleteRoot ( structures : ( FileAccessor * VhdxStructures )[] ) : Task =
         task {
+            if structures.Length < 2 then
+                raise <| VhdxMediaException( "The VHDX file for the root to be deleted does not exist." )
+
             let ( dfa, dstr ) = structures.[0]
             let ( mfa, mstr ) = structures.[1]
 

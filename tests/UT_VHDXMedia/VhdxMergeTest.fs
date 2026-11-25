@@ -738,4 +738,164 @@ type VhdxMergeTest_Test () =
         Assert.StrictEqual( blkcnt_me.one32, count )
         Assert.StrictEqual( 0x80uy, mstr.BAT.SectorBitmap.[0].Bitmap.[255] &&& 0x80uy )
 
+    [<Theory>]
+    [<InlineData( 0u, "Unexpected payload block size" )>]
+    [<InlineData( 0x100000u, "It must be a differencing VHDX file" )>]
+    member _.FillPartiallyPayload_Fail_001 ( pbsize : uint32 ) ( expmsg : string ) =
+        let testcase ( fa : FileAccessor ) : Task = task {
+            let! str = VhdxReader.ReadVhdx fa
+            let str2 = { str with VDI.PayloadBlockSize = pbsize }
+            let! r =
+                Assert.ThrowsAnyAsync<VhdxMediaException>( fun _ -> task {
+                    let! _ = VhdxMerge.FillPartiallyPayload fa str2 str2.LoadedVarHeader
+                    ()
+                } )
+            Assert.StartsWith( expmsg, r.Message )
+        }
+        VhdxTestFunc.CreateDynamicVHDXFileAndTest testcase
 
+    [<Fact>]
+    member _.FillPartiallyPayload_Fail_002 () =
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x100000UL Blocksize.BS_512 0x100000u 0x100000u ( fun _ fa -> task {
+            let! structures = VhdxReader.ReadVhdx fa
+            structures.BAT.SectorBitmap.[0] <- {
+                structures.BAT.SectorBitmap.[0] with
+                    Bitmap = Array.empty;
+            }
+            let! ex =
+                Assert.ThrowsAsync<VhdxMediaException>( fun _ -> task {
+                    let! _ = VhdxMerge.FillPartiallyPayload fa structures structures.LoadedVarHeader
+                    ()
+                } )
+            Assert.StartsWith( "Sector bitmap is not allocated", ex.Message )
+        } )
+
+    // Retain used sectors and zero-clear unused sectors.
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    [<InlineData( 2047UL )>]
+    member _.FillPartiallyPayload_001 ( usedLba : uint64 ) =
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x100000UL Blocksize.BS_512 0x100000u 0x100000u ( fun _ fa -> task {
+
+            // Allocate payload block 0 and set state to Partially Present.
+            let! structures = VhdxReader.ReadVhdx fa
+            let struct( updated4KSecsForBAT, requiredFileSize ) =
+                VhdxWriter.AllocatePayloadBlock structures blkcnt_me.zero64 blkcnt_me.one64
+            let! lvh = VhdxWriter.WriteUpdatedBAT fa structures structures.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT ) requiredFileSize
+            structures.BAT.Payloads.[0] <- {
+                structures.BAT.Payloads.[0] with
+                    State = BatEntryStatePB.PayloadPartiallyPresent;
+            }
+
+            // Fill the payload block with a non-zero value.
+            let payloadData = Array.create 0x100000 0xA5uy
+            do! fa.WriteArray structures.BAT.Payloads.[0].FileOffset payloadData
+
+            let struct( _, bytePos, bitPos ) =
+                VhdxCommons.LBAtoSectorBitmapIndex ( blkcnt_me.ofUInt64 usedLba ) structures
+            structures.BAT.SectorBitmap.[0].Bitmap.[ int32 bytePos ] <-
+                structures.BAT.SectorBitmap.[0].Bitmap.[ int32 bytePos ] ||| ( 1uy <<< int32 bitPos )
+
+            let! returnedHeader = VhdxMerge.FillPartiallyPayload fa structures lvh
+
+            Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, structures.BAT.Payloads.[0].State )
+            Assert.StrictEqual( BatEntryStateSB.SectorBitmapNotPresent, structures.BAT.SectorBitmap.[0].SBState )
+            Assert.StrictEqual( 0UL, structures.BAT.SectorBitmap.[0].FileOffset )
+            Assert.Empty structures.BAT.SectorBitmap.[0].Bitmap
+            Assert.NotStrictEqual( lvh.SequenceNumber, returnedHeader.SequenceNumber )
+            Assert.StrictEqual( Guid(), returnedHeader.LogGuid )
+
+            do! fa.ReadArray structures.BAT.Payloads.[0].FileOffset payloadData
+            for i = 0 to 2047 do
+                let expd = if uint64 i = usedLba then 0xA5uy else 0uy
+                for j = 0 to 511 do
+                    Assert.StrictEqual( expd, payloadData.[ i * 512 + j ] )
+        } )
+
+    static member m_FillPartiallyPayload_002_data : obj[][] = [|
+        [| BatEntryStatePB.PayloadNotPresent; |];
+        [| BatEntryStatePB.PayloadUndefined; |];
+        [| BatEntryStatePB.PayloadUnapped; |];
+        [| BatEntryStatePB.PayloadZero; |];
+        [| BatEntryStatePB.PayloadFullyPresent; |];
+    |]
+
+    // For cases where the payload state is not `PayloadPartiallyPresent`, take no action.
+    // Only clear the sector bitmap.
+    [<Theory>]
+    [<MemberData( "m_FillPartiallyPayload_002_data" )>]
+    member _.FillPartiallyPayload_002 ( state : BatEntryStatePB ) =
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x200000UL Blocksize.BS_512 0x100000u 0x100000u ( fun _ fa -> task {
+
+            // Allocate payload block 0 and set state to Partially Present.
+            let! structures = VhdxReader.ReadVhdx fa
+            let struct( updated4KSecsForBAT, requiredFileSize ) =
+                VhdxWriter.AllocatePayloadBlock structures blkcnt_me.zero64 blkcnt_me.one64
+            let! lvh = VhdxWriter.WriteUpdatedBAT fa structures structures.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT ) requiredFileSize
+            structures.BAT.Payloads.[0] <- {
+                structures.BAT.Payloads.[0] with
+                    State = state;
+            }
+
+            // Fill the payload block with random values
+            let payloadData = Array.init 0x100000 ( fun _ -> Random.Shared.Next() |> byte )
+            do! fa.WriteArray structures.BAT.Payloads.[0].FileOffset payloadData
+
+            let! _ = VhdxMerge.FillPartiallyPayload fa structures lvh
+
+            Assert.StrictEqual( state, structures.BAT.Payloads.[0].State )
+            Assert.All( structures.BAT.SectorBitmap, fun bitmapEntry ->
+                Assert.StrictEqual( BatEntryStateSB.SectorBitmapNotPresent, bitmapEntry.SBState )
+                Assert.StrictEqual( 0UL, bitmapEntry.FileOffset )
+                Assert.Empty bitmapEntry.Bitmap
+            )
+
+            let payloadData2 = Array.zeroCreate<byte> 0x100000
+            do! fa.ReadArray structures.BAT.Payloads.[0].FileOffset payloadData2
+            Assert.True(( payloadData2 = payloadData ))
+        } )
+
+    [<Fact>]
+    member _.FillPartiallyPayload_003 () =
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x180000UL Blocksize.BS_512 0x100000u 0x100000u ( fun _ fa -> task {
+            let! structures = VhdxReader.ReadVhdx fa
+            let struct( updated4KSecsForBAT1, requiredFileSize1 ) =
+                VhdxWriter.AllocatePayloadBlock structures blkcnt_me.zero64 blkcnt_me.one64
+            let! lvh1 = VhdxWriter.WriteUpdatedBAT fa structures structures.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT1 ) requiredFileSize1
+            let struct( updated4KSecsForBAT2, requiredFileSize2 ) =
+                VhdxWriter.AllocatePayloadBlock structures ( blkcnt_me.ofUInt64 2048UL ) blkcnt_me.one64
+            let! lvh2 = VhdxWriter.WriteUpdatedBAT fa structures lvh1 ( Seq.toArray updated4KSecsForBAT2 ) requiredFileSize2
+            structures.BAT.Payloads.[0] <- {
+                structures.BAT.Payloads.[0] with
+                    State = BatEntryStatePB.PayloadFullyPresent;
+            }
+            structures.BAT.Payloads.[1] <- {
+                structures.BAT.Payloads.[1] with
+                    State = BatEntryStatePB.PayloadPartiallyPresent;
+            }
+
+            let payloadData = Array.create 0x80000 0x5Auy
+            do! fa.WriteArray structures.BAT.Payloads.[1].FileOffset payloadData
+
+            // Mark the last sector as used
+            let lastValidLba = 3071UL
+            let struct( _, bytePos, bitPos ) =
+                VhdxCommons.LBAtoSectorBitmapIndex ( blkcnt_me.ofUInt64 lastValidLba ) structures
+            structures.BAT.SectorBitmap.[0].Bitmap.[ int bytePos ] <-
+                structures.BAT.SectorBitmap.[0].Bitmap.[ int bytePos ] ||| ( 1uy <<< int bitPos )
+
+            let! _ = VhdxMerge.FillPartiallyPayload fa structures lvh2
+
+            Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, structures.BAT.Payloads.[0].State )
+            Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, structures.BAT.Payloads.[1].State )
+            Assert.StrictEqual( BatEntryStateSB.SectorBitmapNotPresent, structures.BAT.SectorBitmap.[0].SBState )
+
+            do! fa.ReadArray structures.BAT.Payloads.[1].FileOffset payloadData
+            for i = 0 to 1023 do
+                let expd = if i = 1023 then 0x5Auy else 0uy
+                for j = 0 to 511 do
+                    if expd <> payloadData.[ i * 512 + j ] then
+                        printfn "a"
+                    Assert.StrictEqual( expd, payloadData.[ i * 512 + j ] )
+        } )
