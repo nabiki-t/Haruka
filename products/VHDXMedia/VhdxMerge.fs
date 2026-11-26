@@ -198,6 +198,7 @@ type VhdxMerge() =
     static member UpdateBATForDeleteRoot
         ( dstr : VhdxStructures )
         ( mstr : VhdxStructures )
+        ( currentFileSize : uint64 )
         ( startLba : BLKCNT64_T )
         ( updateLbaBuf : struct( BLKCNT64_T * BLKCNT32_T )[] )
         : ( uint64 * HashSet<SEC4K_T> * BLKCNT64_T ) =
@@ -227,7 +228,7 @@ type VhdxMerge() =
 
         let updatedPB4K = HashSet<SEC4K_T>()
         let enumFreeList =
-            VhdxWriter.BuildFreeList mstr mstr.BAT.PayloadBlockCount
+            VhdxWriter.BuildFreeList mstr currentFileSize mstr.BAT.PayloadBlockCount
             |> Array.toSeq
             |> _.GetEnumerator()
 
@@ -298,7 +299,7 @@ type VhdxMerge() =
             else
                 gfs1, lba1
 
-        let struct( requiredFileSize, nextlba ) = loop1 struct ( startLba, 0, mstr.LastFileSize )
+        let struct( requiredFileSize, nextlba ) = loop1 struct ( startLba, 0, currentFileSize )
         requiredFileSize, updatedPB4K, nextlba
 
     /// <summary>
@@ -413,7 +414,7 @@ type VhdxMerge() =
             let ps = PseudoSeqStat< ( BLKCNT64_T * VhdxMutableHeader ), VhdxMutableHeader >( ( blkcnt_me.zero64, verhd2 ) )
             for ( lba, verhd4 ) in ps do
                 let requiredFileSize, updatedPB4K, nextLba =
-                    VhdxMerge.UpdateBATForDeleteRoot dstr mstr lba updateLbaBuf
+                    VhdxMerge.UpdateBATForDeleteRoot dstr mstr mfa.FileSize lba updateLbaBuf
                 let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
                 // Output BAT entries.
@@ -474,6 +475,7 @@ type VhdxMerge() =
     static member UpdateBATForMergeIntermediate
         ( dstr : VhdxStructures )
         ( mstr : VhdxStructures )
+        ( currentFileSize : uint64 )
         ( startLba : BLKCNT64_T )
         ( updateLbaBuf : struct( BLKCNT64_T * BLKCNT32_T )[] )
         : ( uint64 * HashSet<SEC4K_T> * Dictionary< SEC4K_T, ArraySegment<byte> > * BLKCNT64_T ) =
@@ -489,7 +491,7 @@ type VhdxMerge() =
         let updatedSB4K = Dictionary< SEC4K_T, ArraySegment<byte> >()
         let updatedPB4K = HashSet<SEC4K_T>()
         let enumFreeList =
-            VhdxWriter.BuildFreeList mstr mstr.BAT.PayloadBlockCount
+            VhdxWriter.BuildFreeList mstr currentFileSize mstr.BAT.PayloadBlockCount
             |> Array.toSeq
             |> _.GetEnumerator()
 
@@ -572,7 +574,7 @@ type VhdxMerge() =
             else
                 gfs1, lba1
 
-        let struct( requiredFileSize, nextlba ) = loop1 struct ( startLba, 0, mstr.LastFileSize )
+        let struct( requiredFileSize, nextlba ) = loop1 struct ( startLba, 0, currentFileSize )
         requiredFileSize, updatedPB4K, updatedSB4K, nextlba
 
     /// <summary>
@@ -606,7 +608,7 @@ type VhdxMerge() =
             let ps = PseudoSeqStat< ( BLKCNT64_T * VhdxMutableHeader ), VhdxMutableHeader >( ( blkcnt_me.zero64, verhd2 ) )
             for ( lba, verhd4 ) in ps do
                 let requiredFileSize, updatedPB4K, updatedSB4K, nextLba =
-                    VhdxMerge.UpdateBATForMergeIntermediate dstr mstr lba updateLbaBuf
+                    VhdxMerge.UpdateBATForMergeIntermediate dstr mstr mfa.FileSize lba updateLbaBuf
                 let updated4KSecsForSB =
                     updatedSB4K
                     |> Seq.map ( fun itr -> struct( itr.Key, itr.Value ) )

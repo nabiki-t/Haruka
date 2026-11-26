@@ -307,8 +307,10 @@ type VhdxStructures = {
     LoadedVarHeader : VhdxMutableHeader;
     /// Log
     Log : LogEntry list;
-    /// Expected file size
-    LastFileSize : uint64;
+    /// Expected file size 
+    /// This value is the one from the time of loading; it is not the most current value.
+    /// The latest value must be obtained by referencing the file size in FileAccessor.
+    LastFileSize_AtLoaded : uint64;
     /// Region table
     Region : RegionTable;
     /// Virtual disk infomation.

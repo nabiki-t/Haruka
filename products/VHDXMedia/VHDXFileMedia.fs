@@ -205,6 +205,12 @@ type VHDXFileMedia
                     let blockSize_u64 = Blocksize.toUInt64 m_BlockSize
                     let mediaBlockCount = m_VirtualDiskSize / blockSize_u64
 
+                    let fileSize =
+                        if m_Config.WriteProtect then
+                            curStr.LastFileSize_AtLoaded
+                        else
+                            curFA.FileSize
+
                     // Check specified range is in media.
                     if Functions.CheckAccessRange argLBA readBytesLength_u64 mediaBlockCount blockSize_u64 |> not then
                         let errmsg =
@@ -248,7 +254,7 @@ type VHDXFileMedia
                             let posInFile = pbEntry.FileOffset + secIdx * blockSize_u64
                             let bytesToRead = takeSectors * blockSize_u64
                             let dstOffset = buffer.Offset + int ( sectorsRead * blockSize_u64 )
-                            do! curFA.ReadWithPseudoLimit curStr.LastFileSize posInFile ( ArraySegment( buffer.Array, dstOffset, int bytesToRead ) )
+                            do! curFA.ReadWithPseudoLimit fileSize posInFile ( ArraySegment( buffer.Array, dstOffset, int bytesToRead ) )
 
                         | PayloadNotPresent
                         | PayloadPartiallyPresent ->
@@ -260,7 +266,7 @@ type VHDXFileMedia
                                     let dstOffset = buffer.Offset + int ( ( sectorsRead + i ) * blockSize_u64 )
                                     let bytesAvail = buffer.Count - dstOffset
                                     let readCount = min ( int blockSize_u64 ) bytesAvail
-                                    do! allFileAccessors.[fsidx].ReadWithPseudoLimit curStr.LastFileSize fpos ( ArraySegment( buffer.Array, dstOffset, readCount ) )
+                                    do! allFileAccessors.[fsidx].ReadWithPseudoLimit fileSize fpos ( ArraySegment( buffer.Array, dstOffset, readCount ) )
                                 | _ ->
                                     let dstOffset = buffer.Offset + int ( ( sectorsRead + i ) * blockSize_u64 )
                                     let bytesAvail = buffer.Count - dstOffset
@@ -336,7 +342,7 @@ type VHDXFileMedia
                         do! m_Lock.WLock()
 
                         let struct( updatedBAT4K, requiredFileSize ) =
-                            VhdxWriter.AllocatePayloadBlock curStr writeStartBlockPos writeBlockLength
+                            VhdxWriter.AllocatePayloadBlock curStr curFA.FileSize writeStartBlockPos writeBlockLength
 
                         let updatedSB4K =
                             if curStr.VDI.HasParent then

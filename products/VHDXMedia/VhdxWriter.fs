@@ -33,6 +33,9 @@ type VhdxWriter() =
     /// <param name="structures">
     ///  VHDX file structures data.
     /// </param>
+    /// <param name="fileSize">
+    ///  Current file size.
+    /// </param>
     /// <param name="maxPBCount">
     ///  Specify the maximum number of payload blocks to allocate.
     /// </param>
@@ -40,14 +43,15 @@ type VhdxWriter() =
     ///  The start position of the unused area.
     ///  The size of a single unused area is the payload block length.
     /// </returns>
-    static member BuildFreeList ( structures : VhdxStructures ) ( maxPBCount : uint64 ) : uint64 [] =
+    static member BuildFreeList ( structures : VhdxStructures ) ( fileSize : uint64 ) ( maxPBCount : uint64 ) : uint64 [] =
+
+        if fileSize <= 0UL then
+            raise <| VhdxMediaException( "File size too small." )
 
         let mb = 1048576UL
         let payloadBlockSize = uint64 structures.VDI.PayloadBlockSize
         if payloadBlockSize = 0UL then
             raise <| VhdxMediaException( "Unexpected the payload block size value." )
-
-        let fileSize = structures.LastFileSize
         let chunkCount = Functions.CeilDiv fileSize mb
 
         // The maximum size of a virtual disk image is 64 TB.
@@ -142,6 +146,9 @@ type VhdxWriter() =
     /// <param name="structures">
     ///  VHDX structures data. The value of BAT is updated.
     /// </param>
+    /// <param name="currentFileSize">
+    ///  Current file size.
+    /// </param>
     /// <param name="lba">
     ///  The starting position of the area where data will be written.
     ///  Offset in a virtual disk, per logical sector.
@@ -152,7 +159,7 @@ type VhdxWriter() =
     /// <returns>
     ///  Pair of BAT updated 4K sector numbers and the file size required after allocation.
     /// </returns>
-    static member AllocatePayloadBlock ( structures : VhdxStructures ) ( lba : BLKCNT64_T ) ( cnt : BLKCNT64_T ) : struct ( HashSet<SEC4K_T> * uint64 ) =
+    static member AllocatePayloadBlock ( structures : VhdxStructures ) ( currentFileSize : uint64 ) ( lba : BLKCNT64_T ) ( cnt : BLKCNT64_T ) : struct ( HashSet<SEC4K_T> * uint64 ) =
 
         let mediaBlkCnt = Functions.CalcBlockCount64 structures.VDI.VirtualDiskSize structures.VDI.LogicalSectorSize
         if not <| Functions.CheckAccessRangeBlock lba cnt mediaBlkCnt then
@@ -163,12 +170,6 @@ type VhdxWriter() =
             if pbSize = 0UL then
                 raise <| VhdxMediaException( "Unexpected the payload block size value." )
 
-            let hasParent = structures.VDI.HasParent
-            let allocPBStat = 
-                if hasParent then
-                    PayloadPartiallyPresent
-                else
-                    PayloadFullyPresent;
             let updated4KSecs = HashSet<SEC4K_T>()
             let maxRequirePBCnt =
                 let w = Functions.CalcBlockCount64 pbSize structures.VDI.LogicalSectorSize
@@ -176,7 +177,7 @@ type VhdxWriter() =
 
             // build free list
             use enumFreeList =
-                VhdxWriter.BuildFreeList structures maxRequirePBCnt
+                VhdxWriter.BuildFreeList structures currentFileSize maxRequirePBCnt
                 |> Array.toSeq
                 |> _.GetEnumerator()
 
@@ -188,11 +189,11 @@ type VhdxWriter() =
                     loop ( blkcnt_me.Incr wcnt ) nextgfs
                 else
                     gfs
-            let requiredFileSize = loop blkcnt_me.zero64 structures.LastFileSize
+            let requiredFileSize = loop blkcnt_me.zero64 currentFileSize
 
             struct ( updated4KSecs, requiredFileSize )
         else
-            struct ( HashSet<SEC4K_T>(), structures.LastFileSize )
+            struct ( HashSet<SEC4K_T>(), currentFileSize )
 
     /// <summary>
     ///  Allocate payload blocks to enable data writing to the specified LBA.
@@ -590,7 +591,7 @@ type VhdxWriter() =
                     let widx = cycle * logEntryUnit
                     let wcnt = min logEntryUnit ( sec4Ks.Length - widx )
                     let newLogGuid = Guid.NewGuid()
-                    let currentFileSize = structures.LastFileSize
+                    let currentFileSize = fa.FileSize
 
                     // Write log entry
                     let listSec4K_SBData =
@@ -694,9 +695,9 @@ type VhdxWriter() =
             // Update FileWriteGuid and DataWriteGuid
             let! verhd2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid vhdxFile structures verhd1
 
-            // Allocate Payload block. structures2 will be updated.
+            // Allocate Payload block. structures will be updated.
             let struct( updatedPB4K, requiredFileSize ) =
-                VhdxWriter.AllocatePayloadBlock structures lba rawDataSec
+                VhdxWriter.AllocatePayloadBlock structures vhdxFile.FileSize lba rawDataSec
 
             // Update sector bitmap.
             let updated4KSecsForSB =

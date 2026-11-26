@@ -143,7 +143,7 @@ type VhdxCreater_Test () =
                 Assert.StrictEqual( logsizse, str1.ImmHeader.LogLength )
                 Assert.StrictEqual( 0x100000UL, str1.ImmHeader.LogOffset )
                 Assert.Empty str1.Log
-                Assert.StrictEqual( fa.FileSize, str1.LastFileSize )
+                Assert.StrictEqual( fa.FileSize, str1.LastFileSize_AtLoaded )
                 Assert.StrictEqual( pbsize, str1.VDI.PayloadBlockSize )
                 if isFixed then
                     Assert.True( str1.VDI.LeaveBlockAllocated )
@@ -213,7 +213,7 @@ type VhdxCreater_Test () =
                 Assert.StrictEqual( cLogsizse, cstr1.ImmHeader.LogLength )
                 Assert.StrictEqual( 0x100000UL, cstr1.ImmHeader.LogOffset )
                 Assert.Empty cstr1.Log
-                Assert.StrictEqual( cfa.FileSize, cstr1.LastFileSize )
+                Assert.StrictEqual( cfa.FileSize, cstr1.LastFileSize_AtLoaded )
                 Assert.StrictEqual( cPBSize, cstr1.VDI.PayloadBlockSize )
                 Assert.False( cstr1.VDI.LeaveBlockAllocated )               // The specified value is ignored.
                 Assert.True( cstr1.VDI.HasParent )

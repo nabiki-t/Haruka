@@ -955,7 +955,7 @@ type VhdxTestFunc() =
                 LogGuid = Guid();
             };
             Log = [];
-            LastFileSize = virtualDiskSize + batRegionStartPos + sectorBitmapCount * 1048576UL;
+            LastFileSize_AtLoaded = virtualDiskSize + batRegionStartPos + sectorBitmapCount * 1048576UL;
             Region = {
                 Signature = 0u;
                 Checksum = 0u;

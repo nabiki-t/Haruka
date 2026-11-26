@@ -77,7 +77,7 @@ type VhdxMergeTest_Test () =
 
             // Allocate all of payload blocks within the source VHDX file
             let struct( updated4KSecsForBAT, requiredFileSize ) =
-                VhdxWriter.AllocatePayloadBlock srcStr blkcnt_me.zero64 ( blkcnt_me.ofUInt64 4096UL )
+                VhdxWriter.AllocatePayloadBlock srcStr srcStr.LastFileSize_AtLoaded blkcnt_me.zero64 ( blkcnt_me.ofUInt64 4096UL )
             let! _ = VhdxWriter.WriteUpdatedBAT srcFA srcStr srcStr.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT ) requiredFileSize
 
             let! r =
@@ -104,7 +104,7 @@ type VhdxMergeTest_Test () =
 
             // Allocate all of payload blocks within the source VHDX file
             let struct( updated4KSecsForBAT, requiredFileSize ) =
-                VhdxWriter.AllocatePayloadBlock srcStr blkcnt_me.zero64 ( blkcnt_me.ofUInt64 4096UL )
+                VhdxWriter.AllocatePayloadBlock srcStr srcStr.LastFileSize_AtLoaded blkcnt_me.zero64 ( blkcnt_me.ofUInt64 4096UL )
             let! _ = VhdxWriter.WriteUpdatedBAT srcFA srcStr srcStr.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT ) requiredFileSize
 
             // Update first payload block status within the source VHDX file.
@@ -138,12 +138,12 @@ type VhdxMergeTest_Test () =
 
             // Allocate all of payload blocks within the source VHDX file
             let struct( updated4KSecsForBAT, requiredFileSize ) =
-                VhdxWriter.AllocatePayloadBlock srcStr blkcnt_me.zero64 ( blkcnt_me.ofUInt64 4096UL )
+                VhdxWriter.AllocatePayloadBlock srcStr srcStr.LastFileSize_AtLoaded blkcnt_me.zero64 ( blkcnt_me.ofUInt64 4096UL )
             let! _ = VhdxWriter.WriteUpdatedBAT srcFA srcStr srcStr.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT ) requiredFileSize
 
             // Allocate all of payload blocks within the destination VHDX file
             let struct( updated4KSecsForBAT, requiredFileSize ) =
-                VhdxWriter.AllocatePayloadBlock dstStr blkcnt_me.zero64 ( blkcnt_me.ofUInt64 4096UL )
+                VhdxWriter.AllocatePayloadBlock dstStr dstStr.LastFileSize_AtLoaded blkcnt_me.zero64 ( blkcnt_me.ofUInt64 4096UL )
             let! _ = VhdxWriter.WriteUpdatedBAT dstFA dstStr dstStr.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT ) requiredFileSize
 
             // Update first payload block status within the destination VHDX file.
@@ -183,7 +183,7 @@ type VhdxMergeTest_Test () =
 
                 // Allocate payload blocks within the destination VHDX file
                 let struct( updated4KSecsForBAT, requiredFileSize ) =
-                    VhdxWriter.AllocatePayloadBlock dstStr bllba ( blkcnt_me.ofUInt64 ( uint64 cnt ) )
+                    VhdxWriter.AllocatePayloadBlock dstStr dstStr.LastFileSize_AtLoaded bllba ( blkcnt_me.ofUInt64 ( uint64 cnt ) )
                 let! _ = VhdxWriter.WriteUpdatedBAT dstFA dstStr dstStr.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT ) requiredFileSize
 
                 do! VhdxMerge.CopyData srcFA srcStr dstFA dstStr bllba ( blkcnt_me.ofUInt32 cnt )
@@ -230,7 +230,7 @@ type VhdxMergeTest_Test () =
 
                 // Allocate payload blocks within the destination VHDX file
                 let struct( updated4KSecsForBAT, requiredFileSize ) =
-                    VhdxWriter.AllocatePayloadBlock dstStr blkcnt_me.zero64 blkcnt_me.one64
+                    VhdxWriter.AllocatePayloadBlock dstStr dstStr.LastFileSize_AtLoaded blkcnt_me.zero64 blkcnt_me.one64
                 let! _ = VhdxWriter.WriteUpdatedBAT dstFA dstStr dstStr.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT ) requiredFileSize
 
                 // update the destination payload block status
@@ -373,7 +373,7 @@ type VhdxMergeTest_Test () =
             let r =
                 Assert.ThrowsAny<VhdxMediaException>( fun _ ->
                     let v = Array.zeroCreate< struct( BLKCNT64_T * BLKCNT32_T ) > bufsize
-                    let _ = VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 v
+                    let _ = VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded blkcnt_me.zero64 v
                     ()
                 )
             Assert.StartsWith( expmsg, r.Message )
@@ -396,7 +396,7 @@ type VhdxMergeTest_Test () =
             let r =
                 Assert.ThrowsAny<VhdxMediaException>( fun _ ->
                     let v = Array.zeroCreate< struct( BLKCNT64_T * BLKCNT32_T ) > 1
-                    let _ = VhdxMerge.UpdateBATForDeleteRoot dstr2 mstr2 blkcnt_me.zero64 v
+                    let _ = VhdxMerge.UpdateBATForDeleteRoot dstr2 mstr2 mstr2.LastFileSize_AtLoaded blkcnt_me.zero64 v
                     ()
                 )
             Assert.StartsWith( "Unexpected payload block size", r.Message )
@@ -415,7 +415,7 @@ type VhdxMergeTest_Test () =
             let r =
                 Assert.ThrowsAny<VhdxMediaException>( fun _ ->
                     let v = Array.zeroCreate< struct( BLKCNT64_T * BLKCNT32_T ) > 1
-                    let _ = VhdxMerge.UpdateBATForDeleteRoot dstr2 mstr2 blkcnt_me.zero64 v
+                    let _ = VhdxMerge.UpdateBATForDeleteRoot dstr2 mstr2 mstr2.LastFileSize_AtLoaded blkcnt_me.zero64 v
                     ()
                 )
             Assert.StartsWith( expmsg, r.Message )
@@ -436,7 +436,7 @@ type VhdxMergeTest_Test () =
             let r =
                 Assert.ThrowsAny<VhdxMediaException>( fun _ ->
                     let v = Array.zeroCreate< struct( BLKCNT64_T * BLKCNT32_T ) > 1
-                    let _ = VhdxMerge.UpdateBATForDeleteRoot dstr mstr ( blkcnt_me.ofUInt64 lba ) v
+                    let _ = VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded ( blkcnt_me.ofUInt64 lba ) v
                     ()
                 )
             Assert.StartsWith( "The value of startLba is out of range", r.Message )
@@ -459,9 +459,9 @@ type VhdxMergeTest_Test () =
 
         let updateLbaBuf = [| struct( blkcnt_me.ofUInt64 123UL, blkcnt_me.ofUInt32 456u ) |]
         let required, updated, nextLba =
-            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded blkcnt_me.zero64 updateLbaBuf
 
-        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.StrictEqual( mstr.LastFileSize_AtLoaded, required )
         Assert.Empty updated
         Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, nextLba )
         let struct( start, count ) = updateLbaBuf.[0]
@@ -492,9 +492,9 @@ type VhdxMergeTest_Test () =
 
         let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
         let required, updated, nextLba =
-            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded blkcnt_me.zero64 updateLbaBuf
 
-        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.StrictEqual( mstr.LastFileSize_AtLoaded, required )
         Assert.Empty updated
         Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, nextLba )
         if copySector then
@@ -519,9 +519,9 @@ type VhdxMergeTest_Test () =
 
         let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
         let required, updated, nextLba =
-            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded blkcnt_me.zero64 updateLbaBuf
 
-        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.StrictEqual( mstr.LastFileSize_AtLoaded, required )
         Assert.Empty updated
         Assert.StrictEqual( blkcnt_me.ofUInt64 2UL, nextLba )
         let struct( start, count ) = updateLbaBuf.[0]
@@ -538,7 +538,7 @@ type VhdxMergeTest_Test () =
 
         let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 2
         let _, _, nextLba =
-            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded blkcnt_me.zero64 updateLbaBuf
 
         let struct( start1, count1 ) = updateLbaBuf.[0]
         let struct( start2, count2 ) = updateLbaBuf.[1]
@@ -558,9 +558,9 @@ type VhdxMergeTest_Test () =
 
         let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
         let required, updated, nextLba =
-            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded blkcnt_me.zero64 updateLbaBuf
 
-        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.StrictEqual( mstr.LastFileSize_AtLoaded, required )
         Assert.StrictEqual( BatEntryStatePB.PayloadPartiallyPresent, mstr.BAT.Payloads.[0].State )
         Assert.True( updated.Count > 0 )
         Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, nextLba )
@@ -576,7 +576,7 @@ type VhdxMergeTest_Test () =
         let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
         let r =
             Assert.Throws<VhdxMediaException>( fun _ ->
-                VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf |> ignore
+                VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded blkcnt_me.zero64 updateLbaBuf |> ignore
             )
         Assert.StartsWith( "Sector bitmap is not allocated", r.Message )
 
@@ -589,9 +589,9 @@ type VhdxMergeTest_Test () =
 
         let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
         let required, updated, nextLba =
-            VhdxMerge.UpdateBATForDeleteRoot dstr mstr ( blkcnt_me.ofUInt64 2048UL ) updateLbaBuf
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded ( blkcnt_me.ofUInt64 2048UL ) updateLbaBuf
 
-        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.StrictEqual( mstr.LastFileSize_AtLoaded, required )
         Assert.Empty updated
         Assert.StrictEqual( blkcnt_me.ofUInt64 4096UL, nextLba )
         let struct( start, count ) = updateLbaBuf.[0]
@@ -615,9 +615,9 @@ type VhdxMergeTest_Test () =
 
         let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 2
         let required, updated, nextLba =
-            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded blkcnt_me.zero64 updateLbaBuf
 
-        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.StrictEqual( mstr.LastFileSize_AtLoaded, required )
         Assert.Empty updated
 
         let struct( start1, count1 ) = updateLbaBuf.[0]
@@ -639,9 +639,9 @@ type VhdxMergeTest_Test () =
 
         let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 2
         let required, updated, nextLba =
-            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded blkcnt_me.zero64 updateLbaBuf
 
-        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.StrictEqual( mstr.LastFileSize_AtLoaded, required )
         Assert.Empty updated
         Assert.StrictEqual( blkcnt_me.ofUInt64 6144UL, nextLba )
         let struct( start1, count1 ) = updateLbaBuf.[0]
@@ -661,9 +661,9 @@ type VhdxMergeTest_Test () =
 
         let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 2
         let required, updated, nextLba =
-            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded blkcnt_me.zero64 updateLbaBuf
 
-        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.StrictEqual( mstr.LastFileSize_AtLoaded, required )
         Assert.Empty updated
         Assert.StrictEqual( blkcnt_me.ofUInt64 3072UL, nextLba )
         let struct( start1, count1 ) = updateLbaBuf.[0]
@@ -684,7 +684,7 @@ type VhdxMergeTest_Test () =
 
         let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
         let required, updated, nextLba =
-            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded blkcnt_me.zero64 updateLbaBuf
 
         Assert.StrictEqual( 0x600000UL, required )
         Assert.StrictEqual( BatEntryStatePB.PayloadPartiallyPresent, mstr.BAT.Payloads.[0].State )
@@ -706,9 +706,9 @@ type VhdxMergeTest_Test () =
 
         let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 2
         let required, updated, nextLba =
-            VhdxMerge.UpdateBATForDeleteRoot dstr mstr blkcnt_me.zero64 updateLbaBuf
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded blkcnt_me.zero64 updateLbaBuf
 
-        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.StrictEqual( mstr.LastFileSize_AtLoaded, required )
         Assert.Empty updated
         Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, nextLba )
         let struct( start1, count1 ) = updateLbaBuf.[0]
@@ -728,9 +728,9 @@ type VhdxMergeTest_Test () =
 
         let updateLbaBuf = Array.zeroCreate<struct( BLKCNT64_T * BLKCNT32_T )> 1
         let required, updated, nextLba =
-            VhdxMerge.UpdateBATForDeleteRoot dstr mstr ( blkcnt_me.ofUInt64 2047UL ) updateLbaBuf
+            VhdxMerge.UpdateBATForDeleteRoot dstr mstr mstr.LastFileSize_AtLoaded ( blkcnt_me.ofUInt64 2047UL ) updateLbaBuf
 
-        Assert.StrictEqual( mstr.LastFileSize, required )
+        Assert.StrictEqual( mstr.LastFileSize_AtLoaded, required )
         Assert.Empty updated
         Assert.StrictEqual( blkcnt_me.ofUInt64 2048UL, nextLba )
         let struct( start, count ) = updateLbaBuf.[0]
@@ -781,7 +781,7 @@ type VhdxMergeTest_Test () =
             // Allocate payload block 0 and set state to Partially Present.
             let! structures = VhdxReader.ReadVhdx fa
             let struct( updated4KSecsForBAT, requiredFileSize ) =
-                VhdxWriter.AllocatePayloadBlock structures blkcnt_me.zero64 blkcnt_me.one64
+                VhdxWriter.AllocatePayloadBlock structures structures.LastFileSize_AtLoaded blkcnt_me.zero64 blkcnt_me.one64
             let! lvh = VhdxWriter.WriteUpdatedBAT fa structures structures.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT ) requiredFileSize
             structures.BAT.Payloads.[0] <- {
                 structures.BAT.Payloads.[0] with
@@ -831,7 +831,7 @@ type VhdxMergeTest_Test () =
             // Allocate payload block 0 and set state to Partially Present.
             let! structures = VhdxReader.ReadVhdx fa
             let struct( updated4KSecsForBAT, requiredFileSize ) =
-                VhdxWriter.AllocatePayloadBlock structures blkcnt_me.zero64 blkcnt_me.one64
+                VhdxWriter.AllocatePayloadBlock structures structures.LastFileSize_AtLoaded blkcnt_me.zero64 blkcnt_me.one64
             let! lvh = VhdxWriter.WriteUpdatedBAT fa structures structures.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT ) requiredFileSize
             structures.BAT.Payloads.[0] <- {
                 structures.BAT.Payloads.[0] with
@@ -861,10 +861,10 @@ type VhdxMergeTest_Test () =
         VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x180000UL Blocksize.BS_512 0x100000u 0x100000u ( fun _ fa -> task {
             let! structures = VhdxReader.ReadVhdx fa
             let struct( updated4KSecsForBAT1, requiredFileSize1 ) =
-                VhdxWriter.AllocatePayloadBlock structures blkcnt_me.zero64 blkcnt_me.one64
+                VhdxWriter.AllocatePayloadBlock structures structures.LastFileSize_AtLoaded blkcnt_me.zero64 blkcnt_me.one64
             let! lvh1 = VhdxWriter.WriteUpdatedBAT fa structures structures.LoadedVarHeader ( Seq.toArray updated4KSecsForBAT1 ) requiredFileSize1
             let struct( updated4KSecsForBAT2, requiredFileSize2 ) =
-                VhdxWriter.AllocatePayloadBlock structures ( blkcnt_me.ofUInt64 2048UL ) blkcnt_me.one64
+                VhdxWriter.AllocatePayloadBlock structures requiredFileSize1 ( blkcnt_me.ofUInt64 2048UL ) blkcnt_me.one64
             let! lvh2 = VhdxWriter.WriteUpdatedBAT fa structures lvh1 ( Seq.toArray updated4KSecsForBAT2 ) requiredFileSize2
             structures.BAT.Payloads.[0] <- {
                 structures.BAT.Payloads.[0] with

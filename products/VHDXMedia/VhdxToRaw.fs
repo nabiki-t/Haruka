@@ -90,7 +90,7 @@ type VhdxToRaw() =
 
                 | PayloadFullyPresent ->
                     // All data is recorded in the input file.
-                    do! vFiles.[cidx].ReadWithPseudoLimit curstr.LastFileSize pbItr.FileOffset ( ArraySegment readPBBuf )
+                    do! vFiles.[cidx].ReadWithPseudoLimit curstr.LastFileSize_AtLoaded pbItr.FileOffset ( ArraySegment readPBBuf )
                     match hexdump with
                     | Some x ->
                         VhdxToRaw.OutputByHexdump outfile readPBBuf x ( uint64 pbIdx * uint64 pbBlockSize )
@@ -104,7 +104,7 @@ type VhdxToRaw() =
                         let lba = uint64 ( pbIdx * secCntInPB + secIdxInPB ) |> blkcnt_me.ofUInt64
                         match VhdxCommons.ResolvLBA lba vMD with
                         | ValueSome( struct( fsidx2, fpos ) ) ->
-                            do! vFiles.[fsidx2].ReadWithPseudoLimit vMD.[fsidx2].LastFileSize fpos ( ArraySegment readSecBuf )
+                            do! vFiles.[fsidx2].ReadWithPseudoLimit vMD.[fsidx2].LastFileSize_AtLoaded fpos ( ArraySegment readSecBuf )
                         | _ ->
                             Array.fill readSecBuf 0 readSecBuf.Length 0uy
                         match hexdump with
@@ -187,7 +187,7 @@ type VhdxToRaw() =
                             fs2.ReadExactly buf2
                             match VhdxCommons.ResolvLBA cnt metadatas with
                             | ValueSome ( struct( fileidx, offset ) ) ->
-                                do! vfiles.[ fileidx ].ReadWithPseudoLimit metadatas.[ fileidx ].LastFileSize offset ( ArraySegment buf1 )
+                                do! vfiles.[ fileidx ].ReadWithPseudoLimit metadatas.[ fileidx ].LastFileSize_AtLoaded offset ( ArraySegment buf1 )
                             | ValueNone ->
                                 Array.fill buf1 0 sectorSize 0uy
                             if buf1 <> buf2 then
@@ -245,14 +245,14 @@ type VhdxToRaw() =
                             // read file1
                             match VhdxCommons.ResolvLBA cnt metadatas1 with
                             | ValueSome ( struct( fileidx1, offset1 ) ) ->
-                                do! vfiles1.[ fileidx1 ].ReadWithPseudoLimit metadatas1.[ fileidx1 ].LastFileSize offset1 ( ArraySegment buf1 )
+                                do! vfiles1.[ fileidx1 ].ReadWithPseudoLimit metadatas1.[ fileidx1 ].LastFileSize_AtLoaded offset1 ( ArraySegment buf1 )
                             | ValueNone ->
                                 Array.fill buf1 0 sectorSize1 0uy
 
                             // read file2
                             match VhdxCommons.ResolvLBA cnt metadatas2 with
                             | ValueSome ( struct( fileidx2, offset2 ) ) ->
-                                do! vfiles2.[ fileidx2 ].ReadWithPseudoLimit metadatas1.[ fileidx2 ].LastFileSize offset2 ( ArraySegment buf1 )
+                                do! vfiles2.[ fileidx2 ].ReadWithPseudoLimit metadatas1.[ fileidx2 ].LastFileSize_AtLoaded offset2 ( ArraySegment buf1 )
                             | ValueNone ->
                                 Array.fill buf2 0 sectorSize1 0uy
 

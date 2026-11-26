@@ -41,7 +41,7 @@ type VhdxWriter_Test () =
                 VDI.PayloadBlockSize = 0u;
         }
         let r = Assert.Throws<VhdxMediaException>( fun () ->
-            VhdxWriter.BuildFreeList str 1UL |> ignore
+            VhdxWriter.BuildFreeList str str.LastFileSize_AtLoaded 1UL |> ignore
         )
         Assert.StartsWith( "Unexpected the payload block size value", r.Message )
 
@@ -50,10 +50,10 @@ type VhdxWriter_Test () =
         let wstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
         let str = {
             wstr with
-                LastFileSize = 18014398501093377UL;
+                LastFileSize_AtLoaded = 18014398501093377UL;
         }
         let r = Assert.Throws<VhdxMediaException>( fun () ->
-            VhdxWriter.BuildFreeList str 1UL |> ignore
+            VhdxWriter.BuildFreeList str str.LastFileSize_AtLoaded 1UL |> ignore
         )
         Assert.StartsWith( "The file is too large to build the free-space bitmap", r.Message )
 
@@ -67,7 +67,7 @@ type VhdxWriter_Test () =
                 ImmHeader.LogLength = length;
         }
         let r = Assert.Throws<VhdxMediaException>( fun () ->
-            VhdxWriter.BuildFreeList str 1UL |> ignore
+            VhdxWriter.BuildFreeList str str.LastFileSize_AtLoaded 1UL |> ignore
         )
         Assert.StartsWith( "Unexpected the log offset or the log length value", r.Message )
 
@@ -81,7 +81,7 @@ type VhdxWriter_Test () =
                     |> List.map ( fun e -> { e with FileOffset = UInt64.MaxValue - 0x0FFFFUL } )
         }
         let r = Assert.Throws<VhdxMediaException>( fun () ->
-            VhdxWriter.BuildFreeList str 1UL |> ignore
+            VhdxWriter.BuildFreeList str str.LastFileSize_AtLoaded 1UL |> ignore
         )
         Assert.StartsWith( "Unexpected the region offset or the region length value", r.Message )
 
@@ -100,7 +100,7 @@ type VhdxWriter_Test () =
                 |];
         }
         let r = Assert.Throws<VhdxMediaException>( fun () ->
-            VhdxWriter.BuildFreeList str 1UL |> ignore
+            VhdxWriter.BuildFreeList str str.LastFileSize_AtLoaded 1UL |> ignore
         )
         Assert.StartsWith( "Unexpected the sector bitmap offset value", r.Message )
 
@@ -118,9 +118,17 @@ type VhdxWriter_Test () =
                 |];
         }
         let r = Assert.Throws<VhdxMediaException>( fun () ->
-            VhdxWriter.BuildFreeList str 1UL |> ignore
+            VhdxWriter.BuildFreeList str str.LastFileSize_AtLoaded 1UL |> ignore
         )
         Assert.StartsWith( "Unexpected the payload block offset value", r.Message )
+
+    [<Fact>]
+    member _.BuildFreeList_Fail_007() =
+        let wstr = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
+        let r = Assert.Throws<VhdxMediaException>( fun () ->
+            VhdxWriter.BuildFreeList wstr 0UL 1UL |> ignore
+        )
+        Assert.StartsWith( "File size too small", r.Message )
 
     [<Fact>]
     member _.BuildFreeList_PayloadNotPresent_001() =
@@ -135,9 +143,9 @@ type VhdxWriter_Test () =
                     { BatEntryIndex = 0UL; State = BatEntryStatePB.PayloadFullyPresent; FileOffset = 0xC00000UL };
                     { BatEntryIndex = 1UL; State = BatEntryStatePB.PayloadPartiallyPresent; FileOffset = 0xE00000UL };
                 |];
-                LastFileSize = 0xF00000UL;
+                LastFileSize_AtLoaded = 0xF00000UL;
             }
-        let r = VhdxWriter.BuildFreeList str 10UL
+        let r = VhdxWriter.BuildFreeList str str.LastFileSize_AtLoaded 10UL
         let exp = [|
             0x400000UL;
             0x500000UL;
@@ -161,9 +169,9 @@ type VhdxWriter_Test () =
                     { BatEntryIndex = 0UL; SBState = BatEntryStateSB.SectorBitmapPresent;  FileOffset = 0x600000UL;  Bitmap = [||] };
                 |]
                 BAT.Payloads = [||]
-                LastFileSize = 0x800000UL;
+                LastFileSize_AtLoaded = 0x800000UL;
             }
-        let r = VhdxWriter.BuildFreeList str 10UL
+        let r = VhdxWriter.BuildFreeList str str.LastFileSize_AtLoaded 10UL
         let exp = [|
             0x400000UL;
             0x500000UL;
@@ -243,9 +251,9 @@ type VhdxWriter_Test () =
                             FileOffset = i;
                         }
                 |];
-                LastFileSize = fsize;
+                LastFileSize_AtLoaded = fsize;
         }
-        let r = VhdxWriter.BuildFreeList str2 maxcnt
+        let r = VhdxWriter.BuildFreeList str2 str2.LastFileSize_AtLoaded maxcnt
         Assert.True(( rxpr = r ))
 
     [<Theory>]
@@ -265,9 +273,9 @@ type VhdxWriter_Test () =
                             FileOffset = i;
                         }
                 |];
-                LastFileSize = fsize;
+                LastFileSize_AtLoaded = fsize;
         }
-        let r = VhdxWriter.BuildFreeList str2 maxcnt
+        let r = VhdxWriter.BuildFreeList str2 str2.LastFileSize_AtLoaded maxcnt
         Assert.True(( rxpr = r ))
 
     static member m_BuildFreeList_DifferentBlockSize_001_data : obj[][] = [|
@@ -311,9 +319,9 @@ type VhdxWriter_Test () =
                             FileOffset = i;
                         }
                 |];
-                LastFileSize = fsize;
+                LastFileSize_AtLoaded = fsize;
         }
-        let r = VhdxWriter.BuildFreeList str2 maxcnt
+        let r = VhdxWriter.BuildFreeList str2 str2.LastFileSize_AtLoaded maxcnt
         Assert.True(( rxpr = r ))
 
     static member m_UpdatePBForAllocate_001_data : obj[][] = [|
@@ -452,7 +460,7 @@ type VhdxWriter_Test () =
         let str = VhdxTestFunc.GenStructures 0x100000u 0x4000000u vds bs false
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
-                VhdxWriter.AllocatePayloadBlock str ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 cnt ) |> ignore
+                VhdxWriter.AllocatePayloadBlock str str.LastFileSize_AtLoaded ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 cnt ) |> ignore
             )
         Assert.StartsWith( "Unexpected access range", r.Message )
 
@@ -462,9 +470,18 @@ type VhdxWriter_Test () =
         let str2 = { str with VDI.PayloadBlockSize = 0u; }
         let r =
             Assert.Throws<VhdxMediaException>( fun () ->
-                VhdxWriter.AllocatePayloadBlock str2 blkcnt_me.zero64 blkcnt_me.one64 |> ignore
+                VhdxWriter.AllocatePayloadBlock str2 str2.LastFileSize_AtLoaded blkcnt_me.zero64 blkcnt_me.one64 |> ignore
             )
         Assert.StartsWith( "Unexpected the payload block size value", r.Message )
+
+    [<Fact>]
+    member _.AllocatePayloadBlock_Fail_003 () =
+        let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxWriter.AllocatePayloadBlock str 0UL blkcnt_me.zero64 blkcnt_me.one64 |> ignore
+            )
+        Assert.StartsWith( "File size too small", r.Message )
 
     // When the number of logical blocks to be allocated is 0
     [<Theory>]
@@ -474,9 +491,9 @@ type VhdxWriter_Test () =
     member _.AllocatePayloadBlock_002 ( lba : uint64 ) ( vds : uint64 ) ( argbs : int ) =
         let bs = if argbs = 512 then Blocksize.BS_512 else Blocksize.BS_4096
         let str = VhdxTestFunc.GenStructures 0x100000u 0x4000000u vds bs false
-        let struct( h, g ) = VhdxWriter.AllocatePayloadBlock str ( blkcnt_me.ofUInt64 lba ) blkcnt_me.zero64
+        let struct( h, g ) = VhdxWriter.AllocatePayloadBlock str str.LastFileSize_AtLoaded ( blkcnt_me.ofUInt64 lba ) blkcnt_me.zero64
         Assert.Empty h
-        Assert.StrictEqual( str.LastFileSize, g )
+        Assert.StrictEqual( str.LastFileSize_AtLoaded, g )
 
     // Only one BAT entry is subject to update.
     [<Theory>]
@@ -496,11 +513,11 @@ type VhdxWriter_Test () =
                 FileOffset = 0UL;
         }
         let struct( d, r ) =
-            VhdxWriter.AllocatePayloadBlock str ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 cnt )
+            VhdxWriter.AllocatePayloadBlock str str.LastFileSize_AtLoaded ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 cnt )
         let bat4ksec = ( str.BAT.BATRegionOffset / 4096UL + sec4k )|> sec4k_me.ofUInt64
         Assert.StrictEqual( 1, d.Count )
         Assert.True( d.Contains bat4ksec )
-        Assert.StrictEqual( str.LastFileSize, r )
+        Assert.StrictEqual( str.LastFileSize_AtLoaded, r )
         Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[ bati ].State )
         Assert.StrictEqual( freeSpace, str.BAT.Payloads.[ bati ].FileOffset )
 
@@ -523,12 +540,12 @@ type VhdxWriter_Test () =
                 FileOffset = 0UL;
         }
         let struct( d, r ) =
-            VhdxWriter.AllocatePayloadBlock str ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 2UL )
+            VhdxWriter.AllocatePayloadBlock str str.LastFileSize_AtLoaded ( blkcnt_me.ofUInt64 lba ) ( blkcnt_me.ofUInt64 2UL )
         let bat4ksec = ( str.BAT.BATRegionOffset / 4096UL )|> sec4k_me.ofUInt64
         Assert.StrictEqual( sec4kcnt, d.Count )
         Assert.True( d.Contains bat4ksec )
         if sec4kcnt = 2 then Assert.True( d.Contains ( bat4ksec + ( sec4k_me.ofUInt64 1UL ) ) )
-        Assert.StrictEqual( str.LastFileSize, r )
+        Assert.StrictEqual( str.LastFileSize_AtLoaded, r )
         Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[ bat0 ].State )
         Assert.StrictEqual( freeSpace0, str.BAT.Payloads.[ bat0 ].FileOffset )
         Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[ bat1 ].State )
@@ -548,12 +565,12 @@ type VhdxWriter_Test () =
         ) str.BAT.Payloads
 
         let struct( d, r ) =
-            VhdxWriter.AllocatePayloadBlock str blkcnt_me.zero64 ( blkcnt_me.ofUInt64 0x200000UL )
+            VhdxWriter.AllocatePayloadBlock str str.LastFileSize_AtLoaded blkcnt_me.zero64 ( blkcnt_me.ofUInt64 0x200000UL )
         let bat4ksec = ( str.BAT.BATRegionOffset / 4096UL )|> sec4k_me.ofUInt64
         Assert.StrictEqual( 2, d.Count )
         Assert.True( d.Contains bat4ksec )
         Assert.True( d.Contains ( bat4ksec + ( sec4k_me.ofUInt64 1UL ) ) )
-        Assert.StrictEqual( str.LastFileSize, r )
+        Assert.StrictEqual( str.LastFileSize_AtLoaded, r )
         Array.iteri ( fun idx itr ->
             Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, itr.State )
             Assert.StrictEqual( freeSpace.[idx], itr.FileOffset )
@@ -570,11 +587,11 @@ type VhdxWriter_Test () =
                 FileOffset = 0UL;
         }
         let struct( d, r ) =
-            VhdxWriter.AllocatePayloadBlock str blkcnt_me.zero64 blkcnt_me.one64
+            VhdxWriter.AllocatePayloadBlock str str.LastFileSize_AtLoaded blkcnt_me.zero64 blkcnt_me.one64
         let bat4ksec = ( str.BAT.BATRegionOffset / 4096UL )|> sec4k_me.ofUInt64
         Assert.StrictEqual( 1, d.Count )
         Assert.True( d.Contains bat4ksec )
-        Assert.StrictEqual( str.LastFileSize, r )
+        Assert.StrictEqual( str.LastFileSize_AtLoaded, r )
         Assert.StrictEqual( BatEntryStatePB.PayloadPartiallyPresent, str.BAT.Payloads.[0].State )
         Assert.StrictEqual( freeSpace, str.BAT.Payloads.[0].FileOffset )
 
@@ -585,7 +602,7 @@ type VhdxWriter_Test () =
         let freeSpace = str.BAT.Payloads.[1023].FileOffset
         let str2 = {
             str with
-                LastFileSize = freeSpace;
+                LastFileSize_AtLoaded = freeSpace;
         }
         str2.BAT.Payloads.[1023] <- {
             str2.BAT.Payloads.[1023] with
@@ -593,8 +610,8 @@ type VhdxWriter_Test () =
                 FileOffset = 0UL;
         }
         let struct( d, r ) =
-            VhdxWriter.AllocatePayloadBlock str2 ( blkcnt_me.ofUInt64 2095104UL ) blkcnt_me.one64
-        Assert.StrictEqual( str2.LastFileSize + uint64 str2.VDI.PayloadBlockSize, r )
+            VhdxWriter.AllocatePayloadBlock str2 str2.LastFileSize_AtLoaded ( blkcnt_me.ofUInt64 2095104UL ) blkcnt_me.one64
+        Assert.StrictEqual( str2.LastFileSize_AtLoaded + uint64 str2.VDI.PayloadBlockSize, r )
         Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str2.BAT.Payloads.[1023].State )
         Assert.StrictEqual( freeSpace, str2.BAT.Payloads.[1023].FileOffset )
 
@@ -603,8 +620,8 @@ type VhdxWriter_Test () =
     member _.AllocatePayloadBlock_008 () =
         let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0xA00000UL Blocksize.BS_512 false
         let struct( d, r ) =
-            VhdxWriter.AllocatePayloadBlock str blkcnt_me.zero64 blkcnt_me.one64
-        Assert.StrictEqual( str.LastFileSize, r )
+            VhdxWriter.AllocatePayloadBlock str str.LastFileSize_AtLoaded blkcnt_me.zero64 blkcnt_me.one64
+        Assert.StrictEqual( str.LastFileSize_AtLoaded, r )
         Assert.Empty d
         Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, str.BAT.Payloads.[0].State )
 
@@ -1080,7 +1097,7 @@ type VhdxWriter_Test () =
 
             let! r =
                 Assert.ThrowsAsync<Exception> ( fun () -> task {
-                    let! _ = VhdxWriter.WriteUpdatedBAT fa2 str str.LoadedVarHeader [| bat4k |] str.LastFileSize
+                    let! _ = VhdxWriter.WriteUpdatedBAT fa2 str str.LoadedVarHeader [| bat4k |] str.LastFileSize_AtLoaded
                     ()
                 })
             Assert.StrictEqual( "xxx", r.Message )
@@ -1136,7 +1153,7 @@ type VhdxWriter_Test () =
 
             let wseccnt = VhdxCorrupter.Max4KSectorCountFromLogCapacity 0x100000u |> int
             let vsec = Array.init ( wseccnt + sd ) ( fun _ -> bat4k )
-            let! r = VhdxWriter.WriteUpdatedBAT fa2 str str.LoadedVarHeader vsec str.LastFileSize
+            let! r = VhdxWriter.WriteUpdatedBAT fa2 str str.LoadedVarHeader vsec str.LastFileSize_AtLoaded
             Assert.StrictEqual( exp, cnt )
             Assert.StrictEqual( Guid(), r.LogGuid )
             Assert.StrictEqual( str.LoadedVarHeader.SequenceNumber + uint64 exp, r.SequenceNumber )
@@ -1158,13 +1175,13 @@ type VhdxWriter_Test () =
                 str.BAT.Payloads.[0] with
                     State = BatEntryStatePB.PayloadUndefined;
             }
-            let! r = VhdxWriter.WriteUpdatedBAT fa1 str str.LoadedVarHeader [| bat4k |] str.LastFileSize
+            let! r = VhdxWriter.WriteUpdatedBAT fa1 str str.LoadedVarHeader [| bat4k |] str.LastFileSize_AtLoaded
             Assert.StrictEqual( Guid(), r.LogGuid )
 
             let! str2 = VhdxReader.ReadVhdx fa1
             Assert.Empty str2.Log
             Assert.StrictEqual( BatEntryStatePB.PayloadUndefined, str2.BAT.Payloads.[0].State )
-            Assert.StrictEqual( str.LastFileSize, fa1.FileSize )
+            Assert.StrictEqual( str.LastFileSize_AtLoaded, fa1.FileSize )
 
             fa1.Close()
             GlbFunc.DeleteFile fname
@@ -1352,7 +1369,7 @@ type VhdxWriter_Test () =
             let fname = Path.GetTempFileName()
             let fa1 = FileAccessor( fname, 1u, false )
             let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
-            do! fa1.SetFileSize str.LastFileSize
+            do! fa1.SetFileSize str.LastFileSize_AtLoaded
             let datalen = 512UL
 
             let fs = new MemoryStream()
@@ -1398,7 +1415,7 @@ type VhdxWriter_Test () =
             let fname = Path.GetTempFileName()
             let fa1 = FileAccessor( fname, 1u, false )
             let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u vdsize bs false
-            do! fa1.SetFileSize str.LastFileSize
+            do! fa1.SetFileSize str.LastFileSize_AtLoaded
             let datalen = rawblkcnt * ( uint64 blksize )
 
             let fs = new MemoryStream()
@@ -1432,7 +1449,7 @@ type VhdxWriter_Test () =
             let fname = Path.GetTempFileName()
             let fa1 = FileAccessor( fname, 1u, false )
             let str = VhdxTestFunc.GenStructures 0x100000u 0x100000u 0x100000UL Blocksize.BS_512 false
-            do! fa1.SetFileSize str.LastFileSize
+            do! fa1.SetFileSize str.LastFileSize_AtLoaded
             let datalen = 512UL
 
             let fs = new MemoryStream()
