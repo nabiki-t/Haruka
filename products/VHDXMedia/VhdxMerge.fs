@@ -401,6 +401,11 @@ type VhdxMerge() =
             let d_VirtualDiskLBACount = Functions.CalcBlockCount64 dstr.VDI.VirtualDiskSize dstr.VDI.LogicalSectorSize
 
             // Flash log entries
+            let! _ =
+                if dstr.Log.Length > 0 then
+                    VhdxChecker.FlushLog dfa dstr
+                else
+                    Task.FromResult dstr.LoadedVarHeader
             let! verhd1 =
                 if mstr.Log.Length > 0 then
                     VhdxChecker.FlushLog mfa mstr
@@ -431,20 +436,20 @@ type VhdxMerge() =
                     ps.Break( verhd5 )
             let verhd3 = ps.LastValue |> _.Value
 
+            // Convert PayloadPartiallyPresent payload block to PayloadFullyPresent.
+            let! verhd6 = VhdxMerge.FillPartiallyPayload mfa mstr verhd3
+
             // Update parent locator.
             let structures2 = {
                 mstr with
                     VDI.ParentLocator = Map.empty;
                     VDI.HasParent = false;
             }
-            let verhd6 = {
-                verhd3 with
-                    SequenceNumber = verhd3.SequenceNumber + 2UL;
+            let verhd7 = {
+                verhd6 with
+                    SequenceNumber = verhd6.SequenceNumber + 2UL;
             }
-            let! verhd7 = VhdxMerge.UpdateMetadata mfa structures2 verhd6
-
-            // Convert PayloadPartiallyPresent payload block to PayloadFullyPresent.
-            let! _ = VhdxMerge.FillPartiallyPayload mfa structures2 verhd7
+            let! _ = VhdxMerge.UpdateMetadata mfa structures2 verhd7
             ()
         }
 

@@ -899,3 +899,56 @@ type VhdxMergeTest_Test () =
                         printfn "a"
                     Assert.StrictEqual( expd, payloadData.[ i * 512 + j ] )
         } )
+
+    [<Theory>]
+    [<InlineData( 0 )>]
+    [<InlineData( 1 )>]
+    member _.DeleteRoot_Fail_001 ( vcnt : int ) =
+        let structures = Array.zeroCreate< FileAccessor * VhdxStructures > vcnt
+        task {
+            let! ex =
+                Assert.ThrowsAsync<VhdxMediaException>( fun _ ->
+                    VhdxMerge.DeleteRoot structures
+                )
+            Assert.StartsWith( "The VHDX file for the root to be deleted does not exist.", ex.Message )
+        }
+
+    [<Fact>]
+    member _.DeleteRoot_001 () =
+        VhdxTestFunc.CreateDifferencingVHDXFileAndTest 0x100000UL Blocksize.BS_512 0x100000u 0x100000u ( fun pfa cfa -> task {
+
+            // inject unprocessed log to child VHDX file.
+            let! cstr = VhdxReader.ReadVhdx cfa
+            do! VhdxCorrupter.Inject cfa [ sec4k_me.ofUInt64( cstr.BAT.BATRegionOffset / 4096UL ) ]
+            let! cstr2 = VhdxReader.ReadVhdx cfa
+            Assert.NotEmpty cstr2.Log
+            let oldSequenceNumber = cstr2.LoadedVarHeader.SequenceNumber
+
+            // inject unprocessed log to parent VHDX file.
+            let! pstr = VhdxReader.ReadVhdx pfa
+            do! VhdxCorrupter.Inject pfa [ sec4k_me.ofUInt64( pstr.BAT.BATRegionOffset / 4096UL ) ]
+            let! pstr2 = VhdxReader.ReadVhdx pfa
+            Assert.NotEmpty pstr2.Log
+
+            let rndFileName = Path.GetTempFileName()
+            try
+                // Write random numbers to the parent VHDX file.
+                GlbFunc.CreateRandomFile rndFileName 0x100000L
+                do! VhdxWriter.Write pfa rndFileName blkcnt_me.zero64
+                let! pstr3 = VhdxReader.ReadVhdx pfa
+                Assert.StrictEqual( BatEntryStatePB.PayloadFullyPresent, pstr3.BAT.Payloads.[0].State )
+
+                do! VhdxMerge.DeleteRoot [| ( pfa, pstr3 ); ( cfa, cstr2 ) |]
+
+                let! cstr3 = VhdxReader.ReadVhdx cfa
+                Assert.False cstr3.VDI.HasParent
+                Assert.Empty cstr3.VDI.ParentLocator
+                Assert.True( cstr3.LoadedVarHeader.SequenceNumber >= oldSequenceNumber + 2UL )
+
+                let resultData = Array.zeroCreate<byte> 0x100000
+                do! cfa.ReadArray cstr3.BAT.Payloads.[0].FileOffset resultData
+                let rndData = File.ReadAllBytes rndFileName
+                Assert.True(( resultData = rndData ))
+            finally
+                GlbFunc.DeleteFile rndFileName
+        } )
